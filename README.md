@@ -21,7 +21,7 @@ npm install
 npm run dev
 ```
 
-The `dev` command uses Vercel Dev so the frontend and `/api/*` functions work together. Open the local URL printed by Vercel. To work on only the static UI, use `npm run dev:ui`; scanner API requests require Vercel Dev or a deployment.
+The `dev` command downloads and runs the current Vercel CLI so the frontend and `/api/*` functions work together. Open the local URL printed by Vercel. To work on only the static UI, use `npm run dev:ui`; scanner API requests require Vercel Dev or a deployment.
 
 ## Verify
 
