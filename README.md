@@ -10,8 +10,7 @@ A standalone, rule-based Nifty/NSE scanner. This project is intentionally separa
 - Blocks new long triggers in a bearish Nifty regime.
 - Calculates a theoretical quantity with a 1% of capital risk ceiling and a 10% position-value ceiling.
 - Offers search, status filters, reason strings and CSV export.
-- Includes health-free, read-only API routes and a weekday scheduled scan endpoint.
-- Includes unit tests and a GitHub Actions verify workflow.
+- Includes read-only API routes, a protected weekday scheduled-scan endpoint, unit tests and a GitHub Actions verify workflow.
 
 ## Run locally
 
@@ -39,15 +38,15 @@ Or run all three with `npm run verify`.
 1. Import this repository into Vercel.
 2. Keep the Vite framework preset, build command `npm run build`, and output directory `dist`.
 3. Deploy. The `/api/scan` and `/api/cron` routes are Vercel Node functions.
-4. Optional: configure `CRON_SECRET` in Vercel environment variables. The scheduled endpoint checks the standard `Authorization: Bearer <CRON_SECRET>` header when the variable is set.
+4. To enable the scheduled scan, set a strong `CRON_SECRET` environment variable in Vercel and redeploy. The cron endpoint rejects requests until that secret is configured and checks the standard `Authorization: Bearer <CRON_SECRET>` header.
 
 The cron schedule is weekdays at 03:00 UTC (08:30 India Standard Time). It calculates a scan from the latest candles available from the provider; it does not place trades or send notifications. Vercel plan limits may affect cron availability.
 
 ## API
 
 - `GET /api/scan` runs or returns a short-lived cached scan.
-- `GET /api/scan?capital=100000&risk=1000&refresh=1` forces a fresh scan with INR sizing inputs.
-- `GET /api/cron` is the scheduled read-only scan endpoint. Set `CRON_SECRET` to protect it.
+- `GET /api/scan?capital=100000&risk=1000&refresh=1` requests a fresh scan with INR sizing inputs. Repeated forced refreshes within 30 seconds reuse the recent result to limit upstream requests.
+- `GET /api/cron` is the scheduled scan endpoint. It requires `CRON_SECRET` and the matching Bearer authorization header.
 
 Responses include a generated timestamp, market regime, India VIX context, per-stock indicator values, a reason per result, and sizing details. Provider failures are represented as warnings or per-symbol errors rather than being silently treated as buy signals.
 

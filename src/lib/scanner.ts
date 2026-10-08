@@ -30,12 +30,13 @@ const positiveNumber = (value: number, fallback: number, maximum: number): numbe
   Number.isFinite(value) && value > 0 ? Math.min(value, maximum) : fallback;
 
 let lastCache: { key: string; expiresAt: number; value: ScanResponse } | null = null;
+let lastFreshScanAt = 0;
 
 async function fetchCandles(symbol: string): Promise<Candle[]> {
   const url = new URL(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}`);
   url.searchParams.set("range", "1y");
   url.searchParams.set("interval", "1d");
-  url.searchParams.set("events", "div%2Csplits");
+  url.searchParams.set("events", "div,splits");
 
   const response = await fetch(url, {
     headers: {
@@ -148,8 +149,12 @@ export async function runScan(input: {
   const effectiveRiskInr = Math.min(requestedRiskInr, capitalInr * MAX_RISK_PCT / 100);
   const key = `${capitalInr}:${requestedRiskInr}`;
   const now = Date.now();
-  if (!input.forceRefresh && lastCache && lastCache.key === key && lastCache.expiresAt > now) {
-    return { ...lastCache.value, cached: true };
+
+  if (lastCache && lastCache.key === key && lastCache.expiresAt > now) {
+    // Avoid hammering the upstream quote service when the UI repeatedly requests a refresh.
+    if (!input.forceRefresh || now - lastFreshScanAt < 30_000) {
+      return { ...lastCache.value, cached: true };
+    }
   }
 
   const warnings: string[] = [];
@@ -200,6 +205,7 @@ export async function runScan(input: {
     results: stockResults,
     warnings
   };
+  lastFreshScanAt = Date.now();
   lastCache = { key, expiresAt: Date.now() + CACHE_TTL_MS, value: response };
   return response;
 }

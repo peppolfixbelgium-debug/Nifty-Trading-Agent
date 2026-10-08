@@ -10,8 +10,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const secret = process.env.CRON_SECRET;
-  const authorization = req.headers.authorization;
-  if (secret && authorization !== `Bearer ${secret}`) {
+  if (!secret) {
+    return res.status(503).json({ error: "Scheduled scans are disabled until CRON_SECRET is configured in the deployment environment." });
+  }
+  if (req.headers.authorization !== `Bearer ${secret}`) {
     return res.status(401).json({ error: "Unauthorized cron request." });
   }
 
