@@ -3,7 +3,6 @@ import type { MarketRegime, ScanAction, ScanResponse, ScanResult } from "./lib/t
 
 type Filter = "ALL" | "TRIGGERED" | "WATCH" | "AVOID";
 
-const inr = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 });
 const inr0 = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
 const integer = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 });
 const fixed = (value: number | null, digits = 2) =>
