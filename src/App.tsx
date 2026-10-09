@@ -114,7 +114,7 @@ function App() {
         years: backtestYears === "3" ? "3" : "5",
         capital,
         risk,
-        costBps: String(Math.max(0, Math.min(200, Number(backtestCostBps) || 15)))
+        costBps: String(backtestCostBps.trim() !== "" && Number.isFinite(Number(backtestCostBps)) ? Math.max(0, Math.min(200, Number(backtestCostBps))) : 15)
       });
       const response = await fetch("/api/backtest?" + query.toString(), {
         headers: { accept: "application/json" }
