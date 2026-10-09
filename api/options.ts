@@ -67,7 +67,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         iv: numberOrNull(row.call_options.option_greeks?.iv ?? row.call_options.market_data?.iv),
         delta: numberOrNull(row.call_options.option_greeks?.delta ?? row.call_options.market_data?.delta),
         theta: numberOrNull(row.call_options.option_greeks?.theta),
-        gamma: numberOrNull(row.call_options.option_greeks?.gamma)
+        gamma: numberOrNull(row.call_options.option_greeks?.gamma),
+        vega: numberOrNull(row.call_options.option_greeks?.vega)
       } : null,
       put: row.put_options ? {
         instrumentKey: row.put_options.instrument_key ?? null,
@@ -80,7 +81,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         iv: numberOrNull(row.put_options.option_greeks?.iv ?? row.put_options.market_data?.iv),
         delta: numberOrNull(row.put_options.option_greeks?.delta ?? row.put_options.market_data?.delta),
         theta: numberOrNull(row.put_options.option_greeks?.theta),
-        gamma: numberOrNull(row.put_options.option_greeks?.gamma)
+        gamma: numberOrNull(row.put_options.option_greeks?.gamma),
+        vega: numberOrNull(row.put_options.option_greeks?.vega)
       } : null
     })).filter((row) => row.strike !== null);
     if (!rows.length) return res.status(502).json({ configured: true, error: "Upstox returned no option-chain rows for this expiry." });
