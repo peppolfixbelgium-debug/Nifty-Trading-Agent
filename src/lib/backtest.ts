@@ -33,7 +33,7 @@ function indiaDate(timestamp: number): string {
   return String(values.year) + "-" + String(values.month) + "-" + String(values.day);
 }
 
-async function fetchCandles(symbol: string, startSeconds: number, endSeconds: number): Promise<Candle[]> {
+export async function fetchCandles(symbol: string, startSeconds: number, endSeconds: number): Promise<Candle[]> {
   const url = new URL("https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(symbol));
   url.searchParams.set("period1", String(startSeconds));
   url.searchParams.set("period2", String(endSeconds));
