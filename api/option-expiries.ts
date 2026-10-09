@@ -1,14 +1,6 @@
 import { resolveUpstoxUnderlying } from "../src/lib/options-provider.js";
 import type { ApiRequest, ApiResponse } from "../src/lib/api-types.js";
 
-const UNDERLYINGS: Record<string, string> = {
-  NIFTY50: "NSE_INDEX|Nifty 50",
-  BANKNIFTY: "NSE_INDEX|Nifty Bank",
-  FINNIFTY: "NSE_INDEX|Nifty Fin Service",
-  MIDCPNIFTY: "NSE_INDEX|Nifty MID Select",
-  SENSEX: "BSE_INDEX|SENSEX"
-};
-
 export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
