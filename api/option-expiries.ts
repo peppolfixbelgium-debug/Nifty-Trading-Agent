@@ -1,3 +1,4 @@
+import { resolveUpstoxUnderlying } from "../src/lib/options-provider.js";
 import type { ApiRequest, ApiResponse } from "../src/lib/api-types.js";
 
 const UNDERLYINGS: Record<string, string> = {
@@ -20,8 +21,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     detail: "Add UPSTOX_ACCESS_TOKEN in Vercel to query available expired-contract expiries. This API requires Upstox's applicable expired-instrument entitlement."
   });
   const id = typeof req.query.underlying === "string" ? req.query.underlying : "NIFTY50";
-  const key = UNDERLYINGS[id];
-  if (!key) return res.status(400).json({ error: "Unsupported options underlying." });
+  const resolved = resolveUpstoxUnderlying(id);
+  const key = resolved?.key;
+  if (!resolved || !key) return res.status(400).json({ error: "Unsupported options underlying." });
 
   try {
     const url = new URL("https://api.upstox.com/v2/expired-instruments/expiries");
