@@ -76,6 +76,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("ALL");
   const [search, setSearch] = useState("");
+  const [chartSymbol, setChartSymbol] = useState("^NSEI");
   const [capital, setCapital] = useState("100000");
   const [risk, setRisk] = useState("1000");
   const [backtestYears, setBacktestYears] = useState("5");
@@ -249,6 +250,11 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  function openChart(symbol: string) {
+    setChartSymbol(symbol);
+    document.getElementById("market-chart")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   const rows = useMemo(() => {
     const needle = search.trim().toLowerCase();
     return (data?.results ?? [])
@@ -345,7 +351,7 @@ function App() {
         </div>
       </section>
 
-      <MarketChart />
+      <MarketChart symbol={chartSymbol} onSelectSymbol={setChartSymbol} />
 
       <section className="control-panel">
         <div className="control-intro">
@@ -604,7 +610,7 @@ function App() {
           {!loading && rows.map((row) => <article className="watchlist-mobile-card" key={`mobile-${row.symbol}`}>
             <div className="watchlist-mobile-card-head">
               <div className="stock-cell"><strong>{row.symbol.replace(".NS", "")}</strong><small>{row.name}</small></div>
-              <ActionPill action={row.action} />
+              <ActionPill action={row.action} /><button type="button" className="watch-chart-open" onClick={() => openChart(row.symbol)}>Chart ↗</button>
             </div>
             <p className="watchlist-mobile-reason">{row.reason}</p>
             <div className="watchlist-mobile-price">
@@ -632,7 +638,7 @@ function App() {
               {loading && !data && Array.from({ length: 7 }, (_, index) => <tr key={index} className="skeleton-row"><td colSpan={10}><span></span></td></tr>)}
               {!loading && rows.map((row) => (
                 <tr key={row.symbol}>
-                  <td><div className="stock-cell"><strong>{row.symbol.replace(".NS", "")}</strong><small>{row.name}</small></div></td>
+                  <td><div className="stock-cell"><strong>{row.symbol.replace(".NS", "")}</strong><small>{row.name}</small><button type="button" className="watch-chart-open" onClick={() => openChart(row.symbol)}>Open chart ↗</button></div></td>
                   <td className="reason-cell"><ActionPill action={row.action} /><small title={row.reason}>{row.reason}</small></td>
                   <td className="number-cell">{fixed(row.lastPrice)}</td>
                   <td className={`number-cell ${(row.changePct ?? 0) >= 0 ? "positive" : "negative"}`}>{pct(row.changePct)}</td>
