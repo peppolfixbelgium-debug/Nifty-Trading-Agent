@@ -95,7 +95,7 @@ All app code, API routes, CI and scheduled-scan configuration in this repository
 
 ## Market Opportunity Scanner readiness
 
-The desired scanner defaults are: all data-supported instruments, all validated strategies, both directions, daily timeframe, and at least 30 completed trades before a candidate is eligible for ranking. These defaults do not mean every market type or strategy is implemented. The current historical simulator remains a single long breakout-with-volume model and uses a fixed 25-stock NSE watchlist with Nifty 50 context. Broad/sector-index trading, futures roll handling, short-side execution, options-premium history and multi-strategy ranking must remain unavailable until their data and execution assumptions are implemented and tested.
+The desired scanner defaults are: all data-supported instruments, all validated strategies, both directions, daily timeframe, and at least 30 completed trades before a candidate is eligible for ranking. These defaults do not mean every market type or strategy is implemented. The opportunity scanner currently supports the registered NSE stock universe and configured broad/sector index price series, four fixed strategy families, and long/short underlying-price research hypotheses. Index histories are subject to runtime coverage gates. Futures roll handling, short-side execution, options-premium history, and broker-ready execution are not implemented.
 
 A minimum of 30 trades is an eligibility floor, not proof of statistical significance. Holdout results must be reviewed independently; a zero-trade holdout is insufficient evidence of a strategy edge. Do not tune rules to make historical results look better.
 
@@ -109,7 +109,7 @@ The scanner compares four fixed entry-rule families: trend following, breakout w
 - Incomplete symbols are excluded with reasons instead of silently shortening the backtest. The scan may return a limited but valid candidate subset if some symbols lack full requested history. If no instrument passes the history checks, the scan returns no ranking.
 - Ranking is an independent single-instrument/strategy simulation; every row starts with the configured capital. It is not a multi-position portfolio simulation and does not show that all rows can be held together.
 - Short rows are theoretical underlying-price simulations only. They do not include stock borrow availability/cost, derivative contracts, expiry/roll, margin, settlement or short-specific execution assumptions and are not executable-trade recommendations.
-- The initial `all` universe means all currently registered NSE stocks. Broad/sector indices, futures and options are not silently substituted into this universe: they need a verified market-data adapter and their own contract/roll/expiry execution model.
+- `universe=all` combines the currently registered NSE stock list and configured broad/sector index symbols; `stocks` and `indices` can be selected separately. Every index is checked against the requested history window at runtime and may be excluded if its data is unavailable or incomplete. This is index-price-series research only, not a futures/options strategy. Futures/options require separate contract history, expiry/roll handling, realistic costs and execution assumptions.
 - Because many symbol/strategy/direction combinations are compared, validation-period selection can still create multiple-comparison bias. Do not tune thresholds to improve the final test; after selecting a candidate, confirm it on a later untouched period.
 
 ## Mobile usability
