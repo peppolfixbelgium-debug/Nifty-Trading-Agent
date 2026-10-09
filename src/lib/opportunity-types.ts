@@ -1,6 +1,6 @@
 export type StrategyId = "trend-following" | "breakout-volume" | "trend-pullback" | "mean-reversion";
 export type TradeDirection = "LONG" | "SHORT";
-export type ScannerUniverse = "all" | "stocks";
+export type ScannerUniverse = "all" | "stocks" | "indices";
 export type ScannerDirection = "both" | "long" | "short";
 export type ScannerStrategy = "all" | StrategyId;
 
