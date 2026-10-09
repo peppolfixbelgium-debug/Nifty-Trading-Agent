@@ -4,7 +4,7 @@ import type { Candle } from "../lib/types.js";
 type OptionSide = {
   instrumentKey: string | null; ltp: number | null; close: number | null;
   volume: number | null; oi: number | null; bid: number | null; ask: number | null;
-  iv: number | null; delta: number | null; theta: number | null; gamma: number | null;
+  iv: number | null; delta: number | null; theta: number | null; gamma: number | null; vega: number | null;
 };
 type ChainRow = { expiry: string; pcr: number | null; strike: number | null; spot: number | null; call: OptionSide | null; put: OptionSide | null };
 type ChainResponse = { configured?: boolean; source?: string; generatedAt?: string; underlying?: string; expiry?: string; spot?: number | null; rows?: ChainRow[]; error?: string; detail?: string };
