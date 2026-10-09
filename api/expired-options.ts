@@ -1,3 +1,4 @@
+import { resolveUpstoxUnderlying } from "../src/lib/options-provider.js";
 import type { ApiRequest, ApiResponse } from "../src/lib/api-types.js";
 
 const UNDERLYINGS: Record<string, string> = {
@@ -20,9 +21,10 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     detail: "Add UPSTOX_ACCESS_TOKEN in Vercel. Expired contract data may require Upstox Plus entitlement."
   });
   const id = typeof req.query.underlying === "string" ? req.query.underlying : "NIFTY50";
-  const key = UNDERLYINGS[id];
+  const resolved = resolveUpstoxUnderlying(id);
+  const key = resolved?.key;
   const expiry = typeof req.query.expiry === "string" ? req.query.expiry : "";
-  if (!key) return res.status(400).json({ error: "Unsupported options underlying." });
+  if (!resolved || !key) return res.status(400).json({ error: "Unsupported options underlying." });
   if (!/^\d{4}-\d{2}-\d{2}$/.test(expiry) || expiry >= new Date().toISOString().slice(0, 10)) {
     return res.status(400).json({ error: "Choose a historical expiry date in YYYY-MM-DD format." });
   }
