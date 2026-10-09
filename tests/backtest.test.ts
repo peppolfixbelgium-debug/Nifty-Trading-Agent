@@ -69,5 +69,5 @@ test("transaction costs reduce or do not improve results versus zero-cost baseli
 test("same-candle stop and target ambiguity is configured conservatively", () => {
   const result = run();
   assert.match(result.assumptions.sameDayStopAndTargetRule, /assume the stop was hit first/i);
-  assert.match(result.assumptions.entryRule, /following session open/i);
+  assert.match(result.assumptions.entryRule, /next session open/i);
 });
