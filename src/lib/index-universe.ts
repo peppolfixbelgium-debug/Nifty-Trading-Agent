@@ -11,8 +11,8 @@ export const INDEX_UNIVERSE: UniverseStock[] = [
   { symbol: "^CNX100", name: "Nifty 100" },
   { symbol: "^CNX200", name: "Nifty 200" },
   { symbol: "^CNX500", name: "Nifty 500" },
-  { symbol: "^NSMIDCP", name: "Nifty Midcap 100" },
-  { symbol: "^CNXSMALLCAP", name: "Nifty Smallcap 100" },
+  { symbol: "^NSMIDCP", name: "Nifty Midcap Select" },
+  { symbol: "^NSEMDCP50", name: "Nifty Midcap 50" },
   { symbol: "^CNXIT", name: "Nifty IT" },
   { symbol: "^CNXAUTO", name: "Nifty Auto" },
   { symbol: "^CNXPHARMA", name: "Nifty Pharma" },
@@ -23,5 +23,5 @@ export const INDEX_UNIVERSE: UniverseStock[] = [
   { symbol: "^CNXMEDIA", name: "Nifty Media" },
   { symbol: "^CNXPSUBANK", name: "Nifty PSU Bank" },
   { symbol: "^CNXINFRA", name: "Nifty Infrastructure" },
-  { symbol: "^CNXFINANCE", name: "Nifty Financial Services" }
+  { symbol: "^CNXFIN", name: "Nifty Financial Services" }
 ];
