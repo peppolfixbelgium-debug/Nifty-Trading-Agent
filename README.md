@@ -48,6 +48,7 @@ The cron schedule is weekdays at 03:00 UTC (08:30 India Standard Time). It calcu
 - `GET /api/scan?capital=100000&risk=1000&refresh=1` requests a fresh scan with INR sizing inputs. Repeated forced refreshes within 30 seconds reuse the recent result to limit upstream requests.
 - `GET /api/cron` is the scheduled scan endpoint. It requires `CRON_SECRET` and the matching Bearer authorization header.
 - `GET /api/backtest?years=5&capital=100000&risk=1000&costBps=15` simulates the strategy on 3 or 5 years of completed daily candles. The `costBps` parameter is an estimated all-in cost on each side and accepts `0` for a gross/no-cost comparison.
+- `GET /api/opportunities?years=5&capital=100000&risk=1000&costBps=15&minTrades=30&universe=all&strategy=all&direction=both&timeframe=daily` runs the Market Opportunity Scanner. Supported strategy IDs are `trend-following`, `breakout-volume`, `trend-pullback`, and `mean-reversion`; `strategy=all` evaluates all four. The initial supported universe is the 25-stock registry in `src/lib/universe.ts`.
 
 Responses include a generated timestamp, market regime, India VIX context, per-stock indicator values, a reason per result, and sizing details. Provider failures are represented as warnings or per-symbol errors rather than being silently treated as buy signals.
 
@@ -97,3 +98,16 @@ All app code, API routes, CI and scheduled-scan configuration in this repository
 The desired scanner defaults are: all data-supported instruments, all validated strategies, both directions, daily timeframe, and at least 30 completed trades before a candidate is eligible for ranking. These defaults do not mean every market type or strategy is implemented. The current historical simulator remains a single long breakout-with-volume model and uses a fixed 25-stock NSE watchlist with Nifty 50 context. Broad/sector-index trading, futures roll handling, short-side execution, options-premium history and multi-strategy ranking must remain unavailable until their data and execution assumptions are implemented and tested.
 
 A minimum of 30 trades is an eligibility floor, not proof of statistical significance. Holdout results must be reviewed independently; a zero-trade holdout is insufficient evidence of a strategy edge. Do not tune rules to make historical results look better.
+
+
+### Market Opportunity Scanner
+
+The scanner compares four fixed entry-rule families: trend following, breakout with volume, trend pullback, and mean reversion. Long and short price-direction hypotheses can be selected. These are pre-registered rules with fixed thresholds, not an optimized parameter sweep.
+
+- The time series is divided chronologically after the 200-bar indicator warm-up: 60% training, 20% validation, and 20% final test. Candidates must have at least the selected minimum trade count (never below 30) in training, at least 10 trades in validation, at least 10 in final test, and reconciled accounting for all three windows.
+- Candidates are sorted by **validation-period net expectancy in R per trade**, with validation return and validation drawdown as tie-breakers. Final-test performance is displayed separately and is not used to sort the ranking.
+- Incomplete symbols are excluded with reasons instead of silently shortening the backtest. The scan may return a limited but valid candidate subset if some symbols lack full requested history. If no instrument passes the history checks, the scan returns no ranking.
+- Ranking is an independent single-instrument/strategy simulation; every row starts with the configured capital. It is not a multi-position portfolio simulation and does not show that all rows can be held together.
+- Short rows are theoretical underlying-price simulations only. They do not include stock borrow availability/cost, derivative contracts, expiry/roll, margin, settlement or short-specific execution assumptions and are not executable-trade recommendations.
+- The initial `all` universe means all currently registered NSE stocks. Broad/sector indices, futures and options are not silently substituted into this universe: they need a verified market-data adapter and their own contract/roll/expiry execution model.
+- Because many symbol/strategy/direction combinations are compared, validation-period selection can still create multiple-comparison bias. Do not tune thresholds to improve the final test; after selecting a candidate, confirm it on a later untouched period.
