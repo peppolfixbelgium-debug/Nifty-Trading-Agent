@@ -1,14 +1,6 @@
 import { resolveUpstoxUnderlying, UPSTOX_RELATIVE_EXPIRIES } from "../src/lib/options-provider.js";
 import type { ApiRequest, ApiResponse } from "../src/lib/api-types.js";
 
-const UNDERLYINGS: Record<string, string> = {
-  NIFTY50: "NSE_INDEX|Nifty 50",
-  BANKNIFTY: "NSE_INDEX|Nifty Bank",
-  FINNIFTY: "NSE_INDEX|Nifty Fin Service",
-  MIDCPNIFTY: "NSE_INDEX|Nifty MID Select",
-  SENSEX: "BSE_INDEX|SENSEX"
-};
-const EXPIRIES = new Set(["current_week", "next_week", "far_week", "current_month", "next_month", "far_month"]);
 const numberOrNull = (value: unknown): number | null => typeof value === "number" && Number.isFinite(value) ? value : null;
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {
@@ -28,7 +20,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   const resolved = resolveUpstoxUnderlying(underlyingId);
   const underlying = resolved?.key;
   const expiryValue = typeof req.query.expiry === "string" ? req.query.expiry : "current_week";
-  const expiry = EXPIRIES.has(expiryValue) || /^\d{4}-\d{2}-\d{2}$/.test(expiryValue) ? expiryValue : "current_week";
+  const expiry = UPSTOX_RELATIVE_EXPIRIES.has(expiryValue) || /^\d{4}-\d{2}-\d{2}$/.test(expiryValue) ? expiryValue : "current_week";
   if (!resolved || !underlying) return res.status(400).json({ error: "Unsupported options underlying." });
 
   try {
