@@ -500,3 +500,7 @@ tbody tr:hover{background:#141e27}
   .premium-history-svg{min-width:520px}
   .provider-setup-callout{padding:14px}
 }
+
+.watch-chart-open{align-self:flex-start;border:1px solid #315542;background:#15231c;color:var(--mint);border-radius:4px;padding:5px 7px;font:9px var(--mono);white-space:nowrap}
+.watch-chart-open:hover{background:#203d2c;border-color:#5b9a79}
+.watchlist-mobile-card-head .watch-chart-open{margin-left:auto}
