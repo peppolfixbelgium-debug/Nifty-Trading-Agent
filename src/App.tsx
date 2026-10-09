@@ -420,7 +420,7 @@ function App() {
           </label>
           <label className="field">
             <span>Minimum closed trades <small>FOR RANKING</small></span>
-            <input className="backtest-number" type="number" min="30" max="500" step="5" value={minimumTradesForRanking} onChange={(event) => setMinimumTradesForRanking(String(Math.max(30, Math.min(500, Number(event.target.value) || 30)))} aria-label="Minimum completed trades for ranking" />
+            <input className="backtest-number" type="number" min="30" max="500" step="5" value={minimumTradesForRanking} onChange={(event) => setMinimumTradesForRanking(String(Math.max(30, Math.min(500, Number(event.target.value) || 30))))} aria-label="Minimum completed trades for ranking" />
           </label>
         </div>
         <div className={`opportunity-readiness ${scannerReadiness.ready ? "opportunity-ready" : "opportunity-blocked"}`}>
