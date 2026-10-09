@@ -82,7 +82,7 @@ export default function PremiumSelect({
               onKeyDown={(event) => {
                 if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
                 event.preventDefault();
-                const items = Array.from(rootRef.current?.querySelectorAll(".premium-select-option:not(:disabled)") ?? []);
+                const items = Array.from(rootRef.current?.querySelectorAll<HTMLButtonElement>(".premium-select-option:not(:disabled)") ?? []);
                 const currentIndex = items.indexOf(event.currentTarget);
                 const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? items.length - 1 : (currentIndex + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length;
                 items[nextIndex]?.focus();
