@@ -442,7 +442,7 @@ function App() {
             <span className={`gate-state ${scannerReadiness.ready ? "gate-open" : "gate-blocked"}`}>{scannerReadiness.ready ? "RESEARCH CANDIDATES QUALIFIED" : "RANKING GATE ACTIVE"}</span>
             <h3>{scannerReadiness.ready ? "Qualified research candidates are available" : "Evidence gates are active"}</h3>
             <p>Defaults: all supported instruments · all validated strategies · both directions · daily · at least {Math.max(30, Number(minimumTradesForRanking) || 30)} training trades. Ranking uses validation expectancy; the final test is displayed separately and never used to sort.</p>
-            {opportunityData && <p className="coverage-summary">Data coverage: {opportunityData.coverage.status} · {opportunityData.coverage.symbolsWithFullWindow}/{opportunityData.coverage.symbolsRequested} stocks have full-window history · {opportunityData.evaluatedCombinations} combinations evaluated · {opportunityData.qualifiedCombinations} passed all gates.</p>}
+            {opportunityData && <p className="coverage-summary">Data coverage: {opportunityData.coverage.status} · {opportunityData.coverage.symbolsWithFullWindow}/{opportunityData.coverage.symbolsRequested} instruments have full-window history · {opportunityData.evaluatedCombinations} combinations evaluated · {opportunityData.qualifiedCombinations} passed all gates.</p>}
           </div>
           <div className="opportunity-blockers">
             <strong>{scannerReadiness.ready ? "Research cautions" : "Current blockers"}</strong>
