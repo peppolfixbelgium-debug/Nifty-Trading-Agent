@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import PremiumSelect from "./components/PremiumSelect";
+import MarketChart from "./components/MarketChart";
+import OptionsDesk from "./components/OptionsDesk";
 import type { BacktestResponse, BacktestTrade } from "./lib/backtest-engine.js";
 import type { OpportunityScanResponse } from "./lib/opportunity-types.js";
 import type { MarketRegime, ScanAction, ScanResponse, ScanResult } from "./lib/types";
@@ -274,6 +276,9 @@ function App() {
           <span className="topbar-muted">NSE · Daily timeframe</span>
         </div>
       </header>
+      <nav className="terminal-nav" aria-label="Terminal navigation">
+        <a href="#market-chart">Charts</a><a href="#options-terminal">Options premiums</a><a href="#strategy-lab">Strategy lab</a><a href="#setup-watchlist">Watchlist</a><a href="#backtest-lab">Backtest</a>
+      </nav>
 
       <section className="hero">
         <div className="hero-copy">
@@ -314,7 +319,7 @@ function App() {
             <div><strong>Compare historical evidence</strong><p>Run Market Opportunity Scanner. Check data coverage, sample sizes, validation expectancy and drawdown. The separate shortlist only shows current setups that pass its stated rules.</p></div>
           </article>
         </div>
-        <div className="quick-start-note"><span>Good to know</span> A blank shortlist is a valid outcome. Keep the 30-trade minimum, don’t force a winner, and treat results as research—not buy/sell instructions.</div>
+        <div className="quick-start-note"><span>Good to know</span> Use charts for context, inspect why a rule failed, and keep the research shortlist separate from executable trades. Do not force a winner.</div>
       </section>
 
       <section className="market-strip" aria-label="Market overview">
@@ -334,11 +339,13 @@ function App() {
           <div className="metric-foot"><span className={`vix-label vix-${(data?.market.vixLabel ?? "UNAVAILABLE").toLowerCase()}`}>{(data?.market.vixLabel ?? "UNAVAILABLE").replace("_", " ")}</span><span> · indicative context</span></div>
         </div>
         <div className="market-card market-card-last">
-          <div className="metric-label">SETUPS TRIGGERED</div>
+          <div className="metric-label">LONG SETUPS TRIGGERED</div>
           <div className="metric-value">{data ? String(triggeredCount).padStart(2, "0") : "—"}<span className="metric-suffix"> / 25</span></div>
           <div className="metric-foot">{watchCount} to watch · {errorCount} data errors</div>
         </div>
       </section>
+
+      <MarketChart />
 
       <section className="control-panel">
         <div className="control-intro">
@@ -364,7 +371,9 @@ function App() {
       {data?.warnings.map((warning) => <div className="inline-warning" key={warning}>{warning}</div>)}
       {error && <div className="error-banner"><strong>Scanner unavailable</strong><span>{error}</span><button onClick={() => void scan(true)}>Try again</button></div>}
 
-      <section className="opportunity-section" aria-labelledby="opportunity-title">
+      <OptionsDesk />
+
+      <section id="strategy-lab" className="opportunity-section" aria-labelledby="opportunity-title">
         <div className="backtest-heading">
           <div>
             <div className="section-kicker">MARKET RESEARCH / OPPORTUNITY SCANNER</div>
@@ -569,7 +578,7 @@ function App() {
         </>}
       </section>
 
-      <section className="results-section">
+      <section id="setup-watchlist" className="results-section">
         <div className="results-heading">
           <div>
             <div className="section-kicker">SCANNER OUTPUT / 02</div>
