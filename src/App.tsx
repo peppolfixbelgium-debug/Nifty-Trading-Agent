@@ -358,56 +358,6 @@ function App() {
       {data?.warnings.map((warning) => <div className="inline-warning" key={warning}>{warning}</div>)}
       {error && <div className="error-banner"><strong>Scanner unavailable</strong><span>{error}</span><button onClick={() => void scan(true)}>Try again</button></div>}
 
-      <section className="results-section">
-        <div className="results-heading">
-          <div>
-            <div className="section-kicker">SCANNER OUTPUT / 02</div>
-            <h2>Setup watchlist <span className="heading-count">{data ? data.results.length : 25}</span></h2>
-          </div>
-          <div className="results-actions">
-            <div className="search-wrap"><span>⌕</span><input aria-label="Search ticker or company" placeholder="Find a stock…" value={search} onChange={(event) => setSearch(event.target.value)} /></div>
-            <button className="export-button" disabled={!rows.length} onClick={() => downloadCsv(rows)}><span>↓</span> Export CSV</button>
-          </div>
-        </div>
-
-        <div className="filter-row" role="tablist" aria-label="Filter scanner results">
-          {(["ALL", "TRIGGERED", "WATCH", "AVOID"] as Filter[]).map((item) => (
-            <button key={item} role="tab" aria-selected={filter === item} className={`filter-tab ${filter === item ? "selected" : ""}`} onClick={() => setFilter(item)}>
-              {item === "ALL" ? "All stocks" : item === "TRIGGERED" ? "Triggered" : item === "WATCH" ? "Watch" : "Avoid"}
-              <span>{item === "ALL" ? (data?.results.length ?? 25) : data?.results.filter((row) => row.action === item).length ?? 0}</span>
-            </button>
-          ))}
-          {data && <span className="last-updated">Updated {new Date(data.generatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}{data.cached ? " · cached" : ""}</span>}
-        </div>
-
-        <div className="table-scroll">
-          <table>
-            <thead><tr>
-              <th>STOCK</th><th>STATUS / REASON</th><th>LAST PRICE</th><th>DAY %</th><th>RSI (14)</th><th>REL. VOL</th><th>TRIGGER</th><th>STOP</th><th>TARGET</th><th>QTY*</th>
-            </tr></thead>
-            <tbody>
-              {loading && !data && Array.from({ length: 7 }, (_, index) => <tr key={index} className="skeleton-row"><td colSpan={10}><span></span></td></tr>)}
-              {!loading && rows.map((row) => (
-                <tr key={row.symbol}>
-                  <td><div className="stock-cell"><strong>{row.symbol.replace(".NS", "")}</strong><small>{row.name}</small></div></td>
-                  <td className="reason-cell"><ActionPill action={row.action} /><small title={row.reason}>{row.reason}</small></td>
-                  <td className="number-cell">{fixed(row.lastPrice)}</td>
-                  <td className={`number-cell ${(row.changePct ?? 0) >= 0 ? "positive" : "negative"}`}>{pct(row.changePct)}</td>
-                  <td className="number-cell">{fixed(row.rsi14, 1)}</td>
-                  <td className="number-cell">{row.relativeVolume === null ? "—" : `${fixed(row.relativeVolume, 2)}×`}</td>
-                  <td className="number-cell">{fixed(row.trigger)}</td>
-                  <td className="number-cell risk-cell">{fixed(row.stop)}</td>
-                  <td className="number-cell target-cell">{fixed(row.target)}</td>
-                  <td className="number-cell qty-cell">{row.quantity ? integer.format(row.quantity) : "—"}</td>
-                </tr>
-              ))}
-              {(!loading && rows.length === 0) && <tr><td colSpan={10} className="empty-state">{data ? "No stocks match this filter." : "Preparing scanner…"}{!data && <small>Loading the latest daily candles and technical indicators.</small>}</td></tr>}
-            </tbody>
-          </table>
-        </div>
-        <div className="table-foot"><span>* Theoretical quantity only, capped at {data?.params.maxPositionPct ?? 10}% of capital and {data?.params.maxRiskPct ?? 1}% risk per trade.</span><span>{data?.dataSource ?? "Awaiting market data"}</span></div>
-      </section>
-
       <section className="opportunity-section" aria-labelledby="opportunity-title">
         <div className="backtest-heading">
           <div>
@@ -572,6 +522,56 @@ function App() {
           </div>
           <div className="backtest-assumptions"><strong>Research and execution limitations</strong><p>{opportunityData.limitations.join(" ")}</p></div>
         </>}
+      </section>
+
+      <section className="results-section">
+        <div className="results-heading">
+          <div>
+            <div className="section-kicker">SCANNER OUTPUT / 02</div>
+            <h2>Setup watchlist <span className="heading-count">{data ? data.results.length : 25}</span></h2>
+          </div>
+          <div className="results-actions">
+            <div className="search-wrap"><span>⌕</span><input aria-label="Search ticker or company" placeholder="Find a stock…" value={search} onChange={(event) => setSearch(event.target.value)} /></div>
+            <button className="export-button" disabled={!rows.length} onClick={() => downloadCsv(rows)}><span>↓</span> Export CSV</button>
+          </div>
+        </div>
+
+        <div className="filter-row" role="tablist" aria-label="Filter scanner results">
+          {(["ALL", "TRIGGERED", "WATCH", "AVOID"] as Filter[]).map((item) => (
+            <button key={item} role="tab" aria-selected={filter === item} className={`filter-tab ${filter === item ? "selected" : ""}`} onClick={() => setFilter(item)}>
+              {item === "ALL" ? "All stocks" : item === "TRIGGERED" ? "Triggered" : item === "WATCH" ? "Watch" : "Avoid"}
+              <span>{item === "ALL" ? (data?.results.length ?? 25) : data?.results.filter((row) => row.action === item).length ?? 0}</span>
+            </button>
+          ))}
+          {data && <span className="last-updated">Updated {new Date(data.generatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}{data.cached ? " · cached" : ""}</span>}
+        </div>
+
+        <div className="table-scroll">
+          <table>
+            <thead><tr>
+              <th>STOCK</th><th>STATUS / REASON</th><th>LAST PRICE</th><th>DAY %</th><th>RSI (14)</th><th>REL. VOL</th><th>TRIGGER</th><th>STOP</th><th>TARGET</th><th>QTY*</th>
+            </tr></thead>
+            <tbody>
+              {loading && !data && Array.from({ length: 7 }, (_, index) => <tr key={index} className="skeleton-row"><td colSpan={10}><span></span></td></tr>)}
+              {!loading && rows.map((row) => (
+                <tr key={row.symbol}>
+                  <td><div className="stock-cell"><strong>{row.symbol.replace(".NS", "")}</strong><small>{row.name}</small></div></td>
+                  <td className="reason-cell"><ActionPill action={row.action} /><small title={row.reason}>{row.reason}</small></td>
+                  <td className="number-cell">{fixed(row.lastPrice)}</td>
+                  <td className={`number-cell ${(row.changePct ?? 0) >= 0 ? "positive" : "negative"}`}>{pct(row.changePct)}</td>
+                  <td className="number-cell">{fixed(row.rsi14, 1)}</td>
+                  <td className="number-cell">{row.relativeVolume === null ? "—" : `${fixed(row.relativeVolume, 2)}×`}</td>
+                  <td className="number-cell">{fixed(row.trigger)}</td>
+                  <td className="number-cell risk-cell">{fixed(row.stop)}</td>
+                  <td className="number-cell target-cell">{fixed(row.target)}</td>
+                  <td className="number-cell qty-cell">{row.quantity ? integer.format(row.quantity) : "—"}</td>
+                </tr>
+              ))}
+              {(!loading && rows.length === 0) && <tr><td colSpan={10} className="empty-state">{data ? "No stocks match this filter." : "Preparing scanner…"}{!data && <small>Loading the latest daily candles and technical indicators.</small>}</td></tr>}
+            </tbody>
+          </table>
+        </div>
+        <div className="table-foot"><span>* Theoretical quantity only, capped at {data?.params.maxPositionPct ?? 10}% of capital and {data?.params.maxRiskPct ?? 1}% risk per trade.</span><span>{data?.dataSource ?? "Awaiting market data"}</span></div>
       </section>
 
       <section className="backtest-section" aria-labelledby="backtest-title">
