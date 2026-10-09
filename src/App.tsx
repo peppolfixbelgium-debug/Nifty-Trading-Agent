@@ -89,12 +89,18 @@ function App() {
   const [directionSelection, setDirectionSelection] = useState("both");
   const [scannerTimeframe, setScannerTimeframe] = useState("daily");
   const [minimumTradesForRanking, setMinimumTradesForRanking] = useState("30");
+  const activeQualifiedSignalCount = useMemo(
+    () => (opportunityData?.candidates ?? []).filter((candidate) => candidate.currentSignal).length,
+    [opportunityData]
+  );
+
   const recommendedCandidates = useMemo(
     () => (opportunityData?.candidates ?? [])
       .filter((candidate) =>
         candidate.currentSignal &&
         (candidate.validation.expectancyR ?? -Infinity) > 0 &&
-        (candidate.validation.profitFactor === null || candidate.validation.profitFactor >= 1)
+        candidate.validation.profitFactor !== null &&
+        candidate.validation.profitFactor >= 1
       )
       .slice(0, 5),
     [opportunityData]
@@ -492,14 +498,53 @@ function App() {
                 </div>
               : <div className="no-recommendations">
                   <span className="no-recommendations-mark">—</span>
-                  <div><strong>No setup currently meets the shortlist rules</strong><p>No current signal passed both historical validation checks. Keep the watchlist and research ranking separate; do not force a pick.</p></div>
+                  <div>
+                    <strong>{activeQualifiedSignalCount === 0 ? "No qualified candidate triggered today" : "Current signals did not pass every shortlist rule"}</strong>
+                    <p>{activeQualifiedSignalCount === 0
+                      ? `The ${opportunityData.qualifiedCombinations} qualified historical candidates did not produce an entry signal on the latest completed daily candle. That is why the shortlist is empty.`
+                      : `${activeQualifiedSignalCount} qualified candidate(s) have a current signal, but none also passed positive validation expectancy and a measurable validation profit factor of at least 1.0.`} Keep the shortlist empty rather than forcing a pick.</p>
+                  </div>
                 </div>}
           </section>
           <div className="opportunity-results-heading">
             <div><strong>Ranked research candidates</strong><span>Sorted only by validation expectancy in R per trade. Final test is for confirmation, not ranking.</span></div>
 
           </div>
-          <div className="table-scroll">
+          <div className="opportunity-mobile-list" aria-label="Ranked research candidates for mobile">
+            {opportunityData.candidates.map((candidate) => <article className="opportunity-mobile-card" key={`mobile-${candidate.symbol}-${candidate.strategy}-${candidate.direction}`}>
+              <div className="opportunity-mobile-card-head">
+                <span className="candidate-rank">#{candidate.rank}</span>
+                <div className="opportunity-mobile-stock">
+                  <strong>{candidate.symbol.replace(".NS", "")}</strong>
+                  <small>{candidate.name}</small>
+                </div>
+                <span className={`recommendation-direction ${candidate.direction === "LONG" ? "direction-long" : "direction-short"}`}>{candidate.direction}</span>
+              </div>
+              <div className="opportunity-mobile-strategy">{candidate.strategyName}</div>
+              <div className={`opportunity-mobile-signal ${candidate.currentSignal ? "signal-active" : "signal-inactive"}`}>
+                <span>{candidate.currentSignal ? "Current daily signal active" : "No current daily signal"}</span>
+                <small>{candidate.signalDate}{candidate.currentSignal ? ` · close ${fixed(candidate.signalClose)}` : ""}</small>
+              </div>
+              <div className="opportunity-mobile-metrics">
+                <span><small>VALIDATION EXPECTANCY</small><strong className={(candidate.validation.expectancyR ?? 0) > 0 ? "positive" : "negative"}>{candidate.validation.expectancyR === null ? "N/A" : fixed(candidate.validation.expectancyR, 3) + "R"}</strong></span>
+                <span><small>VALIDATION PF</small><strong>{candidate.validation.profitFactor === null ? "N/A" : fixed(candidate.validation.profitFactor, 2)}</strong></span>
+                <span><small>VALIDATION RETURN</small><strong className={candidate.validation.totalReturnPct >= 0 ? "positive" : "negative"}>{pct(candidate.validation.totalReturnPct)}</strong></span>
+                <span><small>VALIDATION DRAWDOWN</small><strong className="negative">-{fixed(candidate.validation.maxDrawdownPct)}%</strong></span>
+              </div>
+              <div className="opportunity-mobile-meta">
+                <span>Trades <b>{candidate.inSample.tradeCount} / {candidate.validation.tradeCount} / {candidate.finalTest.tradeCount}</b><small>Training / validation / test</small></span>
+                <span>Untouched test <b className={candidate.finalTest.totalReturnPct >= 0 ? "positive" : "negative"}>{pct(candidate.finalTest.totalReturnPct)}</b><small>{fixed(candidate.finalTest.expectancyR, 3)}R expectancy</small></span>
+              </div>
+              <div className="opportunity-mobile-footer">
+                {candidate.currentSignal
+                  ? <span>Reference stop {fixed(candidate.referenceStop)} · target {fixed(candidate.referenceTarget)}</span>
+                  : <span>Not a current entry signal</span>}
+                <small>{candidate.executionStatus === "SHORT_THEORETICAL_ONLY" ? "Short-side hypothesis only; not execution-ready." : "Research result only; not a buy recommendation."}</small>
+              </div>
+            </article>)}
+            {opportunityData.candidates.length === 0 && <div className="empty-state">No combinations passed the history, sample-size and accounting gates. This is a valid result; do not lower thresholds just to force a ranking.</div>}
+          </div>
+          <div className="table-scroll opportunity-table-scroll">
             <table className="opportunity-table">
               <thead><tr><th>RANK</th><th>INSTRUMENT</th><th>STRATEGY</th><th>DIRECTION</th><th>LATEST SETUP</th><th>VALIDATION EXP. R</th><th>VALIDATION PF</th><th>VALIDATION RETURN</th><th>VALIDATION DD</th><th>TRADES TRAIN / VAL / TEST</th><th>FINAL TEST RETURN</th></tr></thead>
               <tbody>
@@ -546,7 +591,30 @@ function App() {
           {data && <span className="last-updated">Updated {new Date(data.generatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}{data.cached ? " · cached" : ""}</span>}
         </div>
 
-        <div className="table-scroll">
+        <div className="watchlist-mobile-list" aria-label="Stock watchlist for mobile">
+          {!loading && rows.map((row) => <article className="watchlist-mobile-card" key={`mobile-${row.symbol}`}>
+            <div className="watchlist-mobile-card-head">
+              <div className="stock-cell"><strong>{row.symbol.replace(".NS", "")}</strong><small>{row.name}</small></div>
+              <ActionPill action={row.action} />
+            </div>
+            <p className="watchlist-mobile-reason">{row.reason}</p>
+            <div className="watchlist-mobile-price">
+              <span><small>LAST PRICE</small><strong>{fixed(row.lastPrice)}</strong></span>
+              <span><small>DAY CHANGE</small><strong className={(row.changePct ?? 0) >= 0 ? "positive" : "negative"}>{pct(row.changePct)}</strong></span>
+            </div>
+            <div className="watchlist-mobile-metrics">
+              <span><small>RSI 14</small><b>{fixed(row.rsi14, 1)}</b></span>
+              <span><small>REL. VOL</small><b>{row.relativeVolume === null ? "—" : `${fixed(row.relativeVolume, 2)}×`}</b></span>
+              <span><small>TRIGGER</small><b>{fixed(row.trigger)}</b></span>
+              <span><small>STOP</small><b>{fixed(row.stop)}</b></span>
+              <span><small>TARGET</small><b>{fixed(row.target)}</b></span>
+              <span><small>QTY*</small><b>{row.quantity ? integer.format(row.quantity) : "—"}</b></span>
+            </div>
+          </article>)}
+          {loading && !data && <div className="empty-state">Loading today's watchlist…</div>}
+          {!loading && rows.length === 0 && <div className="empty-state">{data ? "No stocks match this filter." : "Preparing scanner…"}</div>}
+        </div>
+        <div className="table-scroll watchlist-table-scroll">
           <table>
             <thead><tr>
               <th>STOCK</th><th>STATUS / REASON</th><th>LAST PRICE</th><th>DAY %</th><th>RSI (14)</th><th>REL. VOL</th><th>TRIGGER</th><th>STOP</th><th>TARGET</th><th>QTY*</th>
