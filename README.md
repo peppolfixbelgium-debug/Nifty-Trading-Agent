@@ -65,12 +65,14 @@ The theoretical stop is 1.5 × ATR below the trigger and the theoretical target 
 
 ## Historical backtest
 
-The Backtest section replays completed daily candles using the same trend/breakout/volume/RSI and bullish-Nifty filters as the scanner. Indicators are calculated only from candles available as of each signal close.
+The Backtest section replays completed daily candles using the same trend/breakout/volume/RSI and bullish-Nifty filters as the scanner. The API reports both the requested calendar window and actual Nifty history window; the simulated trading period may start later because of indicator warm-up, so these dates must not be confused. Indicators are calculated only from candles available as of each signal close.
 
 - Signals are evaluated at the completed daily close; entry is simulated at the next trading session open.
 - Initial stop distance is 1.5 × ATR(14); target is 2R; positions are closed at stop, target, after 20 sessions, or at the end of the test window.
 - When OHLC data shows both stop and target touched in one candle and their order is unknowable, the simulator assumes the stop was hit first.
 - Only one open position at a time is allowed. Quantity is capped by 1% of starting capital risk per trade, 10% position value, and available cash.
+- When a stock candle is missing, an open position remains marked to its last observed close; a missing bar never makes the position disappear from equity. If the final candle is missing, an end-of-data exit uses the latest actually observed close.
+- The API reports requested-versus-actual history coverage, full-window stock counts, trade-P&L versus ending-equity reconciliation, and explicit ranking eligibility. Ranking stays blocked if market history is incomplete, any loaded stock lacks comparable window coverage, data warnings exist, accounting fails, fewer than 30 closed trades are available, or the holdout has fewer than 10 trades.
 - Trading costs are a configurable estimated basis-point rate charged on each side. They are not a broker-specific tax/fee model.
 - The latest Indian calendar day's candle is excluded to reduce partial-session/look-ahead risk.
 - Full-period statistics are accompanied by a separately simulated holdout covering the latest 25% of the post-warm-up timeline. It reuses the earlier prices only for indicator warm-up and starts with fresh capital.
@@ -88,3 +90,10 @@ Yahoo Finance's chart endpoint is unofficial, history can be incomplete, and the
 ## Repository scope
 
 All app code, API routes, CI and scheduled-scan configuration in this repository belong to Nifty Trading Agent. No Life-OS files or workflows are referenced by the build.
+
+
+## Market Opportunity Scanner readiness
+
+The desired scanner defaults are: all data-supported instruments, all validated strategies, both directions, daily timeframe, and at least 30 completed trades before a candidate is eligible for ranking. These defaults do not mean every market type or strategy is implemented. The current historical simulator remains a single long breakout-with-volume model and uses a fixed 25-stock NSE watchlist with Nifty 50 context. Broad/sector-index trading, futures roll handling, short-side execution, options-premium history and multi-strategy ranking must remain unavailable until their data and execution assumptions are implemented and tested.
+
+A minimum of 30 trades is an eligibility floor, not proof of statistical significance. Holdout results must be reviewed independently; a zero-trade holdout is insufficient evidence of a strategy edge. Do not tune rules to make historical results look better.
