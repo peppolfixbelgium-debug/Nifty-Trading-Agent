@@ -6,7 +6,6 @@ import type {
   CandidateMetrics,
   ExcludedSymbol,
   OpportunityCandidate,
-  OpportunityScanConfig,
   OpportunityScanResponse,
   StrategyId,
   TradeDirection
@@ -254,8 +253,8 @@ function simulateWindow(input: {
     }
 
     if (!open && !pending && index < endIndex) {
-      const feature = features[index];
-      const previous = features[index - 1];
+      const feature: OpportunityFeature | null | undefined = features[index];
+      const previous: OpportunityFeature | null | undefined = features[index - 1];
       if (matchesOpportunitySignal(feature, previous, strategy, direction) && feature) {
         pending = { signalIndex: index, atr14: feature.atr14 };
       }
@@ -434,7 +433,7 @@ export async function runMarketOpportunityScan(input: {
         evaluatedCombinations += 1;
         const common = {
           candles, features, strategy: strategy.id, direction,
-          capitalInr, requestedRiskInr, costBpsPerSide
+          capitalInr, requestedRiskInr: riskPerTradeInr, costBpsPerSide
         };
         const inSample = simulateWindow({ ...common, startIndex: trainStart, endIndex: trainEnd }).metrics;
         const validation = simulateWindow({ ...common, startIndex: validationStart, endIndex: validationEnd }).metrics;
