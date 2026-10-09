@@ -18,8 +18,3 @@ test("chart adapter rejects unsupported instruments before making a provider req
     /supported chart universe/i
   );
 });
-
-test("unsupported chart periods fall back to the documented long-range preset", async () => {
-  // Validation occurs before any network access for the invalid symbol.
-  await assert.rejects(() => getMarketChart("BAD", "not-a-range"), /supported chart universe/i);
-});
