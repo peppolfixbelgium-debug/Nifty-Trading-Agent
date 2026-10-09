@@ -1,5 +1,5 @@
-import { averageTrueRange, averageVolume, movingAverage, relativeStrengthIndex } from "./indicators";
-import type { Candle, MarketRegime, ScanAction, ScanResult } from "./types";
+import { averageTrueRange, averageVolume, movingAverage, relativeStrengthIndex } from "./indicators.js";
+import type { Candle, MarketRegime, ScanAction, ScanResult } from "./types.js";
 
 export type AnalysisParams = {
   capitalInr: number;

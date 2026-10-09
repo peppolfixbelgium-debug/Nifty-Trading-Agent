@@ -1,5 +1,5 @@
-import type { ApiRequest, ApiResponse } from "../src/lib/api-types";
-import { runScan } from "../src/lib/scanner";
+import type { ApiRequest, ApiResponse } from "../src/lib/api-types.js";
+import { runScan } from "../src/lib/scanner.js";
 
 export const config = { maxDuration: 60 };
 
