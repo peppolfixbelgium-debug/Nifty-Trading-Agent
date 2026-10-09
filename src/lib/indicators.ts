@@ -1,4 +1,4 @@
-import type { Candle } from "./types";
+import type { Candle } from "./types.js";
 
 export function movingAverage(values: number[], period: number): number | null {
   if (!Number.isInteger(period) || period < 1 || values.length < period) return null;
