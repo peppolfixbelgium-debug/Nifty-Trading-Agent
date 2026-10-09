@@ -9,10 +9,10 @@
   "scripts": {
     "dev": "npx --yes vercel@latest dev",
     "dev:ui": "vite --host 0.0.0.0",
-    "build": "vite build",
+    "build": "npm run typecheck && npm test && vite build",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
-    "verify": "npm run typecheck && npm test && npm run build",
+    "verify": "npm run build",
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
