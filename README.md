@@ -10,7 +10,7 @@ A standalone, rule-based Nifty/NSE scanner. This project is intentionally separa
 - Blocks new long triggers in a bearish Nifty regime.
 - Calculates a theoretical quantity with a 1% of capital risk ceiling and a 10% position-value ceiling.
 - Offers search, status filters, reason strings and CSV export.
-- Includes read-only API routes, a protected weekday scheduled-scan endpoint, unit tests and a GitHub Actions verify workflow.
+- Includes read-only scan and historical backtest API routes, a protected weekday scheduled-scan endpoint, unit tests and a GitHub Actions verify workflow.
 
 ## Run locally
 
@@ -47,6 +47,7 @@ The cron schedule is weekdays at 03:00 UTC (08:30 India Standard Time). It calcu
 - `GET /api/scan` runs or returns a short-lived cached scan.
 - `GET /api/scan?capital=100000&risk=1000&refresh=1` requests a fresh scan with INR sizing inputs. Repeated forced refreshes within 30 seconds reuse the recent result to limit upstream requests.
 - `GET /api/cron` is the scheduled scan endpoint. It requires `CRON_SECRET` and the matching Bearer authorization header.
+- `GET /api/backtest?years=5&capital=100000&risk=1000&costBps=15` simulates the strategy on 3 or 5 years of completed daily candles. The `costBps` parameter is an estimated all-in cost on each side and accepts `0` for a gross/no-cost comparison.
 
 Responses include a generated timestamp, market regime, India VIX context, per-stock indicator values, a reason per result, and sizing details. Provider failures are represented as warnings or per-symbol errors rather than being silently treated as buy signals.
 
@@ -61,6 +62,20 @@ A `TRIGGERED` label requires all of the following on the latest daily candle:
 5. RSI(14) is between 50 and 70.
 
 The theoretical stop is 1.5 × ATR below the trigger and the theoretical target is 2R above it. Quantity is limited by both the selected INR risk ceiling and 10% of stated capital. These are simple rules, not a validated profitable strategy.
+
+## Historical backtest
+
+The Backtest section replays completed daily candles using the same trend/breakout/volume/RSI and bullish-Nifty filters as the scanner. Indicators are calculated only from candles available as of each signal close.
+
+- Signals are evaluated at the completed daily close; entry is simulated at the next trading session open.
+- Initial stop distance is 1.5 × ATR(14); target is 2R; positions are closed at stop, target, after 20 sessions, or at the end of the test window.
+- When OHLC data shows both stop and target touched in one candle and their order is unknowable, the simulator assumes the stop was hit first.
+- Only one open position at a time is allowed. Quantity is capped by 1% of starting capital risk per trade, 10% position value, and available cash.
+- Trading costs are a configurable estimated basis-point rate charged on each side. They are not a broker-specific tax/fee model.
+- The latest Indian calendar day's candle is excluded to reduce partial-session/look-ahead risk.
+- Full-period statistics are accompanied by a separately simulated holdout covering the latest 25% of the post-warm-up timeline. It reuses the earlier prices only for indicator warm-up and starts with fresh capital.
+
+Yahoo Finance's chart endpoint is unofficial, history can be incomplete, and the model omits dividend reinvestment, corporate-action adjustments beyond provider-adjusted prices, portfolio concurrency, order-book fills, and exact taxes. Treat all outputs as research estimates, not proof of profitability.
 
 ## Data and risk notes
 
