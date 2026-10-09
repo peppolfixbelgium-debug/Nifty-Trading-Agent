@@ -102,30 +102,47 @@ export function analyzeStock(input: {
   const positionValueInr = quantity * trigger;
   const changePct = previous.close !== 0 ? ((current.close / previous.close) - 1) * 100 : null;
 
+  // Diagnose the stock independently first. The market regime is a separate risk gate,
+  // so a bearish index must not hide whether an individual stock is strong or weak.
+  let stockReason: string;
+  if (!trendAligned) {
+    const failed = [
+      current.close <= sma20! ? `close ${round(current.close)} is not above SMA20 ${round(sma20!)}` : null,
+      sma20! <= sma50! ? `SMA20 ${round(sma20!)} is not above SMA50 ${round(sma50!)}` : null,
+      sma50! <= sma200! ? `SMA50 ${round(sma50!)} is not above SMA200 ${round(sma200!)}` : null
+    ].filter((part): part is string => part !== null);
+    stockReason = `Stock trend is not fully aligned: ${failed.join("; ")}.`;
+  } else if (rsi14! > 70) {
+    stockReason = `Stock trend is aligned, but RSI is overbought at ${round(rsi14!)} (rule: 70 or lower).`;
+  } else if (current.close < trigger) {
+    stockReason = `Stock trend is aligned; close ${round(current.close)} is below breakout trigger ${round(trigger)}.`;
+  } else if (relativeVolume === null) {
+    stockReason = "Price has cleared the breakout level, but relative volume cannot be confirmed from available data.";
+  } else if (relativeVolume < 1.1) {
+    stockReason = `Breakout level cleared, but relative volume is ${round(relativeVolume, 2)}x; at least 1.1x is required.`;
+  } else if (rsi14! < 50) {
+    stockReason = `Trend, price and volume are aligned, but RSI is ${round(rsi14!)}; at least 50 is required.`;
+  } else {
+    stockReason = "Stock-specific trend, breakout, volume and momentum conditions are satisfied.";
+  }
+
   let action: ScanAction = "AVOID";
-  let reason = "Trend alignment is incomplete; stand aside until conditions improve.";
+  let reason = stockReason;
 
   if (marketRegime === "BEARISH") {
     action = "AVOID";
-    reason = "Nifty regime is bearish; new long setups are blocked by the market filter.";
+    reason = `${stockReason} Market filter: Nifty regime is bearish, so new long entries are blocked.`;
   } else if (marketRegime === "UNAVAILABLE") {
     action = "WATCH";
-    reason = "Nifty regime data is unavailable; wait for market confirmation.";
+    reason = `${stockReason} Market confirmation is unavailable; wait for index data before considering a long setup.`;
   } else if (rsi14! > 70) {
     action = trendAligned ? "WATCH" : "AVOID";
-    reason = trendAligned
-      ? "Trend is aligned, but RSI is extended above 70; avoid chasing."
-      : "RSI is extended and trend alignment is incomplete.";
   } else if (trendAligned && marketRegime === "BULLISH" && current.close >= trigger && relativeVolume !== null && relativeVolume >= 1.1 && rsi14! >= 50) {
     action = "TRIGGERED";
     reason = "Daily close cleared the 5-session breakout level with aligned trend, volume, RSI and bullish Nifty regime. This is a screen result, not an order.";
   } else if (trendAligned) {
     action = "WATCH";
-    if (marketRegime !== "BULLISH") reason = "Stock trend is aligned, but Nifty is not fully bullish; wait for market confirmation.";
-    else if (current.close < trigger) reason = "Trend is aligned; wait for a daily close above the breakout trigger.";
-    else if (relativeVolume === null) reason = "Trend and price conditions are aligned, but volume confirmation is unavailable.";
-    else if (relativeVolume < 1.1) reason = "Trend is aligned; relative volume is below the 1.1x confirmation threshold.";
-    else reason = "Trend is aligned, but the RSI confirmation threshold is not met.";
+    if (marketRegime !== "BULLISH") reason = `${stockReason} Nifty is not fully bullish; wait for market confirmation.`;
   }
 
   return {
