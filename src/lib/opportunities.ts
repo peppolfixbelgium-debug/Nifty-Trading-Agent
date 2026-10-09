@@ -18,7 +18,6 @@ const STRATEGIES: Array<{ id: StrategyId; name: string }> = [
   { id: "trend-pullback", name: "Trend pullback" },
   { id: "mean-reversion", name: "Mean reversion" }
 ];
-const STRATEGY_NAME = new Map(STRATEGIES.map((strategy) => [strategy.id, strategy.name]));
 const WARMUP_BARS = 199;
 const MAX_HOLDING_BARS = 20;
 const STOP_ATR = 1.5;
