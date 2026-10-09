@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import PremiumSelect from "./components/PremiumSelect";
 import type { BacktestResponse, BacktestTrade } from "./lib/backtest-engine.js";
 import type { OpportunityScanResponse } from "./lib/opportunity-types.js";
 import type { MarketRegime, ScanAction, ScanResponse, ScanResult } from "./lib/types";
@@ -88,6 +89,17 @@ function App() {
   const [directionSelection, setDirectionSelection] = useState("both");
   const [scannerTimeframe, setScannerTimeframe] = useState("daily");
   const [minimumTradesForRanking, setMinimumTradesForRanking] = useState("30");
+  const recommendedCandidates = useMemo(
+    () => (opportunityData?.candidates ?? [])
+      .filter((candidate) =>
+        candidate.currentSignal &&
+        (candidate.validation.expectancyR ?? -Infinity) > 0 &&
+        (candidate.validation.profitFactor === null || candidate.validation.profitFactor >= 1)
+      )
+      .slice(0, 5),
+    [opportunityData]
+  );
+
   const scannerReadiness = useMemo(() => {
     const blockers: string[] = [];
     const expectedStrategy = strategySelection as "all" | "trend-following" | "breakout-volume" | "trend-pullback" | "mean-reversion";
@@ -273,6 +285,32 @@ function App() {
         </div>
       </section>
 
+      <section className="quick-start" aria-labelledby="quick-start-title">
+        <div className="quick-start-heading">
+          <div>
+            <div className="section-kicker">START HERE / 30-SECOND GUIDE</div>
+            <h2 id="quick-start-title">How to use this app</h2>
+            <p>Use the watchlist for today’s screening context, and the opportunity scanner to compare fixed rules over history.</p>
+          </div>
+          <span className="quick-start-badge"><span></span> Research mode · no orders placed</span>
+        </div>
+        <div className="quick-start-steps">
+          <article className="quick-start-step">
+            <span className="step-index">01</span>
+            <div><strong>Set your risk</strong><p>Enter total trading capital and your maximum planned loss for one trade. The sizing calculator caps requested risk at 1% of capital.</p></div>
+          </article>
+          <article className="quick-start-step">
+            <span className="step-index">02</span>
+            <div><strong>Scan today’s watchlist</strong><p>Tap <b>Scan market</b> and read each status plus its reason. “Avoid” means the current rules block a setup; it is not a prediction that the stock will fall.</p></div>
+          </article>
+          <article className="quick-start-step">
+            <span className="step-index">03</span>
+            <div><strong>Compare historical evidence</strong><p>Run Market Opportunity Scanner. Check data coverage, sample sizes, validation expectancy and drawdown. The separate shortlist only shows current setups that pass its stated rules.</p></div>
+          </article>
+        </div>
+        <div className="quick-start-note"><span>Good to know</span> A blank shortlist is a valid outcome. Keep the 30-trade minimum, don’t force a winner, and treat results as research—not buy/sell instructions.</div>
+      </section>
+
       <section className="market-strip" aria-label="Market overview">
         <div className="market-card">
           <div className="metric-label">NIFTY 50 <span className="tiny-tag">INDEX</span></div>
@@ -384,39 +422,59 @@ function App() {
         <div className="opportunity-controls">
           <label className="field">
             <span>Market universe</span>
-            <select value={marketUniverse} onChange={(event) => setMarketUniverse(event.target.value)} aria-label="Market universe">
-              <option value="all">All supported instruments</option>
-              <option value="stocks">Current NSE stock universe</option>
-              <option value="indices" disabled>Broad / sector indices — data adapter pending</option>
-              <option value="futures" disabled>Index futures — expiry/roll data pending</option>
-              <option value="options" disabled>Options — historical premium data pending</option>
-            </select>
+            <PremiumSelect
+              value={marketUniverse}
+              onChange={setMarketUniverse}
+              ariaLabel="Market universe"
+              options={[
+                { value: "all", label: "All supported instruments", hint: "Scans currently supported data" },
+                { value: "stocks", label: "Current NSE stock universe", hint: "Registered stock list" },
+                { value: "indices", label: "Broad / sector indices", hint: "Data adapter pending", disabled: true },
+                { value: "futures", label: "Index futures", hint: "Expiry / roll data pending", disabled: true },
+                { value: "options", label: "Options", hint: "Historical premium data pending", disabled: true }
+              ]}
+            />
           </label>
           <label className="field">
             <span>Strategy</span>
-            <select value={strategySelection} onChange={(event) => setStrategySelection(event.target.value)} aria-label="Strategy selection">
-              <option value="all">All validated strategies</option>
-              <option value="trend-following">Trend following</option>
-              <option value="breakout-volume">Breakout + volume</option>
-              <option value="trend-pullback">Trend pullback</option>
-              <option value="mean-reversion">Mean reversion</option>
-            </select>
+            <PremiumSelect
+              value={strategySelection}
+              onChange={setStrategySelection}
+              ariaLabel="Strategy selection"
+              options={[
+                { value: "all", label: "All validated strategies", hint: "Compare all four fixed rule sets" },
+                { value: "trend-following", label: "Trend following" },
+                { value: "breakout-volume", label: "Breakout + volume" },
+                { value: "trend-pullback", label: "Trend pullback" },
+                { value: "mean-reversion", label: "Mean reversion" }
+              ]}
+            />
           </label>
           <label className="field">
             <span>Direction</span>
-            <select value={directionSelection} onChange={(event) => setDirectionSelection(event.target.value)} aria-label="Trade direction">
-              <option value="both">Both long and short</option>
-              <option value="long">Long only</option>
-              <option value="short">Short only</option>
-            </select>
+            <PremiumSelect
+              value={directionSelection}
+              onChange={setDirectionSelection}
+              ariaLabel="Trade direction"
+              options={[
+                { value: "both", label: "Both long and short", hint: "Short results are theoretical" },
+                { value: "long", label: "Long only" },
+                { value: "short", label: "Short only", hint: "Not execution-ready" }
+              ]}
+            />
           </label>
           <label className="field">
             <span>Timeframe</span>
-            <select value={scannerTimeframe} onChange={(event) => setScannerTimeframe(event.target.value)} aria-label="Scanner timeframe">
-              <option value="daily">Daily</option>
-              <option value="15m" disabled>15 minutes — data adapter pending</option>
-              <option value="5m" disabled>5 minutes — data adapter pending</option>
-            </select>
+            <PremiumSelect
+              value={scannerTimeframe}
+              onChange={setScannerTimeframe}
+              ariaLabel="Scanner timeframe"
+              options={[
+                { value: "daily", label: "Daily", hint: "Completed daily candles" },
+                { value: "15m", label: "15 minutes", hint: "Data adapter pending", disabled: true },
+                { value: "5m", label: "5 minutes", hint: "Data adapter pending", disabled: true }
+              ]}
+            />
           </label>
           <label className="field">
             <span>Minimum closed trades <small>FOR RANKING</small></span>
@@ -450,6 +508,43 @@ function App() {
             <summary>Excluded symbols / data issues ({opportunityData.coverage.excludedSymbols.length})</summary>
             <ul>{opportunityData.coverage.excludedSymbols.map((item) => <li key={item.symbol}><strong>{item.symbol}</strong>: {item.reason}</li>)}</ul>
           </details>}
+          <section className="recommended-section" aria-labelledby="recommended-title">
+            <div className="recommended-heading">
+              <div>
+                <div className="section-kicker">SHORTLIST / CURRENT SETUP + VALIDATION</div>
+                <h3 id="recommended-title">Recommended setups to review</h3>
+                <p>Separate from the full ranking. A candidate appears only with an active daily signal, positive validation expectancy and validation profit factor of at least 1.0. Candidates stay in validation-rank order; the final-test result is shown but does not decide which setups appear.</p>
+              </div>
+              <span className="recommended-count">{recommendedCandidates.length} / 5</span>
+            </div>
+            {recommendedCandidates.length > 0
+              ? <div className="recommendation-grid">
+                  {recommendedCandidates.map((candidate) => <article className="recommendation-card" key={candidate.symbol + candidate.strategy + candidate.direction}>
+                    <div className="recommendation-card-top">
+                      <span className="action-pill action-triggered">Passes shortlist rules</span>
+                      <span className={`recommendation-direction ${candidate.direction === "LONG" ? "direction-long" : "direction-short"}`}>{candidate.direction}</span>
+                    </div>
+                    <h4>{candidate.symbol.replace(".NS", "")}</h4>
+                    <p className="recommendation-company">{candidate.name}</p>
+                    <p className="recommendation-strategy">{candidate.strategyName} · Signal {candidate.signalDate}</p>
+                    <div className="recommendation-metrics">
+                      <span><small>VALIDATION EXPECTANCY</small><strong className="positive">{fixed(candidate.validation.expectancyR, 3)}R</strong></span>
+                      <span><small>VALIDATION PF</small><strong>{candidate.validation.profitFactor === null ? "N/A" : fixed(candidate.validation.profitFactor, 2)}</strong></span>
+                    </div>
+                    <div className="recommendation-levels">
+                      <span>Reference close <b>{fixed(candidate.signalClose)}</b></span>
+                      <span>Stop reference <b>{fixed(candidate.referenceStop)}</b></span>
+                      <span>Target reference <b>{fixed(candidate.referenceTarget)}</b></span>
+                    </div>
+                    <div className="recommendation-test">Untouched test: {pct(candidate.finalTest.totalReturnPct)} · {candidate.finalTest.tradeCount} trades</div>
+                    <p className="recommendation-disclaimer">{candidate.executionStatus === "SHORT_THEORETICAL_ONLY" ? "Short-side hypothesis only; not execution-ready." : "Research candidate only; not a buy recommendation."}</p>
+                  </article>)}
+                </div>
+              : <div className="no-recommendations">
+                  <span className="no-recommendations-mark">—</span>
+                  <div><strong>No setup currently meets the shortlist rules</strong><p>No current signal passed both historical validation checks. Keep the watchlist and research ranking separate; do not force a pick.</p></div>
+                </div>}
+          </section>
           <div className="opportunity-results-heading">
             <div><strong>Ranked research candidates</strong><span>Sorted only by validation expectancy in R per trade. Final test is for confirmation, not ranking.</span></div>
 
@@ -492,10 +587,15 @@ function App() {
         <div className="backtest-controls">
           <label className="field">
             <span>Historical period</span>
-            <select value={backtestYears} onChange={(event) => setBacktestYears(event.target.value)} aria-label="Backtest historical period">
-              <option value="3">Last 3 years</option>
-              <option value="5">Last 5 years</option>
-            </select>
+            <PremiumSelect
+              value={backtestYears}
+              onChange={setBacktestYears}
+              ariaLabel="Backtest historical period"
+              options={[
+                { value: "3", label: "Last 3 years", hint: "Shorter test window" },
+                { value: "5", label: "Last 5 years", hint: "Longer historical window" }
+              ]}
+            />
           </label>
           <label className="field">
             <span>All-in estimated cost per side <small>BPS</small></span>
