@@ -323,3 +323,44 @@ tbody tr:hover{background:#141e27}
 .no-recommendations p{margin:6px 0 0;color:var(--muted);font-size:10px;line-height:1.6}
 @media(max-width:900px){.quick-start-steps{grid-template-columns:1fr}.quick-start-step+.quick-start-step{border-left:0;border-top:1px solid var(--line)}.recommendation-grid{grid-template-columns:1fr}}
 @media(max-width:700px){.quick-start-heading{flex-direction:column;gap:12px}.quick-start-heading h2{font-size:21px}.quick-start-badge{white-space:normal}.quick-start-step{padding:14px 12px}.recommended-section{padding:13px;margin-top:18px}.recommended-heading{gap:8px}.recommended-heading h3{font-size:17px}.recommendation-levels{gap:5px}.recommendation-levels span{font-size:8px}.recommendation-levels b{font-size:9px}}
+
+
+/* Mobile-first data views: replace wide multi-column tables with readable cards. */
+.watchlist-mobile-list,.opportunity-mobile-list{display:none}
+@media(max-width:700px){
+  .watchlist-table-scroll,.opportunity-table-scroll{display:none}
+  .watchlist-mobile-list,.opportunity-mobile-list{display:grid;gap:10px;min-width:0}
+  .watchlist-mobile-card{min-width:0;padding:14px 12px;border:1px solid #293943;border-radius:6px;background:#101720}
+  .watchlist-mobile-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .watchlist-mobile-card-head .stock-cell{min-width:0;flex:1}
+  .watchlist-mobile-card-head .stock-cell strong{font-size:13px}
+  .watchlist-mobile-card-head .stock-cell small{white-space:normal;line-height:1.4}
+  .watchlist-mobile-reason{font-size:11px;line-height:1.55;color:#a0adb7;margin:11px 0;padding:10px;border-left:2px solid #465963;background:#0c1319;overflow-wrap:anywhere;white-space:normal}
+  .watchlist-mobile-price{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-bottom:11px;border-bottom:1px solid var(--line)}
+  .watchlist-mobile-price span,.watchlist-mobile-metrics span{display:flex;flex-direction:column;gap:5px;min-width:0}
+  .watchlist-mobile-price small,.watchlist-mobile-metrics small{font:8px var(--mono);letter-spacing:.05em;color:var(--muted)}
+  .watchlist-mobile-price strong{font:600 15px var(--display);overflow-wrap:anywhere}
+  .watchlist-mobile-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 8px;padding-top:12px}
+  .watchlist-mobile-metrics b{font:10px var(--mono);color:#d7e0e7;overflow-wrap:anywhere}
+  .opportunity-mobile-card{min-width:0;padding:14px 12px;border:1px solid #2c3b45;border-radius:6px;background:#101720}
+  .opportunity-mobile-card-head{display:flex;align-items:center;gap:9px;min-width:0}
+  .candidate-rank{flex:0 0 auto;display:grid;place-items:center;width:29px;height:29px;border:1px solid #315442;border-radius:4px;background:#17281f;color:var(--mint);font:10px var(--mono)}
+  .opportunity-mobile-stock{display:flex;flex:1;flex-direction:column;gap:3px;min-width:0}
+  .opportunity-mobile-stock strong{font:600 13px var(--mono);overflow-wrap:anywhere}
+  .opportunity-mobile-stock small{font-size:9px;line-height:1.4;color:var(--muted);white-space:normal}
+  .opportunity-mobile-strategy{margin:10px 0 0 38px;font-size:11px;font-weight:600;color:#d6e1e8}
+  .opportunity-mobile-signal{display:flex;flex-wrap:wrap;justify-content:space-between;gap:5px 10px;margin-top:11px;padding:9px 10px;border-radius:4px;font-size:10px;line-height:1.4}
+  .opportunity-mobile-signal small{font:9px var(--mono);color:var(--muted)}
+  .signal-active{border:1px solid #315442;background:#14231b;color:var(--mint)}
+  .signal-inactive{border:1px solid #35414b;background:#141d26;color:#a6b2bd}
+  .opportunity-mobile-metrics{display:grid;grid-template-columns:1fr 1fr;gap:11px;padding:13px 0;border-bottom:1px solid var(--line)}
+  .opportunity-mobile-metrics span{display:flex;flex-direction:column;gap:5px;min-width:0}
+  .opportunity-mobile-metrics small{font:8px var(--mono);letter-spacing:.04em;color:var(--muted)}
+  .opportunity-mobile-metrics strong{font:600 16px var(--display);overflow-wrap:anywhere}
+  .opportunity-mobile-meta{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+  .opportunity-mobile-meta span{display:flex;flex-direction:column;gap:5px;min-width:0;color:var(--muted);font-size:9px}
+  .opportunity-mobile-meta b{font:10px var(--mono);color:var(--text);overflow-wrap:anywhere}
+  .opportunity-mobile-meta small{font-size:8px}
+  .opportunity-mobile-footer{display:flex;flex-direction:column;gap:6px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:9px;line-height:1.5;color:#b3c2cb}
+  .opportunity-mobile-footer small{color:#83919c}
+}
