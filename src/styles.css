@@ -219,3 +219,22 @@ tbody tr:hover{background:#141e27}
 .ranking-gate ul{margin:0;padding-left:17px;color:#b5a47e;font-size:10px;line-height:1.6}
 .ranking-gate p{font-size:10px;line-height:1.55;color:var(--muted);margin:0}
 @media(max-width:900px){.data-quality-panel{grid-template-columns:1fr}.ranking-gate{border-left:0;border-top:1px solid var(--line);padding:15px 0 0}.data-quality-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* Market Opportunity Scanner configuration and research gate */
+.opportunity-section{padding:36px 0;border-bottom:1px solid var(--line)}
+.opportunity-controls{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:13px;align-items:end;margin-top:22px}
+.opportunity-controls select,.opportunity-controls input{height:42px;border:1px solid #33404b;border-radius:5px;background:#0c1218;color:var(--text);padding:0 10px;font-size:11px;min-width:0;width:100%;outline:none}
+.opportunity-controls select:focus,.opportunity-controls input:focus{border-color:#629878;box-shadow:0 0 0 2px #a4f4c511}
+.opportunity-controls select:disabled option{color:#687785}
+.opportunity-readiness{display:grid;grid-template-columns:minmax(230px,.8fr) minmax(0,1.5fr);gap:22px;padding:19px 20px;margin-top:18px;border:1px solid var(--line);border-radius:5px;background:#101720}
+.opportunity-blocked{border-color:#62502e;background:#1f1b13}
+.opportunity-ready{border-color:#315442;background:#111d18}
+.opportunity-readiness h3{font:700 18px var(--display);margin:10px 0 7px}
+.opportunity-readiness p{font-size:10px;line-height:1.65;color:var(--muted);margin:0}
+.opportunity-blockers{border-left:1px solid var(--line);padding-left:20px}
+.opportunity-blockers strong{font-size:11px}
+.opportunity-blockers ul{margin:8px 0 0;padding-left:17px;color:#c7b48a;font-size:10px;line-height:1.7}
+@media(max-width:1100px){.opportunity-controls{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:800px){.opportunity-controls{grid-template-columns:1fr 1fr}.opportunity-readiness{grid-template-columns:1fr}.opportunity-blockers{border-left:0;border-top:1px solid var(--line);padding:13px 0 0}}
+@media(max-width:480px){.opportunity-controls{grid-template-columns:1fr}}
