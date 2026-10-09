@@ -45,7 +45,7 @@ test("market regime is conservative when inputs are missing or mixed", () => {
   assert.equal(classifyMarket(null, 100, 90), "UNAVAILABLE");
 });
 
-test("scanner never triggers a long setup when the Nifty regime is bearish", () => {
+test("bearish Nifty turns a structurally strong setup into monitor-only, never a long trigger", () => {
   const result = analyzeStock({
     symbol: "TEST.NS",
     name: "Test Company",
@@ -53,11 +53,24 @@ test("scanner never triggers a long setup when the Nifty regime is bearish", () 
     marketRegime: "BEARISH",
     params: { capitalInr: 100000, requestedRiskInr: 1000 }
   });
-  assert.equal(result.action, "AVOID");
+  assert.equal(result.action, "WATCH");
   assert.match(result.reason, /bearish/i);
   assert.match(result.reason, /stock trend is aligned/i);
   assert.match(result.reason, /RSI/i);
   assert.match(result.reason, /market filter/i);
+});
+
+test("bearish market still avoids stocks with weak structure", () => {
+  const result = analyzeStock({
+    symbol: "WEAK.NS",
+    name: "Weak Company",
+    candles: makeCandles(240, { start: 250, step: -0.5, volume: 1000 }),
+    marketRegime: "BEARISH",
+    params: { capitalInr: 100000, requestedRiskInr: 1000 }
+  });
+  assert.equal(result.action, "AVOID");
+  assert.match(result.reason, /market filter/i);
+  assert.match(result.reason, /trend is not fully aligned/i);
 });
 
 test("risk sizing caps requested risk at 1% of capital and position at 10%", () => {

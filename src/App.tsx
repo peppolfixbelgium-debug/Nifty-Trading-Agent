@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import PremiumSelect from "./components/PremiumSelect";
+import MarketChart from "./components/MarketChart";
+import OptionsDesk from "./components/OptionsDesk";
 import type { BacktestResponse, BacktestTrade } from "./lib/backtest-engine.js";
 import type { OpportunityScanResponse } from "./lib/opportunity-types.js";
 import type { MarketRegime, ScanAction, ScanResponse, ScanResult } from "./lib/types";
@@ -74,6 +76,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("ALL");
   const [search, setSearch] = useState("");
+  const [chartSymbol, setChartSymbol] = useState("^NSEI");
   const [capital, setCapital] = useState("100000");
   const [risk, setRisk] = useState("1000");
   const [backtestYears, setBacktestYears] = useState("5");
@@ -247,6 +250,11 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  function openChart(symbol: string) {
+    setChartSymbol(symbol);
+    document.getElementById("market-chart")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   const rows = useMemo(() => {
     const needle = search.trim().toLowerCase();
     return (data?.results ?? [])
@@ -274,6 +282,9 @@ function App() {
           <span className="topbar-muted">NSE · Daily timeframe</span>
         </div>
       </header>
+      <nav className="terminal-nav" aria-label="Terminal navigation">
+        <a href="#market-chart">Charts</a><a href="#options-terminal">Options premiums</a><a href="#strategy-lab">Strategy lab</a><a href="#setup-watchlist">Watchlist</a><a href="#backtest-lab">Backtest</a>
+      </nav>
 
       <section className="hero">
         <div className="hero-copy">
@@ -314,7 +325,7 @@ function App() {
             <div><strong>Compare historical evidence</strong><p>Run Market Opportunity Scanner. Check data coverage, sample sizes, validation expectancy and drawdown. The separate shortlist only shows current setups that pass its stated rules.</p></div>
           </article>
         </div>
-        <div className="quick-start-note"><span>Good to know</span> A blank shortlist is a valid outcome. Keep the 30-trade minimum, don’t force a winner, and treat results as research—not buy/sell instructions.</div>
+        <div className="quick-start-note"><span>Good to know</span> Use charts for context, inspect why a rule failed, and keep the research shortlist separate from executable trades. Do not force a winner.</div>
       </section>
 
       <section className="market-strip" aria-label="Market overview">
@@ -334,11 +345,13 @@ function App() {
           <div className="metric-foot"><span className={`vix-label vix-${(data?.market.vixLabel ?? "UNAVAILABLE").toLowerCase()}`}>{(data?.market.vixLabel ?? "UNAVAILABLE").replace("_", " ")}</span><span> · indicative context</span></div>
         </div>
         <div className="market-card market-card-last">
-          <div className="metric-label">SETUPS TRIGGERED</div>
+          <div className="metric-label">LONG SETUPS TRIGGERED</div>
           <div className="metric-value">{data ? String(triggeredCount).padStart(2, "0") : "—"}<span className="metric-suffix"> / 25</span></div>
           <div className="metric-foot">{watchCount} to watch · {errorCount} data errors</div>
         </div>
       </section>
+
+      <MarketChart symbol={chartSymbol} onSelectSymbol={setChartSymbol} />
 
       <section className="control-panel">
         <div className="control-intro">
@@ -364,7 +377,9 @@ function App() {
       {data?.warnings.map((warning) => <div className="inline-warning" key={warning}>{warning}</div>)}
       {error && <div className="error-banner"><strong>Scanner unavailable</strong><span>{error}</span><button onClick={() => void scan(true)}>Try again</button></div>}
 
-      <section className="opportunity-section" aria-labelledby="opportunity-title">
+      <OptionsDesk />
+
+      <section id="strategy-lab" className="opportunity-section" aria-labelledby="opportunity-title">
         <div className="backtest-heading">
           <div>
             <div className="section-kicker">MARKET RESEARCH / OPPORTUNITY SCANNER</div>
@@ -569,7 +584,7 @@ function App() {
         </>}
       </section>
 
-      <section className="results-section">
+      <section id="setup-watchlist" className="results-section">
         <div className="results-heading">
           <div>
             <div className="section-kicker">SCANNER OUTPUT / 02</div>
@@ -595,7 +610,7 @@ function App() {
           {!loading && rows.map((row) => <article className="watchlist-mobile-card" key={`mobile-${row.symbol}`}>
             <div className="watchlist-mobile-card-head">
               <div className="stock-cell"><strong>{row.symbol.replace(".NS", "")}</strong><small>{row.name}</small></div>
-              <ActionPill action={row.action} />
+              <ActionPill action={row.action} /><button type="button" className="watch-chart-open" onClick={() => openChart(row.symbol)}>Chart ↗</button>
             </div>
             <p className="watchlist-mobile-reason">{row.reason}</p>
             <div className="watchlist-mobile-price">
@@ -623,7 +638,7 @@ function App() {
               {loading && !data && Array.from({ length: 7 }, (_, index) => <tr key={index} className="skeleton-row"><td colSpan={10}><span></span></td></tr>)}
               {!loading && rows.map((row) => (
                 <tr key={row.symbol}>
-                  <td><div className="stock-cell"><strong>{row.symbol.replace(".NS", "")}</strong><small>{row.name}</small></div></td>
+                  <td><div className="stock-cell"><strong>{row.symbol.replace(".NS", "")}</strong><small>{row.name}</small><button type="button" className="watch-chart-open" onClick={() => openChart(row.symbol)}>Open chart ↗</button></div></td>
                   <td className="reason-cell"><ActionPill action={row.action} /><small title={row.reason}>{row.reason}</small></td>
                   <td className="number-cell">{fixed(row.lastPrice)}</td>
                   <td className={`number-cell ${(row.changePct ?? 0) >= 0 ? "positive" : "negative"}`}>{pct(row.changePct)}</td>
@@ -642,7 +657,7 @@ function App() {
         <div className="table-foot"><span>* Theoretical quantity only, capped at {data?.params.maxPositionPct ?? 10}% of capital and {data?.params.maxRiskPct ?? 1}% risk per trade.</span><span>{data?.dataSource ?? "Awaiting market data"}</span></div>
       </section>
 
-      <section className="backtest-section" aria-labelledby="backtest-title">
+      <section id="backtest-lab" className="backtest-section" aria-labelledby="backtest-title">
         <div className="backtest-heading">
           <div>
             <div className="section-kicker">STRATEGY VALIDATION / 03</div>
