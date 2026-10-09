@@ -1,7 +1,7 @@
-import { analyzeStock, classifyMarket } from "./analysis";
-import { movingAverage } from "./indicators";
-import { UNIVERSE } from "./universe";
-import type { Candle, MarketRegime, MarketSummary, ScanResponse, ScanResult } from "./types";
+import { analyzeStock, classifyMarket } from "./analysis.js";
+import { movingAverage } from "./indicators.js";
+import { UNIVERSE } from "./universe.js";
+import type { Candle, MarketRegime, MarketSummary, ScanResponse, ScanResult } from "./types.js";
 
 type YahooChartResponse = {
   chart?: {
