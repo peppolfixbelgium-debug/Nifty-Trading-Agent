@@ -24,6 +24,7 @@ export default function PremiumSelect({
 }: PremiumSelectProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const listId = useId();
   const selected = options.find((option) => option.value === value) ?? options[0];
 
@@ -34,7 +35,7 @@ export default function PremiumSelect({
       if (target instanceof Node && !rootRef.current?.contains(target)) setOpen(false);
     };
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") { setOpen(false); triggerRef.current?.focus(); }
     };
     document.addEventListener("pointerdown", closeOnOutsidePointer);
     document.addEventListener("keydown", closeOnEscape);
@@ -47,6 +48,7 @@ export default function PremiumSelect({
   return (
     <div className={`premium-select ${open ? "is-open" : ""} ${className}`} ref={rootRef}>
       <button
+        ref={triggerRef}
         type="button"
         className="premium-select-trigger"
         aria-label={ariaLabel}
@@ -75,6 +77,15 @@ export default function PremiumSelect({
               onClick={() => {
                 onChange(option.value);
                 setOpen(false);
+                triggerRef.current?.focus();
+              }}
+              onKeyDown={(event) => {
+                if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+                event.preventDefault();
+                const items = Array.from(rootRef.current?.querySelectorAll(".premium-select-option:not(:disabled)") ?? []);
+                const currentIndex = items.indexOf(event.currentTarget);
+                const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? items.length - 1 : (currentIndex + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length;
+                items[nextIndex]?.focus();
               }}
             >
               <span className="premium-select-option-copy">
