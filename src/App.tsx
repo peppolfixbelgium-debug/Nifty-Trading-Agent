@@ -79,6 +79,43 @@ function App() {
   const [backtestLoading, setBacktestLoading] = useState(false);
   const [backtestError, setBacktestError] = useState<string | null>(null);
   const [backtestData, setBacktestData] = useState<BacktestResponse | null>(null);
+  const [marketUniverse, setMarketUniverse] = useState("all");
+  const [strategySelection, setStrategySelection] = useState("all");
+  const [directionSelection, setDirectionSelection] = useState("both");
+  const [scannerTimeframe, setScannerTimeframe] = useState("daily");
+  const [minimumTradesForRanking, setMinimumTradesForRanking] = useState("30");
+  const scannerReadiness = useMemo(() => {
+    const blockers: string[] = [];
+    if (marketUniverse !== "all" && marketUniverse !== "stocks") {
+      blockers.push("This market type has no validated historical data adapter yet.");
+    }
+    if (strategySelection === "all") {
+      blockers.push("Only one strategy is implemented. Comparative ranking across multiple distinct strategy families is not available yet.");
+    }
+    if (strategySelection !== "all" && strategySelection !== "breakout") {
+      blockers.push("The selected strategy family is not implemented in the backtest engine.");
+    }
+    if (directionSelection !== "long") {
+      blockers.push("The current backtest engine models long positions only; short-side returns and execution costs are not validated.");
+    }
+    if (scannerTimeframe !== "daily") {
+      blockers.push("Only completed daily candles are supported by the current data adapter.");
+    }
+    if (!backtestData) {
+      blockers.push("Run the historical baseline once to inspect requested-versus-actual history and accounting.");
+    } else {
+      if (!backtestData.dataQuality || backtestData.dataQuality.status !== "PASS") {
+        blockers.push("Historical coverage is not fully validated for the requested window.");
+        for (const reason of backtestData.dataQuality?.reasons ?? []) blockers.push(reason);
+      }
+      if (!backtestData.accounting.reconciled) blockers.push("Closed-trade P&L does not reconcile to ending equity.");
+      const minimum = Math.max(30, Number(minimumTradesForRanking) || 30);
+      if (backtestData.metrics.tradeCount < minimum) blockers.push("Only " + backtestData.metrics.tradeCount + " closed trades; " + minimum + " are required by the selected ranking threshold.");
+      if ((backtestData.outOfSample?.metrics.tradeCount ?? 0) < 10) blockers.push("Fewer than 10 holdout trades; out-of-sample evidence is too thin for ranking.");
+    }
+    blockers.push("A cross-instrument, multi-strategy ranking endpoint has not been implemented; no leaderboard will be fabricated from the legacy portfolio backtest.");
+    return { ready: blockers.length === 0, blockers: [...new Set(blockers)] };
+  }, [marketUniverse, strategySelection, directionSelection, scannerTimeframe, minimumTradesForRanking, backtestData]);
 
   async function scan(forceRefresh = false) {
     setLoading(true);
@@ -302,6 +339,70 @@ function App() {
           </table>
         </div>
         <div className="table-foot"><span>* Theoretical quantity only, capped at {data?.params.maxPositionPct ?? 10}% of capital and {data?.params.maxRiskPct ?? 1}% risk per trade.</span><span>{data?.dataSource ?? "Awaiting market data"}</span></div>
+      </section>
+
+      <section className="opportunity-section" aria-labelledby="opportunity-title">
+        <div className="backtest-heading">
+          <div>
+            <div className="section-kicker">MARKET RESEARCH / OPPORTUNITY SCANNER</div>
+            <h2 id="opportunity-title">Market Opportunity Scanner</h2>
+            <p>Choose the research universe and strategy scope. The scanner enforces data and sample-size gates; unavailable market/strategy combinations are not ranked as if they were tested.</p>
+          </div>
+        </div>
+        <div className="opportunity-controls">
+          <label className="field">
+            <span>Market universe</span>
+            <select value={marketUniverse} onChange={(event) => setMarketUniverse(event.target.value)} aria-label="Market universe">
+              <option value="all">All supported instruments</option>
+              <option value="stocks">Current NSE stock universe</option>
+              <option value="indices" disabled>Broad / sector indices — data adapter pending</option>
+              <option value="futures" disabled>Index futures — expiry/roll data pending</option>
+              <option value="options" disabled>Options — historical premium data pending</option>
+            </select>
+          </label>
+          <label className="field">
+            <span>Strategy</span>
+            <select value={strategySelection} onChange={(event) => setStrategySelection(event.target.value)} aria-label="Strategy selection">
+              <option value="all">All validated strategies</option>
+              <option value="breakout">Breakout + volume (current model)</option>
+              <option value="trend" disabled>Trend following — not implemented</option>
+              <option value="pullback" disabled>Trend pullback — not implemented</option>
+              <option value="mean-reversion" disabled>Mean reversion — not implemented</option>
+            </select>
+          </label>
+          <label className="field">
+            <span>Direction</span>
+            <select value={directionSelection} onChange={(event) => setDirectionSelection(event.target.value)} aria-label="Trade direction">
+              <option value="both">Both long and short</option>
+              <option value="long">Long only</option>
+              <option value="short">Short only</option>
+            </select>
+          </label>
+          <label className="field">
+            <span>Timeframe</span>
+            <select value={scannerTimeframe} onChange={(event) => setScannerTimeframe(event.target.value)} aria-label="Scanner timeframe">
+              <option value="daily">Daily</option>
+              <option value="15m" disabled>15 minutes — data adapter pending</option>
+              <option value="5m" disabled>5 minutes — data adapter pending</option>
+            </select>
+          </label>
+          <label className="field">
+            <span>Minimum closed trades <small>FOR RANKING</small></span>
+            <input className="backtest-number" type="number" min="30" max="500" step="5" value={minimumTradesForRanking} onChange={(event) => setMinimumTradesForRanking(String(Math.max(30, Math.min(500, Number(event.target.value) || 30))))} aria-label="Minimum completed trades for ranking" />
+          </label>
+        </div>
+        <div className={`opportunity-readiness ${scannerReadiness.ready ? "opportunity-ready" : "opportunity-blocked"}`}>
+          <div>
+            <span className={`gate-state ${scannerReadiness.ready ? "gate-open" : "gate-blocked"}`}>{scannerReadiness.ready ? "READY TO RANK" : "RANKING BLOCKED"}</span>
+            <h3>{scannerReadiness.ready ? "Eligible for research comparison" : "Evidence gate is active"}</h3>
+            <p>Defaults: all supported instruments · all validated strategies · both directions · daily · at least {Math.max(30, Number(minimumTradesForRanking) || 30)} closed trades. “All” means all validated combinations with usable history, not unsupported products.</p>
+          </div>
+          <div className="opportunity-blockers">
+            <strong>Current blockers</strong>
+            <ul>{scannerReadiness.blockers.map((reason) => <li key={reason}>{reason}</li>)}</ul>
+          </div>
+        </div>
+        <p className="backtest-hint">The current Historical backtest below remains the legacy long-only breakout baseline. These settings drive readiness checks; they do not yet change its simulated trades or produce a ranked opportunity leaderboard. Unsupported combinations stay blocked rather than receiving invented results.</p>
       </section>
 
       <section className="backtest-section" aria-labelledby="backtest-title">
