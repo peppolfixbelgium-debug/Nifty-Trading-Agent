@@ -18,7 +18,7 @@ function addDays(dateText: string, amount: number): string {
 }
 function apiInterval(range: Range): { unit: string; interval: string; expired: string } {
   if (range === "1D") return { unit: "minutes", interval: "1", expired: "1minute" };
-  if (range === "5D") return { unit: "minutes", interval: "5", expired: "5minute" };
+  if (range === "5D") return { unit: "minutes", interval: "5", expired: "30minute" };
   if (range === "1M") return { unit: "minutes", interval: "30", expired: "30minute" };
   return { unit: "days", interval: "1", expired: "day" };
 }
