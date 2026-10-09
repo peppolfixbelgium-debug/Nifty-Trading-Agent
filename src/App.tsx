@@ -383,9 +383,9 @@ function App() {
               onChange={setMarketUniverse}
               ariaLabel="Market universe"
               options={[
-                { value: "all", label: "All supported instruments", hint: "Scans currently supported data" },
+                { value: "all", label: "All supported instruments", hint: "Stocks + supported broad/sector indices" },
                 { value: "stocks", label: "Current NSE stock universe", hint: "Registered stock list" },
-                { value: "indices", label: "Broad / sector indices", hint: "Data adapter pending", disabled: true },
+                { value: "indices", label: "Broad / sector indices", hint: "Broad market + sector index price history" },
                 { value: "futures", label: "Index futures", hint: "Expiry / roll data pending", disabled: true },
                 { value: "options", label: "Options", hint: "Historical premium data pending", disabled: true }
               ]}

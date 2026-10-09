@@ -1,6 +1,7 @@
 import { averageTrueRange, averageVolume, movingAverage, relativeStrengthIndex } from "./indicators.js";
 import { fetchCandles } from "./backtest.js";
 import { UNIVERSE } from "./universe.js";
+import { INDEX_UNIVERSE } from "./index-universe.js";
 import type { Candle } from "./types.js";
 import type {
   CandidateMetrics,
@@ -348,7 +349,7 @@ export async function runMarketOpportunityScan(input: {
   riskPerTradeInr: number;
   costBpsPerSide: number;
   minimumTradesForRanking: number;
-  universe: "all" | "stocks";
+  universe: "all" | "stocks" | "indices";
   strategy: "all" | StrategyId;
   direction: "both" | "long" | "short";
   timeframe: "daily";
@@ -366,7 +367,11 @@ export async function runMarketOpportunityScan(input: {
   const startSeconds = Math.floor(startDate.getTime() / 1000);
   const endSeconds = Math.floor(endDate.getTime() / 1000);
 
-  const requestedSymbols = input.universe === "stocks" ? UNIVERSE : UNIVERSE;
+  const requestedSymbols = input.universe === "stocks"
+    ? UNIVERSE
+    : input.universe === "indices"
+      ? INDEX_UNIVERSE
+      : [...UNIVERSE, ...INDEX_UNIVERSE];
   const fetched = await mapWithConcurrency(requestedSymbols, 8, async (item) => {
     try {
       const candles = await fetchCandles(item.symbol, startSeconds, endSeconds);
@@ -488,16 +493,16 @@ export async function runMarketOpportunityScan(input: {
 
   const coverageNotes: string[] = [];
   if (complete.length !== requestedSymbols.length) {
-    coverageNotes.push(`Only ${complete.length} of ${requestedSymbols.length} requested stocks have sufficiently complete daily history for the full ${years}-year window. Only this validated subset was evaluated.`);
+    coverageNotes.push(`Only ${complete.length} of ${requestedSymbols.length} requested instruments have sufficiently complete daily history for the full ${years}-year window. Only this validated subset was evaluated.`);
   }
   if (complete.length === 0) {
-    coverageNotes.push("No stock has enough complete history for the requested window; ranking is blocked instead of silently shortening the period.");
+    coverageNotes.push("No instrument has enough complete history for the requested window; ranking is blocked instead of silently shortening the period.");
   }
   if (candidates.length === 0 && complete.length > 0) {
     coverageNotes.push("No candidate met the pre-registered training, validation, final-test and accounting gates. No winner is fabricated.");
   }
   const limitations = [
-    "The 'all supported instruments' universe currently means the 25 registered NSE stocks. Nifty 50 is not ranked as a tradable candidate, and broad/sector indices, futures and options require separate verified data adapters.",
+    "The index universe uses Yahoo Finance index symbols as daily OHLCV research proxies. Runtime history/coverage checks exclude unsupported or incomplete symbols. Index price-series results are not automatically executable futures/options strategies.",
     "Strategy thresholds are fixed in source and evaluated once; there is no parameter grid search. A 30-trade threshold is a minimum sample gate, not a guarantee of statistical significance.",
     "The validation period sorts candidates; the final-test period is kept out of ranking. After selecting a candidate from many comparisons, confirm it on a later untouched period before relying on it.",
     "Yahoo Finance chart data is unofficial. Missing corporate-action adjustments, dividends, market impact, exact fees/taxes and realistic fills can change results.",
