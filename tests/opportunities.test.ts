@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { buildOpportunityFeatures, matchesOpportunitySignal, type OpportunityFeature } from "../src/lib/opportunities.js";
+import { INDEX_UNIVERSE } from "../src/lib/index-universe.js";
 import type { Candle } from "../src/lib/types.js";
 
 function feature(overrides: Partial<OpportunityFeature> = {}): OpportunityFeature {
@@ -80,4 +81,13 @@ test("feature preparation uses prior candles and waits for a full 200-bar warm-u
   assert.ok(features[199]);
   assert.ok(features.at(-1));
   assert.equal(features.at(-1)?.date, new Date(candles.at(-1)!.time).toISOString().slice(0, 10));
+});
+
+test("broad and sector index universe is populated and has unique symbols", () => {
+  assert.ok(INDEX_UNIVERSE.length >= 15);
+  assert.ok(INDEX_UNIVERSE.some((item) => item.symbol === "^NSEI"));
+  assert.ok(INDEX_UNIVERSE.some((item) => item.name === "Nifty Bank"));
+  assert.ok(INDEX_UNIVERSE.some((item) => item.name === "Nifty IT"));
+  assert.equal(new Set(INDEX_UNIVERSE.map((item) => item.symbol)).size, INDEX_UNIVERSE.length);
+  assert.ok(INDEX_UNIVERSE.every((item) => item.symbol.startsWith("^") && item.name.length > 0));
 });
