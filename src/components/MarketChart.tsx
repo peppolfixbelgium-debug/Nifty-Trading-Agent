@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import type { PointerEvent } from "react";
 import { INDEX_UNIVERSE } from "../lib/index-universe.js";
 import { UNIVERSE } from "../lib/universe.js";
 import type { Candle } from "../lib/types.js";
@@ -133,7 +134,7 @@ export default function MarketChart({ onSelectSymbol }: Props) {
     };
   }, [candles, sma20, sma50, sma200, rsi]);
 
-  function pointerMove(event: React.MouseEvent<SVGSVGElement>) {
+  function pointerMove(event: PointerEvent<SVGSVGElement>) {
     if (!drawing || !candles.length) return;
     const box = event.currentTarget.getBoundingClientRect();
     const svgX = ((event.clientX - box.left) / Math.max(1, box.width)) * drawing.width;
@@ -142,7 +143,7 @@ export default function MarketChart({ onSelectSymbol }: Props) {
     setHoverIndex(Math.max(0, Math.min(candles.length - 1, Math.floor(fraction * candles.length))));
   }
 
-  return <section className="terminal-chart-section" aria-labelledby="terminal-chart-title">
+  return <section id="market-chart" className="terminal-chart-section" aria-labelledby="terminal-chart-title">
     <div className="terminal-section-top">
       <div>
         <div className="section-kicker">MARKET TERMINAL / 01</div>
@@ -176,7 +177,7 @@ export default function MarketChart({ onSelectSymbol }: Props) {
     {loading && <div className="chart-loading"><span className="spinner" /> Loading candles and calculating indicators…</div>}
     {error && <div className="error-banner"><strong>Chart unavailable</strong><span>{error}</span><button onClick={() => setRefreshKey((value) => value + 1)}>Retry</button></div>}
     {!error && !loading && data && drawing && <div className="terminal-svg-wrap">
-      <svg className="terminal-svg-chart" viewBox="0 0 1000 510" role="img" aria-label={data.name + " candlestick chart with moving averages, volume and RSI"} onMouseMove={pointerMove} onMouseLeave={() => setHoverIndex(null)}>
+      <svg className="terminal-svg-chart" viewBox="0 0 1000 510" role="img" aria-label={data.name + " candlestick chart with moving averages, volume and RSI"} onPointerMove={pointerMove} onPointerLeave={() => setHoverIndex(null)}>
         {drawing.horizontal.map((line) => <g key={line.y}><line x1={drawing.left} x2={drawing.right} y1={line.y} y2={line.y} className="chart-grid-line" /><text x="944" y={line.y + 4} className="chart-axis-label">{inr.format(line.value)}</text></g>)}
         {[drawing.volumeTop, drawing.rsiTop - 8, drawing.rsiBottom].map((y) => <line key={y} x1={drawing.left} x2={drawing.right} y1={y} y2={y} className="chart-grid-line" />)}
         <line x1={drawing.left} x2={drawing.right} y1={drawing.rsiY(70)} y2={drawing.rsiY(70)} className="chart-rsi-threshold" />
