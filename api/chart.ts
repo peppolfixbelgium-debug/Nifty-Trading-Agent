@@ -8,8 +8,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   }
   const symbol = typeof req.query.symbol === "string" ? req.query.symbol : "^NSEI";
   const range = typeof req.query.range === "string" ? req.query.range : "1Y";
+  const forceRefresh = req.query.refresh === "1" || req.query.refresh === "true";
   try {
-    const result = await getMarketChart(symbol, range);
+    const result = await getMarketChart(symbol, range, forceRefresh);
     res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=120");
     res.setHeader("X-Content-Type-Options", "nosniff");
     return res.status(200).json(result);
