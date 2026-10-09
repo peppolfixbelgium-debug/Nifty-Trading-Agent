@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { BacktestResponse, BacktestTrade } from "./lib/backtest-engine.js";
-import type { OpportunityCandidate, OpportunityScanResponse } from "./lib/opportunity-types.js";
+import type { OpportunityScanResponse } from "./lib/opportunity-types.js";
 import type { MarketRegime, ScanAction, ScanResponse, ScanResult } from "./lib/types";
 
 type Filter = "ALL" | "TRIGGERED" | "WATCH" | "AVOID";
