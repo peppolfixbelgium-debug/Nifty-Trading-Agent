@@ -138,7 +138,7 @@ function App() {
     const curve = backtestData?.equityCurve ?? [];
     if (curve.length < 2 || !backtestData) return null;
     const stride = Math.max(1, Math.ceil(curve.length / 120));
-    const sampled = curve.filter((point, index) => index === 0 || index === curve.length - 1 || index % stride === 0);
+    const sampled = curve.filter((_, index) => index === 0 || index === curve.length - 1 || index % stride === 0);
     const values = sampled.map((point) => point.equityInr).concat([backtestData.capitalInr]);
     const minimum = Math.min(...values);
     const maximum = Math.max(...values);
