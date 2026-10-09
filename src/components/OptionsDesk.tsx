@@ -31,7 +31,6 @@ const EXPIRIES = [
   { value: "far_month", label: "Far month" }
 ];
 const RANGES: Range[] = ["1D", "5D", "1M", "6M"];
-const formatDate = (value: number) => new Date(value).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 
 export default function OptionsDesk() {
   const [mode, setMode] = useState<Mode>("live");
