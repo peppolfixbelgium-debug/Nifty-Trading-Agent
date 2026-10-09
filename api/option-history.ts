@@ -18,7 +18,7 @@ function addDays(dateText: string, amount: number): string {
 }
 function apiInterval(range: Range): { unit: string; interval: string; expired: string } {
   if (range === "1D") return { unit: "minutes", interval: "1", expired: "1minute" };
-  if (range === "5D") return { unit: "minutes", interval: "5", expired: "30minute" };
+  if (range === "5D") return { unit: "minutes", interval: "5", expired: "5minute" };
   if (range === "1M") return { unit: "minutes", interval: "30", expired: "30minute" };
   return { unit: "days", interval: "1", expired: "day" };
 }
@@ -46,16 +46,29 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
   const range = rangeValue as Range;
   const today = indiaDate(Date.now());
-  const fromDate = addDays(today, -(numberOfDays[range] - 1));
   const preset = apiInterval(range);
   const parts = instrumentKey.split("|");
   const isExpired = parts.length >= 3;
+  // For an expired contract the requested window must end at its actual expiry, not today,
+  // otherwise the chart asks the archive for dates after the option stopped trading.
+  const expiryToken = isExpired ? parts[parts.length - 1] : undefined;
+  let toDate = today;
+  if (expiryToken) {
+    const match = /^(\\d{2})-(\\d{2})-(\\d{4})$/.exec(expiryToken);
+    if (!match) return res.status(400).json({ error: "Expired option instrument key has an invalid expiry segment." });
+    toDate = match[3] + "-" + match[2] + "-" + match[1];
+    const parsed = new Date(toDate + "T00:00:00.000Z");
+    if (!Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== toDate || toDate > today) {
+      return res.status(400).json({ error: "Expired option history requires a valid contract expiry on or before today." });
+    }
+  }
+  const fromDate = addDays(toDate, -(numberOfDays[range] - 1));
   let url: URL;
   if (isExpired) {
     // Upstox expired option keys include the contract expiry segment and use the expired-instrument endpoint.
     url = new URL(
       "https://api.upstox.com/v2/expired-instruments/historical-candle/" +
-      encodeURIComponent(instrumentKey) + "/" + preset.expired + "/" + today + "/" + fromDate
+      encodeURIComponent(instrumentKey) + "/" + preset.expired + "/" + toDate + "/" + fromDate
     );
   } else if (range === "1D") {
     url = new URL(
@@ -65,7 +78,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   } else {
     url = new URL(
       "https://api.upstox.com/v3/historical-candle/" +
-      encodeURIComponent(instrumentKey) + "/" + preset.unit + "/" + preset.interval + "/" + today + "/" + fromDate
+      encodeURIComponent(instrumentKey) + "/" + preset.unit + "/" + preset.interval + "/" + toDate + "/" + fromDate
     );
   }
 
