@@ -63,14 +63,14 @@ export function listChartSymbols(): ChartSymbol[] {
   return ALLOWED_SYMBOLS;
 }
 
-export async function getMarketChart(symbolValue: string, rangeValue: string): Promise<MarketChartResponse> {
+export async function getMarketChart(symbolValue: string, rangeValue: string, forceRefresh = false): Promise<MarketChartResponse> {
   const stock = SYMBOLS.get(symbolValue);
   if (!stock) throw new Error("That instrument is not in the supported chart universe.");
   const range = (Object.keys(PRESETS) as ChartRange[]).includes(rangeValue as ChartRange)
     ? rangeValue as ChartRange : "1Y";
   const preset = PRESETS[range];
   const key = stock.symbol + ":" + range;
-  if (cache && cache.key === key && cache.expires > Date.now()) return cache.value;
+  if (!forceRefresh && cache && cache.key === key && cache.expires > Date.now()) return cache.value;
 
   const url = new URL("https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(stock.symbol));
   url.searchParams.set("range", preset.range);
