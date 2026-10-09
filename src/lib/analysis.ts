@@ -92,6 +92,16 @@ export function analyzeStock(input: {
   }
 
   const trendAligned = current.close > sma20! && sma20! > sma50! && sma50! > sma200!;
+  const nearBreakout = current.close < priorFiveDayHigh! + atr14! * 0.1 &&
+    current.close >= (priorFiveDayHigh! + atr14! * 0.1) * 0.975;
+  const momentumUsable = rsi14! >= 40 && rsi14! <= 72;
+  const developingTrend = current.close > sma20! &&
+    sma20! >= sma50! * 0.995 &&
+    sma50! >= sma200! * 0.97;
+  // Early-watch candidates are visible when structure is close to aligning or price is
+  // approaching the breakout. This broadens monitoring, but never relaxes trigger rules.
+  const watchableStructure = trendAligned ||
+    (momentumUsable && (developingTrend || (nearBreakout && current.close > sma50!)));
   const trigger = priorFiveDayHigh! + atr14! * 0.1;
   const stop = trigger - atr14! * 1.5;
   const target = trigger + (trigger - stop) * 2;
@@ -130,19 +140,20 @@ export function analyzeStock(input: {
   let reason = stockReason;
 
   if (marketRegime === "BEARISH") {
-    action = "AVOID";
-    reason = `${stockReason} Market filter: Nifty regime is bearish, so new long entries are blocked.`;
+    action = watchableStructure ? "WATCH" : "AVOID";
+    reason = `${stockReason} Market filter: Nifty regime is bearish, so new long entries remain blocked. ${watchableStructure ? "WATCH means monitor-only; the stock has developing/aligned structure, not a permitted entry." : "The stock structure also fails the early-watch rules."}`;
   } else if (marketRegime === "UNAVAILABLE") {
-    action = "WATCH";
-    reason = `${stockReason} Market confirmation is unavailable; wait for index data before considering a long setup.`;
+    action = watchableStructure ? "WATCH" : "AVOID";
+    reason = `${stockReason} Market confirmation is unavailable; no long trigger can be issued until index data is restored.`;
   } else if (rsi14! > 70) {
-    action = trendAligned ? "WATCH" : "AVOID";
-  } else if (trendAligned && marketRegime === "BULLISH" && current.close >= trigger && relativeVolume !== null && relativeVolume >= 1.1 && rsi14! >= 50) {
+    action = watchableStructure ? "WATCH" : "AVOID";
+    reason = `${stockReason} Monitor only; RSI must cool into the entry band before a long trigger can qualify.`;
+  } else if (trendAligned && marketRegime === "BULLISH" && current.close >= trigger && relativeVolume !== null && relativeVolume >= 1.1 && rsi14! >= 50 && rsi14! <= 70) {
     action = "TRIGGERED";
     reason = "Daily close cleared the 5-session breakout level with aligned trend, volume, RSI and bullish Nifty regime. This is a screen result, not an order.";
-  } else if (trendAligned) {
+  } else if (watchableStructure) {
     action = "WATCH";
-    if (marketRegime !== "BULLISH") reason = `${stockReason} Nifty is not fully bullish; wait for market confirmation.`;
+    reason = `${stockReason} Early-watch candidate only; it has not passed every entry requirement.`;
   }
 
   return {
