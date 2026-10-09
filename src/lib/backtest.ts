@@ -156,7 +156,7 @@ export async function runHistoricalBacktest(input: {
   }
   if (stocks.length === 0) throw new Error("No stock histories loaded successfully; try again later.");
 
-  return simulateBacktest({
+  const sharedOptions = {
     yearsRequested: years,
     capitalInr: input.capitalInr,
     requestedRiskInr: input.riskPerTradeInr,
@@ -164,5 +164,29 @@ export async function runHistoricalBacktest(input: {
     indexCandles: indexResult.candles,
     stocks,
     warnings
-  });
+  };
+  const fullResult = simulateBacktest(sharedOptions);
+  const fullStartIndex = indexResult.candles.findIndex((bar) =>
+    new Date(bar.time).toISOString().slice(0, 10) >= fullResult.period.startDate
+  );
+  const evaluationStartIndex = Math.min(
+    indexResult.candles.length - 2,
+    Math.max(fullStartIndex + 1, fullStartIndex + Math.floor((indexResult.candles.length - fullStartIndex) * 0.75))
+  );
+  const evaluationStartDate = new Date(indexResult.candles[evaluationStartIndex]!.time).toISOString().slice(0, 10);
+  const outOfSampleResult = simulateBacktest({ ...sharedOptions, evaluationStartDate });
+  fullResult.outOfSample = {
+    period: outOfSampleResult.period,
+    metrics: {
+      finalEquityInr: outOfSampleResult.metrics.finalEquityInr,
+      netProfitInr: outOfSampleResult.metrics.netProfitInr,
+      totalReturnPct: outOfSampleResult.metrics.totalReturnPct,
+      benchmarkReturnPct: outOfSampleResult.metrics.benchmarkReturnPct,
+      maxDrawdownPct: outOfSampleResult.metrics.maxDrawdownPct,
+      tradeCount: outOfSampleResult.metrics.tradeCount,
+      winRatePct: outOfSampleResult.metrics.winRatePct,
+      profitFactor: outOfSampleResult.metrics.profitFactor
+    }
+  };
+  return fullResult;
 }
