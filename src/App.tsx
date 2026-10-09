@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import type { BacktestResponse, BacktestTrade } from "./lib/backtest-engine.js";
 import type { MarketRegime, ScanAction, ScanResponse, ScanResult } from "./lib/types";
 
 type Filter = "ALL" | "TRIGGERED" | "WATCH" | "AVOID";
@@ -43,6 +44,24 @@ function downloadCsv(rows: ScanResult[]) {
   URL.revokeObjectURL(href);
 }
 
+function downloadBacktestCsv(trades: BacktestTrade[]) {
+  const columns: Array<keyof BacktestTrade> = [
+    "symbol", "name", "entryDate", "exitDate", "entryPrice", "exitPrice",
+    "quantity", "grossPnlInr", "costsInr", "netPnlInr", "rMultiple", "holdingDays", "exitReason"
+  ];
+  const escape = (value: unknown) => {
+    const text = value === null || value === undefined ? "" : String(value);
+    return '"' + text.replaceAll('"', '""') + '"';
+  };
+  const csv = [columns.join(","), ...trades.map((trade) => columns.map((column) => escape(trade[column])).join(","))].join("\r\n");
+  const href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
+  const anchor = document.createElement("a");
+  anchor.href = href;
+  anchor.download = "nifty-backtest-trades-" + new Date().toISOString().slice(0, 10) + ".csv";
+  anchor.click();
+  URL.revokeObjectURL(href);
+}
+
 function ActionPill({ action }: { action: ScanAction }) {
   return <span className={`action-pill action-${action.toLowerCase().replaceAll("_", "-")}`}>{actionLabel[action]}</span>;
 }
@@ -55,6 +74,11 @@ function App() {
   const [search, setSearch] = useState("");
   const [capital, setCapital] = useState("100000");
   const [risk, setRisk] = useState("1000");
+  const [backtestYears, setBacktestYears] = useState("5");
+  const [backtestCostBps, setBacktestCostBps] = useState("15");
+  const [backtestLoading, setBacktestLoading] = useState(false);
+  const [backtestError, setBacktestError] = useState<string | null>(null);
+  const [backtestData, setBacktestData] = useState<BacktestResponse | null>(null);
 
   async function scan(forceRefresh = false) {
     setLoading(true);
@@ -81,6 +105,57 @@ function App() {
       setLoading(false);
     }
   }
+
+  async function runBacktest() {
+    setBacktestLoading(true);
+    setBacktestError(null);
+    try {
+      const query = new URLSearchParams({
+        years: backtestYears === "3" ? "3" : "5",
+        capital,
+        risk,
+        costBps: String(Math.max(0, Math.min(200, Number(backtestCostBps) || 15)))
+      });
+      const response = await fetch("/api/backtest?" + query.toString(), {
+        headers: { accept: "application/json" }
+      });
+      const payload: unknown = await response.json();
+      if (!response.ok) {
+        const body = typeof payload === "object" && payload !== null ? payload as Record<string, unknown> : {};
+        const message = typeof body.error === "string" ? body.error : "The backtest request failed.";
+        const detail = typeof body.detail === "string" ? body.detail : "";
+        throw new Error(detail ? message + " " + detail : message);
+      }
+      setBacktestData(payload as BacktestResponse);
+    } catch (caught) {
+      setBacktestError(caught instanceof Error ? caught.message : "Could not connect to the backtest service.");
+    } finally {
+      setBacktestLoading(false);
+    }
+  }
+
+  const backtestPlot = useMemo(() => {
+    const curve = backtestData?.equityCurve ?? [];
+    if (curve.length < 2 || !backtestData) return null;
+    const stride = Math.max(1, Math.ceil(curve.length / 120));
+    const sampled = curve.filter((point, index) => index === 0 || index === curve.length - 1 || index % stride === 0);
+    const values = sampled.map((point) => point.equityInr).concat([backtestData.capitalInr]);
+    const minimum = Math.min(...values);
+    const maximum = Math.max(...values);
+    const span = Math.max(1, maximum - minimum);
+    const line = sampled.map((point, index) => {
+      const x = (index / Math.max(1, sampled.length - 1)) * 720;
+      const y = 142 - ((point.equityInr - minimum) / span) * 124;
+      return x.toFixed(1) + "," + y.toFixed(1);
+    }).join(" ");
+    const baselineY = 142 - ((backtestData.capitalInr - minimum) / span) * 124;
+    return { line, minimum, maximum, baselineY };
+  }, [backtestData]);
+
+  const recentBacktestTrades = useMemo(
+    () => backtestData ? [...backtestData.trades].slice(-15).reverse() : [],
+    [backtestData]
+  );
 
   useEffect(() => {
     void scan(false);
@@ -229,8 +304,105 @@ function App() {
         <div className="table-foot"><span>* Theoretical quantity only, capped at {data?.params.maxPositionPct ?? 10}% of capital and {data?.params.maxRiskPct ?? 1}% risk per trade.</span><span>{data?.dataSource ?? "Awaiting market data"}</span></div>
       </section>
 
+      <section className="backtest-section" aria-labelledby="backtest-title">
+        <div className="backtest-heading">
+          <div>
+            <div className="section-kicker">STRATEGY VALIDATION / 03</div>
+            <h2 id="backtest-title">Historical backtest</h2>
+            <p>Replay completed daily candles, include estimated costs, and compare the rule set with Nifty 50. This is a simulation, not a forecast.</p>
+          </div>
+          {backtestData && <button className="export-button" onClick={() => downloadBacktestCsv(backtestData.trades)} disabled={backtestData.trades.length === 0}>↓ Export trades CSV</button>}
+        </div>
+
+        <div className="backtest-controls">
+          <label className="field">
+            <span>Historical period</span>
+            <select value={backtestYears} onChange={(event) => setBacktestYears(event.target.value)} aria-label="Backtest historical period">
+              <option value="3">Last 3 years</option>
+              <option value="5">Last 5 years</option>
+            </select>
+          </label>
+          <label className="field">
+            <span>All-in estimated cost per side <small>BPS</small></span>
+            <input className="backtest-number" type="number" min="0" max="200" step="5" value={backtestCostBps} onChange={(event) => setBacktestCostBps(event.target.value)} aria-label="Estimated trading cost per side in basis points" />
+          </label>
+          <div className="backtest-capital">
+            <span>Risk settings</span>
+            <strong>{inr0.format(Number(capital) || 0)} capital · {inr0.format(Math.min(Number(risk) || 0, (Number(capital) || 0) * 0.01))} risk/trade</strong>
+          </div>
+          <button className="scan-button backtest-run-button" onClick={() => void runBacktest()} disabled={backtestLoading || Number(capital) <= 0 || Number(risk) <= 0}>
+            {backtestLoading ? <><span className="spinner"></span> Running test…</> : <><span>↗</span> Run backtest</>}
+          </button>
+        </div>
+        <p className="backtest-hint">Historical data requests can take 30–60 seconds. Today's potentially incomplete candle is excluded. Cost is a configurable all-in estimate on each side, not a broker-specific tax calculation.</p>
+        {backtestLoading && <div className="backtest-progress"><span className="spinner"></span> Loading multi-year daily history and replaying trades…</div>}
+        {backtestError && <div className="error-banner"><strong>Backtest unavailable</strong><span>{backtestError}</span><button onClick={() => void runBacktest()}>Try again</button></div>}
+        {backtestData && <>
+          <div className="backtest-period-line">
+            <span>FULL PERIOD <strong>{backtestData.period.startDate} → {backtestData.period.endDate}</strong></span>
+            <span>SYMBOLS LOADED <strong>{backtestData.metrics.loadedSymbols} / 25</strong></span>
+            <span>DATA SOURCE <strong>Yahoo Finance daily candles</strong></span>
+          </div>
+          <div className="backtest-metrics">
+            <div className="backtest-metric"><small>NET STRATEGY RETURN</small><strong className={backtestData.metrics.totalReturnPct >= 0 ? "positive" : "negative"}>{fixed(backtestData.metrics.totalReturnPct)}%</strong><span>{inr0.format(backtestData.metrics.netProfitInr)} net P&amp;L</span></div>
+            <div className="backtest-metric"><small>NIFTY 50 BENCHMARK</small><strong className={backtestData.metrics.benchmarkReturnPct >= 0 ? "positive" : "negative"}>{fixed(backtestData.metrics.benchmarkReturnPct)}%</strong><span>Buy-and-hold reference, cost-adjusted</span></div>
+            <div className="backtest-metric"><small>MAX DRAWDOWN</small><strong className="negative">-{fixed(backtestData.metrics.maxDrawdownPct)}%</strong><span>Peak-to-trough equity decline</span></div>
+            <div className="backtest-metric"><small>WIN RATE</small><strong>{fixed(backtestData.metrics.winRatePct)}%</strong><span>{backtestData.metrics.wins} wins · {backtestData.metrics.losses} losses</span></div>
+            <div className="backtest-metric"><small>CLOSED TRADES</small><strong>{backtestData.metrics.tradeCount}</strong><span>One position at a time</span></div>
+            <div className="backtest-metric"><small>PROFIT FACTOR</small><strong>{backtestData.metrics.profitFactor === null ? "N/A" : fixed(backtestData.metrics.profitFactor)}</strong><span>Winning P&amp;L ÷ losing P&amp;L</span></div>
+            <div className="backtest-metric"><small>ANNUALIZED RETURN</small><strong>{backtestData.metrics.cagrPct === null ? "N/A" : fixed(backtestData.metrics.cagrPct) + "%"}</strong><span>Net of modeled costs</span></div>
+            <div className="backtest-metric"><small>ESTIMATED TOTAL COSTS</small><strong>{inr0.format(backtestData.metrics.totalCostsInr)}</strong><span>{backtestData.assumptions.costBpsPerSide} bps per side</span></div>
+          </div>
+
+          <div className="backtest-chart-block">
+            <div className="backtest-chart-title"><div><strong>Simulated equity curve</strong><span>Includes realized P&amp;L, modeled entry/exit costs, and mark-to-market open trades</span></div><div><small>STARTING CAPITAL</small><strong>{inr0.format(backtestData.capitalInr)}</strong></div></div>
+            {backtestPlot && <svg className="backtest-chart" viewBox="0 0 720 160" role="img" aria-label="Historical simulated equity curve compared with starting capital" preserveAspectRatio="none">
+              <line x1="0" x2="720" y1={backtestPlot.baselineY} y2={backtestPlot.baselineY} stroke="#6e7c88" strokeDasharray="5 5" strokeWidth="1" />
+              <polyline points={backtestPlot.line} fill="none" stroke="#a4f4c5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>}
+            <div className="backtest-chart-scale"><span>Low {inr0.format(backtestPlot?.minimum ?? backtestData.capitalInr)}</span><span>High {inr0.format(backtestPlot?.maximum ?? backtestData.capitalInr)}</span></div>
+          </div>
+
+          {backtestData.outOfSample && <div className="out-of-sample-panel">
+            <div><div className="section-kicker">HOLDOUT CHECK</div><h3>Out-of-sample performance</h3><p>Latest 25% of the available post-warm-up period, evaluated separately from the full-period result.</p><small>{backtestData.outOfSample.period.startDate} → {backtestData.outOfSample.period.endDate}</small></div>
+            <div className="out-of-sample-stats">
+              <div><small>NET RETURN</small><strong className={backtestData.outOfSample.metrics.totalReturnPct >= 0 ? "positive" : "negative"}>{fixed(backtestData.outOfSample.metrics.totalReturnPct)}%</strong></div>
+              <div><small>NIFTY BENCHMARK</small><strong>{fixed(backtestData.outOfSample.metrics.benchmarkReturnPct)}%</strong></div>
+              <div><small>MAX DRAWDOWN</small><strong className="negative">-{fixed(backtestData.outOfSample.metrics.maxDrawdownPct)}%</strong></div>
+              <div><small>TRADES</small><strong>{backtestData.outOfSample.metrics.tradeCount}</strong></div>
+              <div><small>WIN RATE</small><strong>{fixed(backtestData.outOfSample.metrics.winRatePct)}%</strong></div>
+              <div><small>PROFIT FACTOR</small><strong>{backtestData.outOfSample.metrics.profitFactor === null ? "N/A" : fixed(backtestData.outOfSample.metrics.profitFactor)}</strong></div>
+            </div>
+          </div>}
+
+          {backtestData.warnings.length > 0 && <div className="inline-warning backtest-warnings"><strong>Data coverage:</strong> {backtestData.warnings.length} symbol(s) were omitted. Details: {backtestData.warnings.slice(0, 3).join(" · ")}{backtestData.warnings.length > 3 ? " · …" : ""}</div>}
+
+          <div className="backtest-assumptions">
+            <strong>Simulation assumptions</strong>
+            <p>{backtestData.assumptions.entryRule} {backtestData.assumptions.sameDayStopAndTargetRule} Exit after {backtestData.assumptions.maxHoldingDays} sessions if neither stop nor target is hit. Cost assumption: {backtestData.assumptions.costBpsPerSide} bps per side. Maximum position value: {backtestData.assumptions.maxPositionPct}% of starting capital; risk budget capped at {backtestData.assumptions.maxRiskPct}% per trade.</p>
+            <p><strong>Important:</strong> only one position may be open at a time. This is a first-pass research simulation; Yahoo Finance is an unofficial source, and actual fills, corporate actions, charges and slippage may differ. A positive backtest does not guarantee future returns.</p>
+          </div>
+
+          <div className="backtest-trades-heading"><div><strong>Recent closed trades</strong><span>Showing up to 15 most recent trades of {backtestData.trades.length}</span></div><button className="export-button" onClick={() => downloadBacktestCsv(backtestData.trades)} disabled={backtestData.trades.length === 0}>↓ Export CSV</button></div>
+          <div className="table-scroll backtest-trade-scroll">
+            <table className="backtest-trade-table">
+              <thead><tr><th>STOCK</th><th>ENTRY DATE</th><th>EXIT DATE</th><th>ENTRY</th><th>EXIT</th><th>QTY</th><th>EXIT REASON</th><th>NET P&amp;L</th><th>R MULTIPLE</th></tr></thead>
+              <tbody>
+                {recentBacktestTrades.map((trade, index) => <tr key={trade.symbol + trade.entryDate + index}>
+                  <td>{trade.symbol.replace(".NS", "")}</td><td>{trade.entryDate}</td><td>{trade.exitDate}</td>
+                  <td className="number-cell">{fixed(trade.entryPrice, 2)}</td><td className="number-cell">{fixed(trade.exitPrice, 2)}</td>
+                  <td className="number-cell">{integer.format(trade.quantity)}</td><td><span className="action-pill action-watch">{trade.exitReason.replaceAll("_", " ")}</span></td>
+                  <td className={"number-cell " + (trade.netPnlInr >= 0 ? "positive" : "negative")}>{inr0.format(trade.netPnlInr)}</td><td className={"number-cell " + (trade.rMultiple >= 0 ? "positive" : "negative")}>{fixed(trade.rMultiple, 2)}R</td>
+                </tr>)}
+                {backtestData.trades.length === 0 && <tr><td colSpan={9} className="empty-state">No trades met all entry conditions in this period. No trade is a valid result.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </>}
+      </section>
+
       <section className="rules-grid">
-        <div className="rules-heading"><div className="section-kicker">BUILT-IN DISCIPLINE / 03</div><h2>How a trigger is earned</h2><p>No black box. The screening rules are visible and testable.</p></div>
+        <div className="rules-heading"><div className="section-kicker">BUILT-IN DISCIPLINE / 04</div><h2>How a trigger is earned</h2><p>No black box. The screening rules are visible and testable.</p></div>
         <div className="rule-card"><span className="rule-number">01</span><div><strong>Trend alignment</strong><p>Close &gt; SMA 20 &gt; SMA 50 &gt; SMA 200.</p></div></div>
         <div className="rule-card"><span className="rule-number">02</span><div><strong>Breakout confirmation</strong><p>Daily close clears the prior 5-session high plus 0.1 × ATR(14), with relative volume at least 1.1×.</p></div></div>
         <div className="rule-card"><span className="rule-number">03</span><div><strong>Market + momentum filter</strong><p>Nifty must be bullish; RSI(14) must be between 50 and 70. A bearish regime blocks new long triggers.</p></div></div>
