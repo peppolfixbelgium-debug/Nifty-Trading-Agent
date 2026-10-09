@@ -111,3 +111,10 @@ The scanner compares four fixed entry-rule families: trend following, breakout w
 - Short rows are theoretical underlying-price simulations only. They do not include stock borrow availability/cost, derivative contracts, expiry/roll, margin, settlement or short-specific execution assumptions and are not executable-trade recommendations.
 - The initial `all` universe means all currently registered NSE stocks. Broad/sector indices, futures and options are not silently substituted into this universe: they need a verified market-data adapter and their own contract/roll/expiry execution model.
 - Because many symbol/strategy/direction combinations are compared, validation-period selection can still create multiple-comparison bias. Do not tune thresholds to improve the final test; after selecting a candidate, confirm it on a later untouched period.
+
+## Mobile usability
+
+- A short guide at the top of the page explains the position calculator, daily watchlist and opportunity scanner, including what "Avoid" and an empty shortlist mean.
+- The universe, strategy, direction, timeframe and historical-period controls use a compact in-app dropdown instead of the browser's native mobile selector, with readable option descriptions and disabled states for unsupported markets.
+- "Recommended setups to review" is a separate shortlist of current daily signals that also have positive validation expectancy and validation profit factor of at least 1.0. It is kept separate from the full qualified research list, and the final-test return is shown for transparency but does not select the shortlist.
+- The shortlist is not a trade instruction. A blank shortlist is an acceptable outcome; there is no fallback that fabricates picks just to populate it.
