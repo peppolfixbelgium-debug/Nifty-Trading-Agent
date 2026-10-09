@@ -23,6 +23,17 @@ type YahooChartResponse = {
 };
 
 const DATA_SOURCE = "Yahoo Finance chart data";
+
+function indiaDate(timestamp: number): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date(timestamp));
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return String(values.year) + "-" + String(values.month) + "-" + String(values.day);
+}
 const CACHE_TTL_MS = 3 * 60 * 1000;
 const MAX_POSITION_PCT = 10;
 const MAX_RISK_PCT = 1;
@@ -56,6 +67,7 @@ async function fetchCandles(symbol: string): Promise<Candle[]> {
   if (!quote || timestamps.length === 0) throw new Error(`No daily candles returned for ${symbol}`);
 
   const candles: Candle[] = [];
+  const todayInIndia = indiaDate(Date.now());
   for (let index = 0; index < timestamps.length; index += 1) {
     const open = quote.open?.[index];
     const high = quote.high?.[index];
@@ -67,13 +79,16 @@ async function fetchCandles(symbol: string): Promise<Candle[]> {
       !Number.isFinite(open) || !Number.isFinite(high) ||
       !Number.isFinite(low) || !Number.isFinite(close)
     ) continue;
+    const time = (timestamps[index] as number) * 1000;
+    // Daily scanner signals must be based on a completed Indian session, not a partial live candle.
+    if (indiaDate(time) >= todayInIndia) continue;
     const safeOpen = open as number;
     const safeHigh = high as number;
     const safeLow = low as number;
     const safeClose = close as number;
     if (safeHigh < safeLow || safeClose <= 0) continue;
     candles.push({
-      time: (timestamps[index] as number) * 1000,
+      time,
       open: safeOpen,
       high: safeHigh,
       low: safeLow,
