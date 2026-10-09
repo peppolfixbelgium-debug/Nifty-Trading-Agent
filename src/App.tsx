@@ -452,7 +452,7 @@ function App() {
           </details>}
           <div className="opportunity-results-heading">
             <div><strong>Ranked research candidates</strong><span>Sorted only by validation expectancy in R per trade. Final test is for confirmation, not ranking.</span></div>
-            {opportunityData.candidates.length > 0 && <button className="export-button" onClick={() => downloadOpportunityCsv(opportunityData.candidates)}>↓ Export CSV</button>}
+
           </div>
           <div className="table-scroll">
             <table className="opportunity-table">
