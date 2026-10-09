@@ -9,7 +9,7 @@ type ChartResponse = {
   symbol: string; name: string; range: ChartRange; interval: string;
   dataSource: string; freshness: string; generatedAt: string; candles: Candle[];
 };
-type Props = { onSelectSymbol?: (symbol: string) => void };
+type Props = { symbol?: string; onSelectSymbol?: (symbol: string) => void };
 
 const ranges: ChartRange[] = ["1D", "5D", "1M", "6M", "1Y", "5Y"];
 const inr = new Intl.NumberFormat("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -57,15 +57,17 @@ function formatAxisTime(timestamp: number, range: ChartRange): string {
   });
 }
 
-export default function MarketChart({ onSelectSymbol }: Props) {
+export default function MarketChart({ symbol: initialSymbol, onSelectSymbol }: Props) {
   const symbols = useMemo(() => [...INDEX_UNIVERSE, ...UNIVERSE], []);
-  const [symbol, setSymbol] = useState("^NSEI");
+  const [symbol, setSymbol] = useState(initialSymbol ?? "^NSEI");
   const [range, setRange] = useState<ChartRange>("1Y");
   const [data, setData] = useState<ChartResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+
+  useEffect(() => { if (initialSymbol && initialSymbol !== symbol) setSymbol(initialSymbol); }, [initialSymbol, symbol]);
 
   useEffect(() => {
     const controller = new AbortController();
