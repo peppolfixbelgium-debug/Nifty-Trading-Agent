@@ -56,7 +56,7 @@ test("scanner never triggers a long setup when the Nifty regime is bearish", () 
   assert.equal(result.action, "AVOID");
   assert.match(result.reason, /bearish/i);
   assert.match(result.reason, /stock trend is aligned/i);
-  assert.match(result.reason, /relative volume/i);
+  assert.match(result.reason, /RSI/i);
   assert.match(result.reason, /market filter/i);
 });
 
