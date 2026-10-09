@@ -137,10 +137,7 @@ export default function OptionsDesk() {
 
   const liveContracts = useMemo(() => {
     const options: Array<{ key: string; label: string }> = [];
-    const basis = chainRows.length && chain?.spot != null
-      ? [...chainRows].sort((a, b) => Math.abs((a.strike ?? 0) - chain.spot!) - Math.abs((b.strike ?? 0) - chain.spot!)).slice(0, 25)
-      : chainRows.slice(0, 25);
-    for (const row of basis) {
+    for (const row of chainRows) {
       if (row.call?.instrumentKey) options.push({ key: row.call.instrumentKey, label: "CALL " + number.format(row.strike ?? 0) + " · premium " + price.format(row.call.ltp ?? 0) });
       if (row.put?.instrumentKey) options.push({ key: row.put.instrumentKey, label: "PUT " + number.format(row.strike ?? 0) + " · premium " + price.format(row.put.ltp ?? 0) });
     }
@@ -223,7 +220,7 @@ export default function OptionsDesk() {
     ? activeContract.tradingSymbol
     : activeContract && "label" in activeContract ? activeContract.label : "Choose a contract";
 
-  return <section className="options-desk-section" aria-labelledby="options-desk-title">
+  return <section id="options-terminal" className="options-desk-section" aria-labelledby="options-desk-title">
     <div className="terminal-section-top">
       <div>
         <div className="section-kicker">DERIVATIVES LAB / 02</div>
@@ -275,6 +272,8 @@ export default function OptionsDesk() {
       </div>
       {premiumBusy && <div className="chart-loading"><span className="spinner" /> Loading this contract's premium candles…</div>}
       {premiumError && !premiumBusy && <div className="options-history-message">{premiumError}</div>}
+      {!premiumBusy && !premiumError && !premiumChart && premiumCandles.length > 0 && <div className="options-history-message">At least two usable premium candles are required to draw the chart.</div>}
+      {!premiumBusy && !premiumError && premium && premiumCandles.length === 0 && <div className="options-history-message">{premium.note ?? "No premium candles are available for this contract and window."}</div>}
       {!premiumBusy && !premiumError && premiumChart && <>
         <div className="premium-chart-stats"><span>LATEST PREMIUM <strong>₹{price.format(premiumChart.latest)}</strong></span><span>WINDOW CHANGE <strong className={premiumChart.changePct >= 0 ? "positive" : "negative"}>{premiumChart.changePct > 0 ? "+" : ""}{premiumChart.changePct.toFixed(2)}%</strong></span><span>CANDLES <strong>{premiumCandles.length}</strong></span><span>LOW / HIGH <strong>₹{price.format(premiumChart.min)} / ₹{price.format(premiumChart.max)}</strong></span></div>
         <svg className="premium-history-svg" viewBox={`0 0 ${premiumChart.width} ${premiumChart.height}`} role="img" aria-label="Selected option contract premium history">
