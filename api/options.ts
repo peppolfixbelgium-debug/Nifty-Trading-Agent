@@ -1,3 +1,4 @@
+import { resolveUpstoxUnderlying, UPSTOX_RELATIVE_EXPIRIES } from "../src/lib/options-provider.js";
 import type { ApiRequest, ApiResponse } from "../src/lib/api-types.js";
 
 const UNDERLYINGS: Record<string, string> = {
@@ -24,10 +25,11 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     });
   }
   const underlyingId = typeof req.query.underlying === "string" ? req.query.underlying : "NIFTY50";
-  const underlying = UNDERLYINGS[underlyingId];
+  const resolved = resolveUpstoxUnderlying(underlyingId);
+  const underlying = resolved?.key;
   const expiryValue = typeof req.query.expiry === "string" ? req.query.expiry : "current_week";
   const expiry = EXPIRIES.has(expiryValue) || /^\d{4}-\d{2}-\d{2}$/.test(expiryValue) ? expiryValue : "current_week";
-  if (!underlying) return res.status(400).json({ error: "Unsupported options underlying." });
+  if (!resolved || !underlying) return res.status(400).json({ error: "Unsupported options underlying." });
 
   try {
     const url = new URL("https://api.upstox.com/v2/option/chain");
