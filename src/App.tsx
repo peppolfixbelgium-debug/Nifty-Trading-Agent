@@ -343,6 +343,27 @@ function App() {
             <span>SYMBOLS LOADED <strong>{backtestData.metrics.loadedSymbols} / 25</strong></span>
             <span>DATA SOURCE <strong>Yahoo Finance daily candles</strong></span>
           </div>
+          {backtestData.dataQuality && <div className={`data-quality-panel data-quality-${backtestData.dataQuality.status.toLowerCase()}`}>
+            <div className="data-quality-main">
+              <div className="section-kicker">DATA &amp; ACCOUNTING GATE</div>
+              <h3>{backtestData.dataQuality.status === "PASS" ? "Coverage checks passed" : backtestData.dataQuality.status === "LIMITED" ? "Research coverage is limited" : "Backtest validity hold"}</h3>
+              <p>Requested {backtestData.assumptions.yearsRequested} years: {backtestData.dataQuality.requestedPeriod.startDate} → {backtestData.dataQuality.requestedPeriod.endDate}. Actual Nifty candles: {backtestData.dataQuality.marketDataPeriod.startDate} → {backtestData.dataQuality.marketDataPeriod.endDate} ({backtestData.dataQuality.marketCoveragePct}% of requested calendar span).</p>
+              <div className="data-quality-stats">
+                <span><small>INDEX CANDLES</small><strong>{integer.format(backtestData.dataQuality.actualMarketCandles)}</strong></span>
+                <span><small>STOCKS LOADED</small><strong>{backtestData.dataQuality.symbolsLoaded} / {backtestData.dataQuality.symbolsRequested}</strong></span>
+                <span><small>FULL-WINDOW STOCKS</small><strong>{backtestData.dataQuality.symbolsWithFullWindow}</strong></span>
+                <span><small>ACCOUNTING</small><strong className={backtestData.accounting.reconciled ? "positive" : "negative"}>{backtestData.accounting.reconciled ? "Reconciled" : "Mismatch"}</strong></span>
+              </div>
+              <p className="accounting-line">Trade net P&amp;L {inr0.format(backtestData.accounting.closedTradeNetPnlInr)} · equity-derived P&amp;L {inr0.format(backtestData.accounting.equityDerivedNetPnlInr)} · difference {inr0.format(backtestData.accounting.reconciliationDifferenceInr)} (tolerance {inr0.format(backtestData.accounting.toleranceInr)}).</p>
+            </div>
+            <div className="ranking-gate">
+              <span className={`gate-state ${backtestData.rankingEligibility?.eligible ? "gate-open" : "gate-blocked"}`}>{backtestData.rankingEligibility?.eligible ? "RANKING ELIGIBLE" : "RANKING BLOCKED"}</span>
+              <strong>Minimum {backtestData.rankingEligibility?.minimumTrades ?? 30} completed trades</strong>
+              <span>{backtestData.rankingEligibility?.completedTrades ?? backtestData.metrics.tradeCount} full-period · {backtestData.rankingEligibility?.outOfSampleTrades ?? backtestData.outOfSample?.metrics.tradeCount ?? 0} holdout</span>
+              {backtestData.rankingEligibility && backtestData.rankingEligibility.reasons.length > 0 && <ul>{backtestData.rankingEligibility.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul>}
+              {(!backtestData.rankingEligibility || backtestData.rankingEligibility.reasons.length === 0) && <p>Ranking still requires validated strategy and direction coverage; this report covers the existing long breakout model only.</p>}
+            </div>
+          </div>}
           <div className="backtest-metrics">
             <div className="backtest-metric"><small>NET STRATEGY RETURN</small><strong className={backtestData.metrics.totalReturnPct >= 0 ? "positive" : "negative"}>{fixed(backtestData.metrics.totalReturnPct)}%</strong><span>{inr0.format(backtestData.metrics.netProfitInr)} net P&amp;L</span></div>
             <div className="backtest-metric"><small>NIFTY 50 BENCHMARK</small><strong className={backtestData.metrics.benchmarkReturnPct >= 0 ? "positive" : "negative"}>{fixed(backtestData.metrics.benchmarkReturnPct)}%</strong><span>Buy-and-hold reference, cost-adjusted</span></div>
