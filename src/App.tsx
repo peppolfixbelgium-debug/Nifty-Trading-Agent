@@ -651,7 +651,7 @@ function App() {
         <div className="table-foot"><span>* Theoretical quantity only, capped at {data?.params.maxPositionPct ?? 10}% of capital and {data?.params.maxRiskPct ?? 1}% risk per trade.</span><span>{data?.dataSource ?? "Awaiting market data"}</span></div>
       </section>
 
-      <section className="backtest-section" aria-labelledby="backtest-title">
+      <section id="backtest-lab" className="backtest-section" aria-labelledby="backtest-title">
         <div className="backtest-heading">
           <div>
             <div className="section-kicker">STRATEGY VALIDATION / 03</div>
