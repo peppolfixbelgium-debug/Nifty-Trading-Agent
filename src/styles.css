@@ -196,3 +196,26 @@ tbody tr:hover{background:#141e27}
   .out-of-sample-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
   .backtest-trades-heading{align-items:flex-start}
 }
+
+
+/* Data quality and ranking eligibility gate */
+.data-quality-panel{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(260px,1fr);gap:22px;padding:20px;border:1px solid var(--line);border-radius:5px;margin:18px 0;background:#101720}
+.data-quality-pass{border-color:#315442;background:#111d18}
+.data-quality-limited{border-color:#62502e;background:#1f1b13}
+.data-quality-fail{border-color:#673c3c;background:#211719}
+.data-quality-main h3{font:700 19px var(--display);letter-spacing:-.025em;margin:8px 0}
+.data-quality-main>p{font-size:10px;line-height:1.65;color:var(--muted);margin:8px 0}
+.data-quality-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:12px 0 4px}
+.data-quality-stats span{display:flex;flex-direction:column;gap:6px;min-width:0}
+.data-quality-stats small{font:8px var(--mono);color:var(--muted);letter-spacing:.06em}
+.data-quality-stats strong{font:600 15px var(--display);overflow-wrap:anywhere}
+.accounting-line{border-top:1px solid var(--line);padding-top:9px!important}
+.ranking-gate{border-left:1px solid var(--line);padding-left:20px;display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.gate-state{border:1px solid var(--line);border-radius:3px;padding:5px 7px;font:9px var(--mono);letter-spacing:.08em}
+.gate-open{color:var(--mint);border-color:#315442;background:#14231b}
+.gate-blocked{color:var(--amber);border-color:#62502e;background:#261f14}
+.ranking-gate>strong{font:600 14px var(--display)}
+.ranking-gate>span:not(.gate-state){font:10px var(--mono);color:var(--muted)}
+.ranking-gate ul{margin:0;padding-left:17px;color:#b5a47e;font-size:10px;line-height:1.6}
+.ranking-gate p{font-size:10px;line-height:1.55;color:var(--muted);margin:0}
+@media(max-width:900px){.data-quality-panel{grid-template-columns:1fr}.ranking-gate{border-left:0;border-top:1px solid var(--line);padding:15px 0 0}.data-quality-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
