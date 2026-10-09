@@ -25,6 +25,17 @@ export type BacktestTrade = {
 
 export type EquityPoint = { date: string; equityInr: number };
 
+export type BacktestCompactMetrics = {
+  finalEquityInr: number;
+  netProfitInr: number;
+  totalReturnPct: number;
+  benchmarkReturnPct: number;
+  maxDrawdownPct: number;
+  tradeCount: number;
+  winRatePct: number;
+  profitFactor: number | null;
+};
+
 export type BacktestResponse = {
   generatedAt: string;
   dataSource: string;
@@ -58,6 +69,10 @@ export type BacktestResponse = {
     averageR: number | null;
     totalCostsInr: number;
     loadedSymbols: number;
+  };
+  outOfSample?: {
+    period: { startDate: string; endDate: string };
+    metrics: BacktestCompactMetrics;
   };
   equityCurve: EquityPoint[];
   trades: BacktestTrade[];
@@ -93,6 +108,7 @@ type BacktestOptions = {
   indexCandles: Candle[];
   stocks: BacktestStock[];
   warnings?: string[];
+  evaluationStartDate?: string;
 };
 
 const MAX_POSITION_PCT = 10;
@@ -190,11 +206,19 @@ export function simulateBacktest(options: BacktestOptions): BacktestResponse {
   }
   if (usableStocks.length === 0) throw new Error("No stock has enough historical candles to evaluate the strategy.");
 
-  const timelineStartIndex = Math.max(199, dates.findIndex((date) => {
+  const overlappingStartIndex = dates.findIndex((date) => {
     const marketIndex = indexByDate.get(date);
     if (marketIndex === undefined || marketIndex < 199) return false;
     return usableStocks.some((stock) => (stock.indexByDate.get(date) ?? -1) >= 199);
-  }));
+  });
+  const requestedStartIndex = options.evaluationStartDate
+    ? dates.findIndex((date) => date >= options.evaluationStartDate!)
+    : 0;
+  const timelineStartIndex = Math.max(
+    199,
+    overlappingStartIndex,
+    options.evaluationStartDate && requestedStartIndex >= 0 ? requestedStartIndex : 0
+  );
   if (timelineStartIndex < 199 || timelineStartIndex >= dates.length - 1) {
     throw new Error("Not enough overlapping historical data after indicator warm-up.");
   }
@@ -207,7 +231,6 @@ export function simulateBacktest(options: BacktestOptions): BacktestResponse {
   let totalCostsInr = 0;
   const startDate = dates[timelineStartIndex];
   const endDate = dates[dates.length - 1];
-  const initialRiskPct = riskBudgetInr / capitalInr;
 
   const closePosition = (exitDate: string, exitPrice: number, exitReason: BacktestTrade["exitReason"], dayIndex: number) => {
     if (!openTrade) return;
