@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { BacktestResponse, BacktestTrade } from "./lib/backtest-engine.js";
+import type { OpportunityCandidate, OpportunityScanResponse } from "./lib/opportunity-types.js";
 import type { MarketRegime, ScanAction, ScanResponse, ScanResult } from "./lib/types";
 
 type Filter = "ALL" | "TRIGGERED" | "WATCH" | "AVOID";
@@ -79,6 +80,9 @@ function App() {
   const [backtestLoading, setBacktestLoading] = useState(false);
   const [backtestError, setBacktestError] = useState<string | null>(null);
   const [backtestData, setBacktestData] = useState<BacktestResponse | null>(null);
+  const [opportunityData, setOpportunityData] = useState<OpportunityScanResponse | null>(null);
+  const [opportunityLoading, setOpportunityLoading] = useState(false);
+  const [opportunityError, setOpportunityError] = useState<string | null>(null);
   const [marketUniverse, setMarketUniverse] = useState("all");
   const [strategySelection, setStrategySelection] = useState("all");
   const [directionSelection, setDirectionSelection] = useState("both");
@@ -86,36 +90,30 @@ function App() {
   const [minimumTradesForRanking, setMinimumTradesForRanking] = useState("30");
   const scannerReadiness = useMemo(() => {
     const blockers: string[] = [];
-    if (marketUniverse !== "all" && marketUniverse !== "stocks") {
-      blockers.push("This market type has no validated historical data adapter yet.");
-    }
-    if (strategySelection === "all") {
-      blockers.push("Only one strategy is implemented. Comparative ranking across multiple distinct strategy families is not available yet.");
-    }
-    if (strategySelection !== "all" && strategySelection !== "breakout") {
-      blockers.push("The selected strategy family is not implemented in the backtest engine.");
-    }
-    if (directionSelection !== "long") {
-      blockers.push("The current backtest engine models long positions only; short-side returns and execution costs are not validated.");
-    }
-    if (scannerTimeframe !== "daily") {
-      blockers.push("Only completed daily candles are supported by the current data adapter.");
-    }
-    if (!backtestData) {
-      blockers.push("Run the historical baseline once to inspect requested-versus-actual history and accounting.");
+    const expectedStrategy = strategySelection as "all" | "trend-following" | "breakout-volume" | "trend-pullback" | "mean-reversion";
+    const configMatches = !!opportunityData &&
+      opportunityData.config.universe === marketUniverse &&
+      opportunityData.config.strategy === expectedStrategy &&
+      opportunityData.config.direction === directionSelection &&
+      opportunityData.config.timeframe === scannerTimeframe &&
+      opportunityData.config.minimumTradesForRanking === Math.max(30, Number(minimumTradesForRanking) || 30) &&
+      opportunityData.config.years === (backtestYears === "3" ? 3 : 5) &&
+      opportunityData.config.costBpsPerSide === Math.max(0, Math.min(200, Number(backtestCostBps) || 0)) &&
+      opportunityData.config.capitalInr === Math.max(1, Number(capital) || 1) &&
+      opportunityData.config.riskPerTradeInr === Math.min(Math.max(1, Number(risk) || 1), Math.max(1, Number(capital) || 1) * 0.01);
+    if (!opportunityData) {
+      blockers.push("Run the opportunity scan to verify historical coverage and evaluate the selected combinations.");
     } else {
-      if (!backtestData.dataQuality || backtestData.dataQuality.status !== "PASS") {
-        blockers.push("Historical coverage is not fully validated for the requested window.");
-        for (const reason of backtestData.dataQuality?.reasons ?? []) blockers.push(reason);
+      if (!configMatches) blockers.push("Settings changed after the last run; scan again to refresh the rankings.");
+      if (opportunityData.coverage.status === "FAIL") {
+        blockers.push("No instruments passed the full-window data-coverage gate. Ranking is blocked.");
       }
-      if (!backtestData.accounting.reconciled) blockers.push("Closed-trade P&L does not reconcile to ending equity.");
-      const minimum = Math.max(30, Number(minimumTradesForRanking) || 30);
-      if (backtestData.metrics.tradeCount < minimum) blockers.push("Only " + backtestData.metrics.tradeCount + " closed trades; " + minimum + " are required by the selected ranking threshold.");
-      if ((backtestData.outOfSample?.metrics.tradeCount ?? 0) < 10) blockers.push("Fewer than 10 holdout trades; out-of-sample evidence is too thin for ranking.");
+      if (opportunityData.qualifiedCombinations === 0) {
+        blockers.push("No strategy/instrument/direction combination passed the sample-size and accounting gates.");
+      }
     }
-    blockers.push("A cross-instrument, multi-strategy ranking endpoint has not been implemented; no leaderboard will be fabricated from the legacy portfolio backtest.");
-    return { ready: blockers.length === 0, blockers: [...new Set(blockers)] };
-  }, [marketUniverse, strategySelection, directionSelection, scannerTimeframe, minimumTradesForRanking, backtestData]);
+    return { ready: !!opportunityData && configMatches && opportunityData.coverage.status !== "FAIL" && opportunityData.qualifiedCombinations > 0, blockers };
+  }, [opportunityData, marketUniverse, strategySelection, directionSelection, scannerTimeframe, minimumTradesForRanking, backtestYears, backtestCostBps, capital, risk]);
 
   async function scan(forceRefresh = false) {
     setLoading(true);
@@ -140,6 +138,37 @@ function App() {
         : "Could not connect to the scanner.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function runOpportunityScan() {
+    setOpportunityLoading(true);
+    setOpportunityError(null);
+    try {
+      const query = new URLSearchParams({
+        years: backtestYears === "3" ? "3" : "5",
+        capital: String(Math.max(1, Number(capital) || 100000)),
+        risk: String(Math.max(1, Number(risk) || 1000)),
+        costBps: String(Math.max(0, Math.min(200, Number(backtestCostBps) || 0))),
+        minTrades: String(Math.max(30, Math.min(500, Number(minimumTradesForRanking) || 30))),
+        universe: marketUniverse,
+        strategy: strategySelection,
+        direction: directionSelection,
+        timeframe: scannerTimeframe
+      });
+      const response = await fetch("/api/opportunities?" + query.toString(), {
+        headers: { accept: "application/json" }
+      });
+      const payload: unknown = await response.json();
+      if (!response.ok) {
+        const body = typeof payload === "object" && payload !== null ? payload as Record<string, unknown> : {};
+        throw new Error(typeof body.error === "string" ? body.error : "The opportunity scan failed.");
+      }
+      setOpportunityData(payload as OpportunityScanResponse);
+    } catch (caught) {
+      setOpportunityError(caught instanceof Error ? caught.message : "Could not connect to the opportunity scanner.");
+    } finally {
+      setOpportunityLoading(false);
     }
   }
 
@@ -346,8 +375,11 @@ function App() {
           <div>
             <div className="section-kicker">MARKET RESEARCH / OPPORTUNITY SCANNER</div>
             <h2 id="opportunity-title">Market Opportunity Scanner</h2>
-            <p>Choose the research universe and strategy scope. The scanner enforces data and sample-size gates; unavailable market/strategy combinations are not ranked as if they were tested.</p>
+            <p>Compare fixed daily strategy families using separate training, validation and final-test periods. The final-test results are deliberately not used to sort the leaderboard.</p>
           </div>
+          <button className="scan-button" onClick={() => void runOpportunityScan()} disabled={opportunityLoading || Number(capital) <= 0 || Number(risk) <= 0}>
+            {opportunityLoading ? <><span className="spinner"></span> Auditing &amp; ranking…</> : <><span>↗</span> Run opportunity scan</>}
+          </button>
         </div>
         <div className="opportunity-controls">
           <label className="field">
@@ -364,10 +396,10 @@ function App() {
             <span>Strategy</span>
             <select value={strategySelection} onChange={(event) => setStrategySelection(event.target.value)} aria-label="Strategy selection">
               <option value="all">All validated strategies</option>
-              <option value="breakout">Breakout + volume (current model)</option>
-              <option value="trend" disabled>Trend following — not implemented</option>
-              <option value="pullback" disabled>Trend pullback — not implemented</option>
-              <option value="mean-reversion" disabled>Mean reversion — not implemented</option>
+              <option value="trend-following">Trend following</option>
+              <option value="breakout-volume">Breakout + volume</option>
+              <option value="trend-pullback">Trend pullback</option>
+              <option value="mean-reversion">Mean reversion</option>
             </select>
           </label>
           <label className="field">
@@ -388,21 +420,63 @@ function App() {
           </label>
           <label className="field">
             <span>Minimum closed trades <small>FOR RANKING</small></span>
-            <input className="backtest-number" type="number" min="30" max="500" step="5" value={minimumTradesForRanking} onChange={(event) => setMinimumTradesForRanking(String(Math.max(30, Math.min(500, Number(event.target.value) || 30))))} aria-label="Minimum completed trades for ranking" />
+            <input className="backtest-number" type="number" min="30" max="500" step="5" value={minimumTradesForRanking} onChange={(event) => setMinimumTradesForRanking(String(Math.max(30, Math.min(500, Number(event.target.value) || 30)))} aria-label="Minimum completed trades for ranking" />
           </label>
         </div>
         <div className={`opportunity-readiness ${scannerReadiness.ready ? "opportunity-ready" : "opportunity-blocked"}`}>
           <div>
-            <span className={`gate-state ${scannerReadiness.ready ? "gate-open" : "gate-blocked"}`}>{scannerReadiness.ready ? "READY TO RANK" : "RANKING BLOCKED"}</span>
-            <h3>{scannerReadiness.ready ? "Eligible for research comparison" : "Evidence gate is active"}</h3>
-            <p>Defaults: all supported instruments · all validated strategies · both directions · daily · at least {Math.max(30, Number(minimumTradesForRanking) || 30)} closed trades. “All” means all validated combinations with usable history, not unsupported products.</p>
+            <span className={`gate-state ${scannerReadiness.ready ? "gate-open" : "gate-blocked"}`}>{scannerReadiness.ready ? "RESEARCH CANDIDATES QUALIFIED" : "RANKING GATE ACTIVE"}</span>
+            <h3>{scannerReadiness.ready ? "Qualified research candidates are available" : "Evidence gates are active"}</h3>
+            <p>Defaults: all supported instruments · all validated strategies · both directions · daily · at least {Math.max(30, Number(minimumTradesForRanking) || 30)} training trades. Ranking uses validation expectancy; the final test is displayed separately and never used to sort.</p>
+            {opportunityData && <p className="coverage-summary">Data coverage: {opportunityData.coverage.status} · {opportunityData.coverage.symbolsWithFullWindow}/{opportunityData.coverage.symbolsRequested} stocks have full-window history · {opportunityData.evaluatedCombinations} combinations evaluated · {opportunityData.qualifiedCombinations} passed all gates.</p>}
           </div>
           <div className="opportunity-blockers">
-            <strong>Current blockers</strong>
-            <ul>{scannerReadiness.blockers.map((reason) => <li key={reason}>{reason}</li>)}</ul>
+            <strong>{scannerReadiness.ready ? "Research cautions" : "Current blockers"}</strong>
+            {scannerReadiness.blockers.length > 0
+              ? <ul>{scannerReadiness.blockers.map((reason) => <li key={reason}>{reason}</li>)}</ul>
+              : <ul><li>Short results are hypothetical price-direction simulations, not execution-ready short trades.</li><li>Each candidate is an independent single-instrument simulation, not a combined portfolio.</li></ul>}
           </div>
         </div>
-        <p className="backtest-hint">The current Historical backtest below remains the legacy long-only breakout baseline. These settings drive readiness checks; they do not yet change its simulated trades or produce a ranked opportunity leaderboard. Unsupported combinations stay blocked rather than receiving invented results.</p>
+        {opportunityLoading && <div className="backtest-progress"><span className="spinner"></span> Fetching up to five years of daily history, checking data coverage and testing fixed rule sets…</div>}
+        {opportunityError && <div className="error-banner"><strong>Opportunity scan unavailable</strong><span>{opportunityError}</span><button onClick={() => void runOpportunityScan()}>Try again</button></div>}
+        {opportunityData && <>
+          <div className="backtest-period-line">
+            <span>REQUESTED PERIOD <strong>{opportunityData.coverage.requestedPeriod.startDate} → {opportunityData.coverage.requestedPeriod.endDate}</strong></span>
+            <span>UNIVERSE <strong>{opportunityData.coverage.symbolsWithFullWindow} / {opportunityData.coverage.symbolsRequested} full history</strong></span>
+            <span>VALIDATION SPLIT <strong>60% / 20% / 20%</strong></span>
+          </div>
+          {opportunityData.coverage.notes.map((note) => <div className="inline-warning" key={note}>{note}</div>)}
+          {opportunityData.coverage.excludedSymbols.length > 0 && <details className="coverage-details">
+            <summary>Excluded symbols / data issues ({opportunityData.coverage.excludedSymbols.length})</summary>
+            <ul>{opportunityData.coverage.excludedSymbols.map((item) => <li key={item.symbol}><strong>{item.symbol}</strong>: {item.reason}</li>)}</ul>
+          </details>}
+          <div className="opportunity-results-heading">
+            <div><strong>Ranked research candidates</strong><span>Sorted only by validation expectancy in R per trade. Final test is for confirmation, not ranking.</span></div>
+            {opportunityData.candidates.length > 0 && <button className="export-button" onClick={() => downloadOpportunityCsv(opportunityData.candidates)}>↓ Export CSV</button>}
+          </div>
+          <div className="table-scroll">
+            <table className="opportunity-table">
+              <thead><tr><th>RANK</th><th>INSTRUMENT</th><th>STRATEGY</th><th>DIRECTION</th><th>LATEST SETUP</th><th>VALIDATION EXP. R</th><th>VALIDATION PF</th><th>VALIDATION RETURN</th><th>VALIDATION DD</th><th>TRADES TRAIN / VAL / TEST</th><th>FINAL TEST RETURN</th></tr></thead>
+              <tbody>
+                {opportunityData.candidates.map((candidate) => <tr key={candidate.symbol + candidate.strategy + candidate.direction}>
+                  <td className="number-cell">{candidate.rank}</td>
+                  <td><div className="stock-cell"><strong>{candidate.symbol.replace(".NS", "")}</strong><small>{candidate.name}</small></div></td>
+                  <td>{candidate.strategyName}</td>
+                  <td><span className={`action-pill ${candidate.direction === "LONG" ? "action-triggered" : "action-watch"}`}>{candidate.direction}</span><small className="execution-caveat">{candidate.executionStatus === "SHORT_THEORETICAL_ONLY" ? "Theoretical only" : "Research only"}</small></td>
+                  <td>{candidate.currentSignal ? <><span className="action-pill action-triggered">Setup</span><small className="execution-caveat">{candidate.signalDate}<br/>Close {fixed(candidate.signalClose)} · Stop {fixed(candidate.referenceStop)} · Target {fixed(candidate.referenceTarget)}</small></> : <span className="muted-cell">No latest trigger</span>}</td>
+                  <td className={`number-cell ${(candidate.validation.expectancyR ?? 0) >= 0 ? "positive" : "negative"}`}>{candidate.validation.expectancyR === null ? "—" : fixed(candidate.validation.expectancyR, 3)}R</td>
+                  <td className="number-cell">{candidate.validation.profitFactor === null ? "N/A" : fixed(candidate.validation.profitFactor, 2)}</td>
+                  <td className={`number-cell ${candidate.validation.totalReturnPct >= 0 ? "positive" : "negative"}`}>{pct(candidate.validation.totalReturnPct)}</td>
+                  <td className="number-cell negative">-{fixed(candidate.validation.maxDrawdownPct)}%</td>
+                  <td className="number-cell">{candidate.inSample.tradeCount} / {candidate.validation.tradeCount} / {candidate.finalTest.tradeCount}</td>
+                  <td className={`number-cell ${candidate.finalTest.totalReturnPct >= 0 ? "positive" : "negative"}`}>{pct(candidate.finalTest.totalReturnPct)}<small className="execution-caveat">{fixed(candidate.finalTest.expectancyR, 3)}R expectancy</small></td>
+                </tr>)}
+                {opportunityData.candidates.length === 0 && <tr><td colSpan={11} className="empty-state">No combinations passed full-history, minimum trade-count, accounting and validation gates. This is a valid outcome; do not lower thresholds solely to force a leaderboard.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+          <div className="backtest-assumptions"><strong>Research and execution limitations</strong><p>{opportunityData.limitations.join(" ")}</p></div>
+        </>}
       </section>
 
       <section className="backtest-section" aria-labelledby="backtest-title">
