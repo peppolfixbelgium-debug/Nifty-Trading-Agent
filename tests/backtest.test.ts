@@ -66,6 +66,37 @@ test("transaction costs reduce or do not improve results versus zero-cost baseli
   assert.ok(withCosts.metrics.totalCostsInr >= 0);
 });
 
+test("closed trade P&L reconciles to ending equity within display-rounding tolerance", () => {
+  const result = run();
+  const tradePnl = result.trades.reduce((sum, trade) => sum + trade.netPnlInr, 0);
+  assert.ok(result.accounting.reconciled);
+  assert.ok(Math.abs(result.accounting.equityDerivedNetPnlInr - tradePnl) <= result.accounting.toleranceInr);
+});
+
+test("a missing stock candle does not remove an open position from marked equity", () => {
+  const baseline = run();
+  const heldTrade = baseline.trades.find((trade) => trade.holdingDays >= 4);
+  assert.ok(heldTrade, "synthetic series should produce a trade lasting at least four sessions");
+
+  const count = 320;
+  const indexCandles = makeCandles(count, { start: 20000, step: 2 });
+  const stockCandles = makeCandles(count, { start: 100, step: 0.1, stockVolume: true });
+  const missingDate = new Date(Date.parse(heldTrade.entryDate + "T00:00:00Z") + 2 * 86_400_000).toISOString().slice(0, 10);
+  const sparseCandles = stockCandles.filter((candle) => new Date(candle.time).toISOString().slice(0, 10) !== missingDate);
+  const sparseResult = simulateBacktest({
+    yearsRequested: 3,
+    capitalInr: 100000,
+    requestedRiskInr: 1000,
+    costBpsPerSide: 15,
+    indexCandles,
+    stocks: [{ symbol: "TEST.NS", name: "Test Company", candles: sparseCandles }]
+  });
+  const point = sparseResult.equityCurve.find((item) => item.date === missingDate);
+  assert.ok(point, "equity series should preserve the market-date row");
+  assert.ok(point.equityInr > 95000, "the open position should be marked at the last observed close");
+  assert.ok(sparseResult.accounting.reconciled);
+});
+
 test("same-candle stop and target ambiguity is configured conservatively", () => {
   const result = run();
   assert.match(result.assumptions.sameDayStopAndTargetRule, /assume the stop was hit first/i);

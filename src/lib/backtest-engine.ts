@@ -77,6 +77,33 @@ export type BacktestResponse = {
   equityCurve: EquityPoint[];
   trades: BacktestTrade[];
   warnings: string[];
+  accounting: {
+    closedTradeNetPnlInr: number;
+    equityDerivedNetPnlInr: number;
+    reconciliationDifferenceInr: number;
+    toleranceInr: number;
+    reconciled: boolean;
+  };
+  dataQuality?: {
+    requestedPeriod: { startDate: string; endDate: string };
+    marketDataPeriod: { startDate: string; endDate: string };
+    marketCoveragePct: number;
+    actualMarketCandles: number;
+    symbolsRequested: number;
+    symbolsLoaded: number;
+    symbolsWithFullWindow: number;
+    symbolsExcluded: number;
+    marketHistoryComplete: boolean;
+    status: "PASS" | "LIMITED" | "FAIL";
+    reasons: string[];
+  };
+  rankingEligibility?: {
+    eligible: boolean;
+    minimumTrades: number;
+    completedTrades: number;
+    outOfSampleTrades: number;
+    reasons: string[];
+  };
 };
 
 type Signal = {
@@ -119,6 +146,14 @@ const rounded = (value: number, places = 2): number => {
   return Math.round((value + Number.EPSILON) * factor) / factor;
 };
 const dateKey = (time: number): string => new Date(time).toISOString().slice(0, 10);
+
+function lastCandleOnOrBefore(candles: Candle[], date: string): Candle | undefined {
+  for (let index = candles.length - 1; index >= 0; index -= 1) {
+    const candle = candles[index];
+    if (candle && dateKey(candle.time) <= date) return candle;
+  }
+  return undefined;
+}
 
 function marketRegimeAt(indexCandles: Candle[], index: number): MarketRegime {
   if (index < 199) return "UNAVAILABLE";
@@ -330,7 +365,12 @@ export function simulateBacktest(options: BacktestOptions): BacktestResponse {
           closePosition(date, exitPrice, exitReason, dayIndex);
         }
       } else if (dayIndex === dates.length - 1 && openTrade) {
-        closePosition(date, openTrade.entryPrice, "END_OF_DATA", dayIndex);
+        // Do not invent an entry-price exit when the provider omits the final bar.
+        // Use the last actually observed close and report its actual date.
+        const lastObserved = stock ? lastCandleOnOrBefore(stock.candles, date) : undefined;
+        if (lastObserved) {
+          closePosition(dateKey(lastObserved.time), lastObserved.close, "END_OF_DATA", dayIndex);
+        }
       }
     }
 
@@ -351,8 +391,11 @@ export function simulateBacktest(options: BacktestOptions): BacktestResponse {
 
     const currentTradeStock = openTrade ? usableStocks.find((stock) => stock.symbol === openTrade?.symbol) : undefined;
     const currentTradeIndex = currentTradeStock?.indexByDate.get(date);
-    const mark = currentTradeIndex === undefined ? undefined : currentTradeStock?.candles[currentTradeIndex]?.close;
-    const equityInr = cash + (openTrade && mark !== undefined ? openTrade.quantity * mark : 0);
+    const observedMark = currentTradeIndex === undefined
+      ? currentTradeStock ? lastCandleOnOrBefore(currentTradeStock.candles, date)?.close : undefined
+      : currentTradeStock?.candles[currentTradeIndex]?.close;
+    // A missing stock candle must not make an open position disappear from equity.
+    const equityInr = cash + (openTrade && observedMark !== undefined ? openTrade.quantity * observedMark : 0);
     equityCurve.push({ date, equityInr: rounded(equityInr) });
   }
 
@@ -388,6 +431,19 @@ export function simulateBacktest(options: BacktestOptions): BacktestResponse {
   const benchmarkCagrPct = benchmarkFinalInr > 0
     ? (Math.pow(benchmarkFinalInr / capitalInr, 1 / yearsElapsed) - 1) * 100
     : null;
+
+  // Reconcile display-rounded trade P&L to the equity-derived result.
+  const closedTradeNetPnlInr = trades.reduce((sum, trade) => sum + trade.netPnlInr, 0);
+  const equityDerivedNetPnlInr = rounded(finalEquityInr - capitalInr);
+  const reconciliationDifferenceInr = rounded(equityDerivedNetPnlInr - closedTradeNetPnlInr);
+  const reconciliationToleranceInr = rounded(Math.max(0.05, trades.length * 0.01 + 0.02));
+  const accounting = {
+    closedTradeNetPnlInr: rounded(closedTradeNetPnlInr),
+    equityDerivedNetPnlInr,
+    reconciliationDifferenceInr,
+    toleranceInr: reconciliationToleranceInr,
+    reconciled: Math.abs(reconciliationDifferenceInr) <= reconciliationToleranceInr
+  };
 
   return {
     generatedAt: new Date().toISOString(),
@@ -425,6 +481,7 @@ export function simulateBacktest(options: BacktestOptions): BacktestResponse {
     },
     equityCurve,
     trades,
-    warnings: options.warnings ?? []
+    warnings: options.warnings ?? [],
+    accounting
   };
 }

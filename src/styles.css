@@ -196,3 +196,61 @@ tbody tr:hover{background:#141e27}
   .out-of-sample-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
   .backtest-trades-heading{align-items:flex-start}
 }
+
+
+/* Data quality and ranking eligibility gate */
+.data-quality-panel{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(260px,1fr);gap:22px;padding:20px;border:1px solid var(--line);border-radius:5px;margin:18px 0;background:#101720}
+.data-quality-pass{border-color:#315442;background:#111d18}
+.data-quality-limited{border-color:#62502e;background:#1f1b13}
+.data-quality-fail{border-color:#673c3c;background:#211719}
+.data-quality-main h3{font:700 19px var(--display);letter-spacing:-.025em;margin:8px 0}
+.data-quality-main>p{font-size:10px;line-height:1.65;color:var(--muted);margin:8px 0}
+.data-quality-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:12px 0 4px}
+.data-quality-stats span{display:flex;flex-direction:column;gap:6px;min-width:0}
+.data-quality-stats small{font:8px var(--mono);color:var(--muted);letter-spacing:.06em}
+.data-quality-stats strong{font:600 15px var(--display);overflow-wrap:anywhere}
+.accounting-line{border-top:1px solid var(--line);padding-top:9px!important}
+.ranking-gate{border-left:1px solid var(--line);padding-left:20px;display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.gate-state{border:1px solid var(--line);border-radius:3px;padding:5px 7px;font:9px var(--mono);letter-spacing:.08em}
+.gate-open{color:var(--mint);border-color:#315442;background:#14231b}
+.gate-blocked{color:var(--amber);border-color:#62502e;background:#261f14}
+.ranking-gate>strong{font:600 14px var(--display)}
+.ranking-gate>span:not(.gate-state){font:10px var(--mono);color:var(--muted)}
+.ranking-gate ul{margin:0;padding-left:17px;color:#b5a47e;font-size:10px;line-height:1.6}
+.ranking-gate p{font-size:10px;line-height:1.55;color:var(--muted);margin:0}
+@media(max-width:900px){.data-quality-panel{grid-template-columns:1fr}.ranking-gate{border-left:0;border-top:1px solid var(--line);padding:15px 0 0}.data-quality-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* Market Opportunity Scanner configuration and research gate */
+.opportunity-section{padding:36px 0;border-bottom:1px solid var(--line)}
+.opportunity-controls{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:13px;align-items:end;margin-top:22px}
+.opportunity-controls select,.opportunity-controls input{height:42px;border:1px solid #33404b;border-radius:5px;background:#0c1218;color:var(--text);padding:0 10px;font-size:11px;min-width:0;width:100%;outline:none}
+.opportunity-controls select:focus,.opportunity-controls input:focus{border-color:#629878;box-shadow:0 0 0 2px #a4f4c511}
+.opportunity-controls select:disabled option{color:#687785}
+.opportunity-readiness{display:grid;grid-template-columns:minmax(230px,.8fr) minmax(0,1.5fr);gap:22px;padding:19px 20px;margin-top:18px;border:1px solid var(--line);border-radius:5px;background:#101720}
+.opportunity-blocked{border-color:#62502e;background:#1f1b13}
+.opportunity-ready{border-color:#315442;background:#111d18}
+.opportunity-readiness h3{font:700 18px var(--display);margin:10px 0 7px}
+.opportunity-readiness p{font-size:10px;line-height:1.65;color:var(--muted);margin:0}
+.opportunity-blockers{border-left:1px solid var(--line);padding-left:20px}
+.opportunity-blockers strong{font-size:11px}
+.opportunity-blockers ul{margin:8px 0 0;padding-left:17px;color:#c7b48a;font-size:10px;line-height:1.7}
+@media(max-width:1100px){.opportunity-controls{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:800px){.opportunity-controls{grid-template-columns:1fr 1fr}.opportunity-readiness{grid-template-columns:1fr}.opportunity-blockers{border-left:0;border-top:1px solid var(--line);padding:13px 0 0}}
+@media(max-width:480px){.opportunity-controls{grid-template-columns:1fr}}
+
+
+.opportunity-results-heading{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:24px 0 12px}
+.opportunity-results-heading>div{display:flex;flex-direction:column;gap:6px}
+.opportunity-results-heading strong{font:600 14px var(--display)}
+.opportunity-results-heading span{font-size:10px;line-height:1.5;color:var(--muted)}
+.coverage-summary{margin-top:8px!important;color:#b5c6ba!important}
+.coverage-details{margin:12px 0;border:1px solid var(--line);border-radius:4px;padding:11px 13px;color:var(--muted);font-size:10px}
+.coverage-details summary{cursor:pointer;color:#c4d0d8}
+.coverage-details ul{margin:9px 0 0;padding-left:18px;line-height:1.7}
+.coverage-details li strong{color:#dfe7eb}
+.opportunity-table{min-width:1450px}
+.opportunity-table td{font-size:10px;vertical-align:top;line-height:1.5}
+.opportunity-table .stock-cell{min-width:95px}
+.execution-caveat{display:block;margin-top:5px;max-width:150px;color:var(--muted);font-size:9px;line-height:1.5;white-space:normal}
+.muted-cell{color:var(--muted);font-size:10px}
