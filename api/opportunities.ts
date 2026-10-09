@@ -26,8 +26,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   const directionValue = typeof req.query.direction === "string" ? req.query.direction : "both";
   const timeframeValue = typeof req.query.timeframe === "string" ? req.query.timeframe : "daily";
 
-  if (universeValue !== "all" && universeValue !== "stocks") {
-    return res.status(400).json({ error: "Unsupported market universe. Choose all supported instruments or the current stock universe." });
+  if (universeValue !== "all" && universeValue !== "stocks" && universeValue !== "indices") {
+    return res.status(400).json({ error: "Unsupported market universe. Choose all supported instruments, the current stock universe or broad/sector indices." });
   }
   const strategyIds: StrategyId[] = ["trend-following", "breakout-volume", "trend-pullback", "mean-reversion"];
   if (strategyValue !== "all" && !strategyIds.includes(strategyValue as StrategyId)) {
