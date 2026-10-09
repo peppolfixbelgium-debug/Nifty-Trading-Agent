@@ -56,6 +56,18 @@ export default function PremiumSelect({
         aria-expanded={open}
         aria-controls={listId}
         onClick={() => setOpen((current) => !current)}
+        onKeyDown={(event) => {
+          if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+          event.preventDefault();
+          setOpen(true);
+          window.requestAnimationFrame(() => {
+            const items = Array.from(rootRef.current?.querySelectorAll<HTMLButtonElement>(".premium-select-option:not(:disabled)") ?? []);
+            if (!items.length) return;
+            const selectedIndex = options.findIndex((option) => option.value === value && !option.disabled);
+            const index = selectedIndex < 0 ? 0 : selectedIndex;
+            (event.key === "ArrowUp" ? items[items.length - 1] : items[index])?.focus();
+          });
+        }}
       >
         <span className="premium-select-value">
           <strong>{selected?.label ?? "Choose an option"}</strong>
