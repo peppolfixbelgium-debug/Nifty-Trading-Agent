@@ -19,7 +19,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   const years = yearsValue === 3 ? 3 : 5;
   const capitalInr = boundedNumber(req.query.capital, 100000, 100000000);
   const riskPerTradeInr = boundedNumber(req.query.risk, 1000, 1000000);
-  const costBpsPerSide = boundedNumber(req.query.costBps, 15, 200);
+  const rawCostBps = typeof req.query.costBps === "string" ? Number(req.query.costBps) : 15;
+  const costBpsPerSide = Number.isFinite(rawCostBps) && rawCostBps >= 0 ? Math.min(rawCostBps, 200) : 15;
 
   try {
     const result = await runHistoricalBacktest({
