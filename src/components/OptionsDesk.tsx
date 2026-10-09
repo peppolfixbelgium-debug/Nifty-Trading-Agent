@@ -45,6 +45,7 @@ export default function OptionsDesk() {
   const [archiveBusy, setArchiveBusy] = useState(false);
   const [archiveError, setArchiveError] = useState<string | null>(null);
   const [selectedContract, setSelectedContract] = useState("");
+  const [showAllStrikes, setShowAllStrikes] = useState(false);
   const [historyRange, setHistoryRange] = useState<Range>("1D");
   const [premium, setPremium] = useState<PremiumResponse | null>(null);
   const [premiumBusy, setPremiumBusy] = useState(false);
@@ -128,11 +129,11 @@ export default function OptionsDesk() {
 
   const chainRows = useMemo(() => (chain?.rows ?? []).filter((row) => row.strike !== null).sort((a, b) => (a.strike ?? 0) - (b.strike ?? 0)), [chain]);
   const selectedRows = useMemo(() => {
-    if (!chainRows.length || chain?.spot == null) return chainRows.slice(0, 15);
+    if (showAllStrikes || !chainRows.length || chain?.spot == null) return chainRows;
     const atmIndex = chainRows.reduce((best, row, index) =>
       Math.abs((row.strike ?? 0) - chain.spot!) < Math.abs((chainRows[best]?.strike ?? 0) - chain.spot!) ? index : best, 0);
     return chainRows.slice(Math.max(0, atmIndex - 8), Math.min(chainRows.length, atmIndex + 9));
-  }, [chainRows, chain?.spot]);
+  }, [chainRows, chain?.spot, showAllStrikes]);
 
   const liveContracts = useMemo(() => {
     const options: Array<{ key: string; label: string }> = [];
@@ -175,7 +176,7 @@ export default function OptionsDesk() {
       })
       .finally(() => { if (!controller.signal.aborted) setPremiumBusy(false); });
     return () => controller.abort();
-  }, [activeKey, historyRange, mode]);
+  }, [activeKey, historyRange, mode, refreshKey]);
 
   const totalCallOi = chainRows.reduce((sum, row) => sum + (row.call?.oi ?? 0), 0);
   const totalPutOi = chainRows.reduce((sum, row) => sum + (row.put?.oi ?? 0), 0);
@@ -226,10 +227,10 @@ export default function OptionsDesk() {
         <h2 id="options-desk-title">Options premium terminal</h2>
         <p>Live option-chain snapshot, bid/ask, open interest, IV/Greeks and contract-specific premium history. Nothing is invented if the provider is disconnected.</p>
       </div>
-      <span className="terminal-data-badge terminal-data-badge-amber"><i /> AUTHORIZED FEED</span>
+      <span className={"terminal-data-badge " + (chain && !chainError ? "" : "terminal-data-badge-amber")}><i /> {chain && !chainError ? "UPSTOX SNAPSHOT" : "FEED CONNECTION"}</span>
     </div>
     <div className="options-mode-tabs" role="tablist" aria-label="Options data mode">
-      <button role="tab" aria-selected={mode === "live"} className={mode === "live" ? "active" : ""} onClick={() => setMode("live")}>Live option chain</button>
+      <button role="tab" aria-selected={mode === "live"} className={mode === "live" ? "active" : ""} onClick={() => setMode("live")}>Current option chain</button>
       <button role="tab" aria-selected={mode === "archive"} className={mode === "archive" ? "active" : ""} onClick={() => setMode("archive")}>Expired contracts &amp; history</button>
     </div>
     <div className="options-controls">
@@ -249,14 +250,15 @@ export default function OptionsDesk() {
         <div><small>OI-BASED MAX PAIN</small><strong>{maxPain === null ? "—" : number.format(maxPain)}</strong><span>Approximation, not a target</span></div>
         <div><small>STRIKES RECEIVED</small><strong>{chainRows.length}</strong><span>Expiry {chain.expiry ?? expiry}</span></div>
       </div>
+      <div className="option-chain-actions"><span>{selectedRows.length} of {chainRows.length} strikes shown</span><button type="button" className="chain-chart-button" onClick={() => setShowAllStrikes((value) => !value)}>{showAllStrikes ? "Focus on near-ATM strikes" : "Show all strikes"}</button></div>
       <div className="chain-table-wrap"><table className="premium-chain-table">
-        <thead><tr><th colSpan={5}>CALLS</th><th className="strike-column">STRIKE</th><th colSpan={5}>PUTS</th></tr><tr><th>OI</th><th>IV</th><th>BID / ASK</th><th>CHART</th><th>LTP</th><th className="strike-column">INR</th><th>LTP</th><th>CHART</th><th>BID / ASK</th><th>IV</th><th>OI</th></tr></thead>
+        <thead><tr><th colSpan={6}>CALLS</th><th className="strike-column">STRIKE</th><th colSpan={6}>PUTS</th></tr><tr><th>OI</th><th>IV</th><th>GREEKS Δ / Θ / Γ / V</th><th>BID / ASK</th><th>CHART</th><th>LTP</th><th className="strike-column">INR</th><th>LTP</th><th>CHART</th><th>BID / ASK</th><th>GREEKS Δ / Θ / Γ / V</th><th>IV</th><th>OI</th></tr></thead>
         <tbody>{selectedRows.map((row) => <tr key={row.strike} className={chain.spot !== null && row.strike === selectedRows.reduce((best, item) => Math.abs((item.strike ?? 0) - (chain.spot ?? 0)) < Math.abs((best?.strike ?? 0) - (chain.spot ?? 0)) ? item : best, selectedRows[0])?.strike ? "chain-atm" : ""}>
-          <td>{row.call?.oi == null ? "—" : number.format(row.call.oi)}</td><td>{row.call?.iv == null ? "—" : row.call.iv.toFixed(1) + "%"}</td><td>{row.call?.bid == null || row.call.ask == null ? "—" : price.format(row.call.bid) + " / " + price.format(row.call.ask)}</td>
+          <td>{row.call?.oi == null ? "—" : number.format(row.call.oi)}</td><td>{row.call?.iv == null ? "—" : row.call.iv.toFixed(1) + "%"}</td><td className="greeks-cell">{row.call ? "Δ " + (row.call.delta == null ? "—" : row.call.delta.toFixed(2)) + " · Θ " + (row.call.theta == null ? "—" : row.call.theta.toFixed(1)) + " · Γ " + (row.call.gamma == null ? "—" : row.call.gamma.toFixed(4)) + " · V " + (row.call.vega == null ? "—" : row.call.vega.toFixed(2)) : "—"}</td><td>{row.call?.bid == null || row.call.ask == null ? "—" : price.format(row.call.bid) + " / " + price.format(row.call.ask)}</td>
           <td><button className="chain-chart-button" disabled={!row.call?.instrumentKey} onClick={() => setSelectedContract(row.call?.instrumentKey ?? "")}>Chart</button></td><td className="chain-call-ltp">{row.call?.ltp == null ? "—" : price.format(row.call.ltp)}</td>
           <th className="strike-column">{row.strike == null ? "—" : number.format(row.strike)}</th>
           <td className="chain-put-ltp">{row.put?.ltp == null ? "—" : price.format(row.put.ltp)}</td><td><button className="chain-chart-button" disabled={!row.put?.instrumentKey} onClick={() => setSelectedContract(row.put?.instrumentKey ?? "")}>Chart</button></td>
-          <td>{row.put?.bid == null || row.put.ask == null ? "—" : price.format(row.put.bid) + " / " + price.format(row.put.ask)}</td><td>{row.put?.iv == null ? "—" : row.put.iv.toFixed(1) + "%"}</td><td>{row.put?.oi == null ? "—" : number.format(row.put.oi)}</td>
+          <td>{row.put?.bid == null || row.put.ask == null ? "—" : price.format(row.put.bid) + " / " + price.format(row.put.ask)}</td><td className="greeks-cell">{row.put ? "Δ " + (row.put.delta == null ? "—" : row.put.delta.toFixed(2)) + " · Θ " + (row.put.theta == null ? "—" : row.put.theta.toFixed(1)) + " · Γ " + (row.put.gamma == null ? "—" : row.put.gamma.toFixed(4)) + " · V " + (row.put.vega == null ? "—" : row.put.vega.toFixed(2)) : "—"}</td><td>{row.put?.iv == null ? "—" : row.put.iv.toFixed(1) + "%"}</td><td>{row.put?.oi == null ? "—" : number.format(row.put.oi)}</td>
         </tr>)}</tbody>
       </table></div>
       <p className="options-note">Chain data as of {chain.generatedAt ? new Date(chain.generatedAt).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit" }) + " IST" : "provider response"} · Snapshot timing follows the provider, not a guaranteed exchange tick feed. Click Chart beside a contract to inspect its own premium history.</p>
