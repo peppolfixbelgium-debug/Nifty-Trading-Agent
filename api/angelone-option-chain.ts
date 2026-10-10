@@ -41,7 +41,6 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     const greekPayload = await greekResponse.json() as { status?: boolean; message?: string; errorcode?: string; data?: Greek[] | null };
     if (greekPayload.status !== true) throw new Error(greekPayload.message ?? greekPayload.errorcode ?? "Angel One returned no Greeks for " + expiry + ".");
     const catalog = master.filter(i => i.exch_seg === "NFO" && i.name === name && i.expiry === chosen.value && (i.instrumenttype === "OPTIDX" || i.instrumenttype === "OPTSTK") && /^\d+$/.test(i.token ?? ""));
-    const byContract = new Map(catalog.map(i => [String(n(i.strike) === null ? "" : n(i.strike)) + "|" + (i.instrumenttype === "OPTIDX" ? (i.symbol?.endsWith("CE") ? "CE" : i.symbol?.endsWith("PE") ? "PE" : "") : ""), i]));
     const greekRows = (greekPayload.data ?? []).map(g => ({ strike: n(g.strikePrice), type: g.optionType, delta: n(g.delta), gamma: n(g.gamma), theta: n(g.theta), vega: n(g.vega), iv: n(g.impliedVolatility), volume: n(g.tradeVolume) })).filter(g => g.strike !== null && (g.type === "CE" || g.type === "PE"));
     const strikes = [...new Set(greekRows.map(g => g.strike!))].sort((a,b) => a-b);
     const indexToken = INDEX_TOKENS[name];
