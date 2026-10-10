@@ -12,6 +12,7 @@ type ArchiveContract = { name: string; instrumentKey: string; tradingSymbol: str
 type ArchiveResponse = { configured?: boolean; dates?: string[]; contracts?: ArchiveContract[]; error?: string; detail?: string };
 type PremiumResponse = { configured?: boolean; source?: string; instrumentKey?: string; range?: string; generatedAt?: string; candles?: Candle[]; note?: string; error?: string; detail?: string };
 type Mode = "live" | "archive";
+type Provider = "angelone" | "upstox";
 type Range = "1D" | "5D" | "1M" | "6M";
 const number = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 });
 const price = new Intl.NumberFormat("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -34,6 +35,7 @@ const RANGES: Range[] = ["1D", "5D", "1M", "6M"];
 
 export default function OptionsDesk() {
   const [mode, setMode] = useState<Mode>("live");
+  const [provider, setProvider] = useState<Provider>("angelone");
   const [underlying, setUnderlying] = useState("NIFTY50");
   const [expiry, setExpiry] = useState("current_week");
   const [chain, setChain] = useState<ChainResponse | null>(null);
@@ -57,7 +59,7 @@ export default function OptionsDesk() {
     const controller = new AbortController();
     setChainBusy(true);
     setChainError(null);
-    fetch("/api/options?underlying=" + underlying + "&expiry=" + encodeURIComponent(expiry) + "&refresh=" + refreshKey, { signal: controller.signal })
+    fetch((provider === "angelone" ? "/api/angelone-option-chain" : "/api/options") + "?underlying=" + underlying + "&expiry=" + encodeURIComponent(expiry) + "&refresh=" + refreshKey, { signal: controller.signal })
       .then(async (response) => {
         const body = await response.json() as ChainResponse;
         if (!response.ok) throw new Error([body.error, body.detail].filter(Boolean).join(" "));
@@ -71,10 +73,10 @@ export default function OptionsDesk() {
       })
       .finally(() => { if (!controller.signal.aborted) setChainBusy(false); });
     return () => controller.abort();
-  }, [mode, underlying, expiry, refreshKey]);
+  }, [mode, provider, underlying, expiry, refreshKey]);
 
   useEffect(() => {
-    if (mode !== "archive") return;
+    if (mode !== "archive" || provider === "angelone") return;
     const controller = new AbortController();
     setArchiveError(null);
     setArchiveDates([]);
@@ -99,10 +101,10 @@ export default function OptionsDesk() {
       })
       .finally(() => { if (!controller.signal.aborted) setArchiveBusy(false); });
     return () => controller.abort();
-  }, [mode, underlying]);
+  }, [mode, provider, underlying]);
 
   useEffect(() => {
-    if (mode !== "archive" || !archiveExpiry) return;
+    if (mode !== "archive" || provider === "angelone" || !archiveExpiry) return;
     const controller = new AbortController();
     setArchiveBusy(true);
     setArchiveError(null);
@@ -125,7 +127,7 @@ export default function OptionsDesk() {
       })
       .finally(() => { if (!controller.signal.aborted) setArchiveBusy(false); });
     return () => controller.abort();
-  }, [mode, underlying, archiveExpiry]);
+  }, [mode, provider, underlying, archiveExpiry]);
 
   const chainRows = useMemo(() => (chain?.rows ?? []).filter((row) => row.strike !== null).sort((a, b) => (a.strike ?? 0) - (b.strike ?? 0)), [chain]);
   const selectedRows = useMemo(() => {
@@ -162,7 +164,7 @@ export default function OptionsDesk() {
     const controller = new AbortController();
     setPremiumBusy(true);
     setPremiumError(null);
-    fetch("/api/option-history?instrumentKey=" + encodeURIComponent(activeKey) + "&range=" + historyRange, { signal: controller.signal })
+    fetch((provider === "angelone" ? "/api/angelone-option-history?instrumentToken=" : "/api/option-history?instrumentKey=") + encodeURIComponent(activeKey) + "&range=" + historyRange, { signal: controller.signal })
       .then(async (response) => {
         const body = await response.json() as PremiumResponse;
         if (!response.ok) throw new Error([body.error, body.detail].filter(Boolean).join(" "));
@@ -176,7 +178,7 @@ export default function OptionsDesk() {
       })
       .finally(() => { if (!controller.signal.aborted) setPremiumBusy(false); });
     return () => controller.abort();
-  }, [activeKey, historyRange, mode, refreshKey]);
+  }, [activeKey, historyRange, mode, provider, refreshKey]);
 
   const totalCallOi = chainRows.reduce((sum, row) => sum + (row.call?.oi ?? 0), 0);
   const totalPutOi = chainRows.reduce((sum, row) => sum + (row.put?.oi ?? 0), 0);
@@ -227,22 +229,22 @@ export default function OptionsDesk() {
         <h2 id="options-desk-title">Options premium terminal</h2>
         <p>Live option-chain snapshot, bid/ask, open interest, IV/Greeks and contract-specific premium history. Nothing is invented if the provider is disconnected.</p>
       </div>
-      <span className={"terminal-data-badge " + (chain && !chainError ? "" : "terminal-data-badge-amber")}><i /> {chain && !chainError ? "UPSTOX SNAPSHOT" : "FEED CONNECTION"}</span>
+      <span className={"terminal-data-badge " + (chain && !chainError ? "" : "terminal-data-badge-amber")}><i /> {chain && !chainError ? (provider === "angelone" ? "ANGEL ONE SNAPSHOT" : "UPSTOX SNAPSHOT") : "FEED CONNECTION"}</span>
     </div>
     <div className="options-mode-tabs" role="tablist" aria-label="Options data mode">
       <button role="tab" aria-selected={mode === "live"} className={mode === "live" ? "active" : ""} onClick={() => setMode("live")}>Current option chain</button>
       <button role="tab" aria-selected={mode === "archive"} className={mode === "archive" ? "active" : ""} onClick={() => setMode("archive")}>Expired contracts &amp; history</button>
     </div>
-    <div className="options-controls">
+    <div className="options-controls">\n      <label className="chart-instrument-picker"><span>DATA PROVIDER</span><select value={provider} onChange={(event) => { setProvider(event.target.value as Provider); setChain(null); setSelectedContract(""); setChainError(null); setPremium(null); }}><option value="angelone">Angel One SmartAPI · free</option><option value="upstox">Upstox</option></select></label>
       <label className="chart-instrument-picker"><span>UNDERLYING</span><select value={underlying} onChange={(event) => { setUnderlying(event.target.value); setChain(null); setSelectedContract(""); }} >{UNDERLYINGS.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}</select></label>
       {mode === "live" ? <label className="chart-instrument-picker"><span>EXPIRY</span><select value={expiry} onChange={(event) => { setExpiry(event.target.value); setSelectedContract(""); }} >{EXPIRIES.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}</select></label>
         : <label className="chart-instrument-picker"><span>HISTORICAL EXPIRY</span><select value={archiveExpiry} onChange={(event) => setArchiveExpiry(event.target.value)} disabled={!archiveDates.length}>{archiveDates.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>}
       <button className="chart-refresh" onClick={() => setRefreshKey((value) => value + 1)} disabled={chainBusy || archiveBusy} aria-label="Refresh option data">↻</button>
     </div>
     {mode === "live" && chainBusy && <div className="chart-loading"><span className="spinner" /> Loading authorised option chain…</div>}
-    {mode === "live" && chainError && <div className="provider-setup-callout"><strong>Connect the options data feed</strong><p>{chainError}</p><ol><li>Create/authorize a market-data app with Upstox.</li><li>Add <code>UPSTOX_ACCESS_TOKEN</code> as a server-side Vercel environment variable. Never put it in frontend code or Git.</li><li>Redeploy and refresh this panel. Tokens expire and may need a secure refresh flow.</li></ol><small>Options quotes, IV and Greeks require the provider to authorize your account. No sample quotes are displayed as live data.</small></div>}
-    {mode === "archive" && (archiveBusy || !archiveDates.length) && !archiveError && <div className="chart-loading"><span className="spinner" /> Loading the available historical expiries and contract catalog…</div>}
-    {mode === "archive" && archiveError && <div className="provider-setup-callout"><strong>Expired-contract archive unavailable</strong><p>{archiveError}</p><small>Upstox documents expired-instrument access as an entitled feature; eligibility depends on your plan/account.</small></div>}
+    {mode === "live" && chainError && <div className="provider-setup-callout"><strong>Connect the options data feed</strong><p>{chainError}</p><ol><li>{provider === "angelone" ? "Create/authorize an Angel One SmartAPI app and generate a valid session JWT." : "Create/authorize a market-data app with Upstox."}</li><li>Add the required provider credentials as server-side Vercel environment variables only. Never put credentials in frontend code, chat or Git.</li><li>Redeploy and refresh this panel. Session tokens expire and need secure re-authentication.</li></ol><small>No sample quotes are displayed as live data.</small></div>}
+    {mode === "archive" && provider === "angelone" && <div className="options-history-message">Angel One adapter currently supports live option-chain data and contract-specific candles only. Expired-contract discovery is not wired yet; switch to Upstox for its existing archive integration.</div>}\n    {mode === "archive" && provider === "upstox" && (archiveBusy || !archiveDates.length) && !archiveError && <div className="chart-loading"><span className="spinner" /> Loading the available historical expiries and contract catalog…</div>}
+    {mode === "archive" && provider === "upstox" && archiveError && <div className="provider-setup-callout"><strong>Expired-contract archive unavailable</strong><p>{archiveError}</p><small>Upstox documents expired-instrument access as an entitled feature; eligibility depends on your plan/account.</small></div>}
     {mode === "live" && chain && !chainError && <>
       <div className="options-kpi-grid">
         <div><small>UNDERLYING SPOT</small><strong>{chain.spot == null ? "—" : price.format(chain.spot)}</strong><span>{UNDERLYINGS.find((item) => item.value === underlying)?.label}</span></div>
@@ -263,7 +265,7 @@ export default function OptionsDesk() {
       </table></div>
       <p className="options-note">Chain data as of {chain.generatedAt ? new Date(chain.generatedAt).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit" }) + " IST" : "provider response"} · Snapshot timing follows the provider, not a guaranteed exchange tick feed. Click Chart beside a contract to inspect its own premium history.</p>
     </>}
-    {mode === "archive" && contracts.length > 0 && !archiveBusy && <>
+    {mode === "archive" && provider === "upstox" && contracts.length > 0 && !archiveBusy && <>
       <div className="archive-contract-picker"><label className="chart-instrument-picker"><span>EXPIRED CONTRACT</span><select value={selectedContract} onChange={(event) => setSelectedContract(event.target.value)}>{contracts.map((item) => <option key={item.instrumentKey} value={item.instrumentKey}>{item.tradingSymbol} · lot {item.lotSize ?? "—"}</option>)}</select></label><span>{contracts.length} contracts returned</span></div>
       <p className="options-note">Historical contract data is not a continuous option series. Each strike and expiry is a distinct instrument; review the selected contract's actual candle coverage.</p>
     </>}
@@ -285,7 +287,7 @@ export default function OptionsDesk() {
           })}
           <polyline points={premiumChart.points} className="premium-history-line" />
         </svg>
-        <div className="chart-source-note">{premium?.source ?? "Upstox premium history"}. Range requested: {historyRange}; provider returned candles only for this contract's available life. This is not stitched across different strikes/expiries.</div>
+        <div className="chart-source-note">{premium?.source ?? (provider === "angelone" ? "Angel One premium history" : "Upstox premium history")}. Range requested: {historyRange}; provider returned candles only for this contract's available life. This is not stitched across different strikes/expiries.</div>
       </>}
     </div>}
     <div className="options-risk-note"><strong>Before an options trade</strong><p>Premium decay, IV change, bid/ask spread, lot size, expiry settlement, slippage and fees can dominate an apparently attractive chart. Open-interest ratio and max pain are descriptive statistics, not reliable directional signals. This panel does not place orders.</p></div>
