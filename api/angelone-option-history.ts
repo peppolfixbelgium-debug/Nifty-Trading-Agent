@@ -36,11 +36,14 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
   const apiKey = process.env.ANGELONE_API_KEY;
   const jwt = process.env.ANGELONE_JWT_TOKEN;
-  if (!apiKey || !jwt) {
+  const localIp = process.env.ANGELONE_CLIENT_LOCAL_IP;
+  const publicIp = process.env.ANGELONE_CLIENT_PUBLIC_IP;
+  const macAddress = process.env.ANGELONE_MAC_ADDRESS;
+  if (!apiKey || !jwt || !localIp || !publicIp || !macAddress) {
     return res.status(503).json({
       configured: false,
       error: "Angel One historical options feed is not connected.",
-      detail: "Set ANGELONE_API_KEY and ANGELONE_JWT_TOKEN as server-side environment variables. Never add broker credentials to frontend code or Git."
+      detail: "Set ANGELONE_API_KEY, ANGELONE_JWT_TOKEN, ANGELONE_CLIENT_LOCAL_IP, ANGELONE_CLIENT_PUBLIC_IP and ANGELONE_MAC_ADDRESS as server-side environment variables. Never add broker credentials to frontend code or Git."
     });
   }
 
@@ -63,9 +66,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     "Content-Type": "application/json",
     "X-UserType": "USER",
     "X-SourceID": "WEB",
-    "X-ClientLocalIP": process.env.ANGELONE_CLIENT_LOCAL_IP ?? "127.0.0.1",
-    "X-ClientPublicIP": process.env.ANGELONE_CLIENT_PUBLIC_IP ?? "127.0.0.1",
-    "X-MACAddress": process.env.ANGELONE_MAC_ADDRESS ?? "00:00:00:00:00:00"
+    "X-ClientLocalIP": localIp,
+    "X-ClientPublicIP": publicIp,
+    "X-MACAddress": macAddress
   };
 
   try {
