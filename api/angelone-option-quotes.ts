@@ -85,7 +85,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         high: numberOrNull((item as Record<string, unknown>).high),
         low: numberOrNull((item as Record<string, unknown>).low),
         close: numberOrNull((item as Record<string, unknown>).close),
-        volume: numberOrNull(item.tradeVolume ?? item.netChange),
+        volume: numberOrNull(item.tradeVolume),
         oi: numberOrNull(item.opnInterest),
         bid: numberOrNull(buy[0]?.price),
         ask: numberOrNull(sell[0]?.price)
