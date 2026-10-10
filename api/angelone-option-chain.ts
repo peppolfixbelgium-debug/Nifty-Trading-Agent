@@ -59,7 +59,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       const quoteResponse = await fetch("https://apiconnect.angelone.in/rest/secure/angelbroking/market/v1/quote", { method: "POST", headers, body: JSON.stringify({ mode: "FULL", exchangeTokens: { NFO: tokens.slice(i,i+50) } }), signal: AbortSignal.timeout(12000) });
       if (!quoteResponse.ok) continue;
       const q = await quoteResponse.json() as { status?: boolean; data?: { fetched?: Array<Record<string, unknown>> } };
-      for (const item of q.data?.fetched ?? []) if (typeof item.symbolToken === "string") quoteMap.set(item.symbolToken, item);
+      for (const item of q.data?.fetched ?? []) if (item.symbolToken !== undefined && item.symbolToken !== null) quoteMap.set(String(item.symbolToken), item);
     }
     const rows = near.map(strike => {
       const side = (type: string) => {
