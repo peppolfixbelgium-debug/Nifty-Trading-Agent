@@ -55,6 +55,8 @@ The cron schedule is weekdays at 03:00 UTC (08:30 India Standard Time). It calcu
 - `GET /api/chart?symbol=^NSEI&range=1Y` returns chart candles for whitelisted stocks and indices. Ranges: `1D` (5-minute intraday), `5D` (15-minute), `1M` (30-minute), `6M`/`1Y` (daily), and `5Y` (weekly). Intraday Yahoo data is a best-effort unofficial provider snapshot, not a guaranteed real-time/exchange-certified feed.
 - `GET /api/options?underlying=NIFTY50&expiry=current_week` returns provider-backed option-chain premiums when `UPSTOX_ACCESS_TOKEN` is configured.
 - `GET /api/angelone-option-history?instrumentToken=12345&range=1D` returns contract-specific historical candles from Angel One SmartAPI for an official NFO instrument token. Supported windows: `1D`, `5D`, `1M`, `6M`. This endpoint is an initial provider adapter and is not yet wired into the Options Premium Terminal UI.
+- `GET /api/angelone-option-quotes?tokens=12345,67890` returns live FULL quotes for 1–50 supplied official NFO tokens; it does not discover tokens itself.
+- `GET /api/angelone-option-greeks?underlying=NIFTY&expiry=29OCT2026` returns provider Greeks/IV for supported live NIFTY-family expiries in `DDMMMYYYY` format. Availability depends on Angel One returning data for that live expiry.
 - `GET /api/option-history?instrumentKey=...&range=1D` returns the selected option contract's history; supported ranges are `1D`, `5D`, `1M`, and `6M`, subject to current/expired data availability and provider permissions.
 - `GET /api/option-expiries?underlying=NIFTY50` and `GET /api/expired-options?underlying=NIFTY50&expiry=YYYY-MM-DD` are for the authenticated provider's expired-contract archive and require the applicable entitlement.
 - `GET /api/opportunities?years=5&capital=100000&risk=1000&costBps=15&minTrades=30&universe=all&strategy=all&direction=both&timeframe=daily` runs the Market Opportunity Scanner. Supported strategy IDs are `trend-following`, `breakout-volume`, `trend-pullback`, and `mean-reversion`; `strategy=all` evaluates all four. `universe=stocks` scans the registered 25-stock NSE list; `universe=indices` scans the broad/sector index list in `src/lib/index-universe.ts`; `universe=all` combines both. Index histories are checked at runtime against the requested window and incomplete/unavailable symbols are excluded with reasons. Yahoo Finance symbols are an unofficial research data source; an index-price backtest is not a tradable futures/options backtest.
@@ -64,7 +66,7 @@ Responses include a generated timestamp, market regime, India VIX context, per-s
 
 ### Angel One SmartAPI (zero-cost provider path)
 
-An initial server-side historical-options endpoint is available at `/api/angelone-option-history`. It uses Angel One's documented historical candle API with exchange `NFO`; it does not place orders. The instrument token must come from Angel One's official instrument master. Do not guess or hardcode tokens because contracts change by expiry and strike.
+An initial set of server-side options endpoints is available at `/api/angelone-option-history`, `/api/angelone-option-quotes`, and `/api/angelone-option-greeks`. It uses Angel One's documented historical candle API with exchange `NFO`; it does not place orders. The instrument token must come from Angel One's official instrument master. Do not guess or hardcode tokens because contracts change by expiry and strike.
 
 Configure these server-side Vercel environment variables only after you have registered/authorised SmartAPI:
 
