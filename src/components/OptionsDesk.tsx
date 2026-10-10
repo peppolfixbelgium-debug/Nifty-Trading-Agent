@@ -269,7 +269,7 @@ export default function OptionsDesk() {
       <div className="archive-contract-picker"><label className="chart-instrument-picker"><span>EXPIRED CONTRACT</span><select value={selectedContract} onChange={(event) => setSelectedContract(event.target.value)}>{contracts.map((item) => <option key={item.instrumentKey} value={item.instrumentKey}>{item.tradingSymbol} · lot {item.lotSize ?? "—"}</option>)}</select></label><span>{contracts.length} contracts returned</span></div>
       <p className="options-note">Historical contract data is not a continuous option series. Each strike and expiry is a distinct instrument; review the selected contract's actual candle coverage.</p>
     </>}
-    {(mode === "live" ? !!activeKey : !!selectedContract) && <div className="premium-chart-section">
+    {(mode === "live" ? !!activeKey : provider === "upstox" && !!selectedContract) && <div className="premium-chart-section">
       <div className="premium-chart-heading"><div><small>CONTRACT PREMIUM / HISTORICAL CANDLES</small><h3>{optionName}</h3><p>{activeKey}</p></div>
         <div className="chart-range-tabs" role="tablist" aria-label="Option premium history timeframe">{RANGES.map((item) => <button key={item} role="tab" aria-selected={historyRange === item} className={historyRange === item ? "active" : ""} onClick={() => setHistoryRange(item)}>{item}</button>)}</div>
       </div>
