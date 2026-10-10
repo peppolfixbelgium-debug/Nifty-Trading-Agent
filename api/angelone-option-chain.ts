@@ -52,7 +52,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     const near = centre === null ? strikes.slice(0, 17) : strikes.slice().sort((a,b) => Math.abs(a-centre)-Math.abs(b-centre)).slice(0, 17).sort((a,b)=>a-b);
     const selected = greekRows.filter(g => near.includes(g.strike!));
     const tokenBySymbol = new Map(catalog.map(i => [i.symbol ?? "", i]));
-    const tokenFor = (strike: number, type: string) => catalog.find(i => n(i.strike) === strike && i.symbol?.endsWith(type));
+    const instrumentStrike = (i: Instrument) => { const value = n(i.strike); return value === null ? null : value > 100000 ? value / 100 : value; };\n    const tokenFor = (strike: number, type: string) => catalog.find(i => instrumentStrike(i) === strike && i.symbol?.endsWith(type));
     const tokens = [...new Set(selected.map(g => tokenFor(g.strike!, g.type!)?.token).filter((v): v is string => !!v))];
     const quoteMap = new Map<string, Record<string, unknown>>();
     for (let i=0; i<tokens.length; i+=50) {
