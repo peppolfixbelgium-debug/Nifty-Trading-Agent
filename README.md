@@ -154,7 +154,7 @@ The Options Premium Terminal has two modes:
 - **Live option chain:** provider-backed spot, strike-wise CALL/PUT premiums, bid/ask, volume/open interest and provider Greeks; PCR and OI-based max pain are descriptive context, not trade signals.
 - **Expired contracts & history:** loads the provider's available expired expiries/contracts and plots actual contract-specific candles. Premiums from different strikes/expiries are never stitched together into a fake continuous series.
 
-This UI is data-first, not a live feed bundled by default. Add the server-side `UPSTOX_ACCESS_TOKEN` in Vercel to use Upstox APIs. The token is not committed to Git. Expired options endpoints may require Upstox Plus. Check Upstox's current entitlement, token expiry, market-data and exchange permission requirements before relying on this workflow.
+The provider selector defaults to **Angel One SmartAPI** and can also use the existing Upstox adapter. Angel One live chain discovery reads the official daily instrument master and joins live Greeks with quotes; missing provider fields remain blank. Configure these server-side Vercel environment variables to use Angel One: `ANGELONE_API_KEY`, `ANGELONE_JWT_TOKEN`, `ANGELONE_CLIENT_LOCAL_IP`, `ANGELONE_CLIENT_PUBLIC_IP`, and `ANGELONE_MAC_ADDRESS`. Do not commit or share these credentials. The JWT session expires and must be renewed securely by the user; automated refresh is not implemented. Angel One historical premium candles are queried by the official instrument token and may be unavailable for expired contracts. The expired-contract archive remains available only through the existing Upstox adapter.
 
 ### Feed limitations (important)
 
