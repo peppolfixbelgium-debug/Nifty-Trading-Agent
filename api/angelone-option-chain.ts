@@ -1,11 +1,11 @@
 import type { ApiRequest, ApiResponse } from "../src/lib/api-types.js";
 
 type Instrument = { token?: string; symbol?: string; name?: string; expiry?: string; strike?: string; lotsize?: string; instrumenttype?: string; exch_seg?: string };
-type Greek = { strike?: string; optionType?: string; delta?: string; gamma?: string; theta?: string; vega?: string; impliedVolatility?: string; tradeVolume?: string };
+type Greek = { strikePrice?: string; optionType?: string; delta?: string; gamma?: string; theta?: string; vega?: string; impliedVolatility?: string; tradeVolume?: string };
 const INDEX_TOKENS: Record<string, string> = { NIFTY: "99926000", BANKNIFTY: "99926009", FINNIFTY: "99926037", MIDCPNIFTY: "99926074" };
 const UNDERLYINGS: Record<string, string> = { NIFTY50: "NIFTY", BANKNIFTY: "BANKNIFTY", FINNIFTY: "FINNIFTY", MIDCPNIFTY: "MIDCPNIFTY" };
 const n = (v: unknown): number | null => { const x = typeof v === "number" ? v : typeof v === "string" && v.trim() ? Number(v) : NaN; return Number.isFinite(x) ? x : null; };
-const expiryDate = (value: string): Date | null => { const d = new Date(value); return Number.isFinite(d.getTime()) ? d : null; };
+const expiryDate = (value: string): Date | null => { const match = /^(\\d{2})([A-Z]{3})(\\d{4})$/i.exec(value); if (!match) return null; const months: Record<string, number> = { JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5, JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11 }; const month = months[match[2]!.toUpperCase()]; if (month === undefined) return null; const d = new Date(Number(match[3]), month, Number(match[1])); return d.getFullYear() === Number(match[3]) && d.getMonth() === month && d.getDate() === Number(match[1]) ? d : null; };
 const ddMmmYyyy = (date: Date) => date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Kolkata" }).replace(/ /g, "").toUpperCase();
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {
