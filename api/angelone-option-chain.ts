@@ -8,6 +8,34 @@ const n = (v: unknown): number | null => { const x = typeof v === "number" ? v :
 const expiryDate = (value: string): Date | null => { const match = /^(\d{2})([A-Z]{3})(\d{4})$/i.exec(value); if (!match) return null; const months: Record<string, number> = { JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5, JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11 }; const month = months[match[2]!.toUpperCase()]; if (month === undefined) return null; const d = new Date(Number(match[3]), month, Number(match[1])); return d.getFullYear() === Number(match[3]) && d.getMonth() === month && d.getDate() === Number(match[1]) ? d : null; };
 const ddMmmYyyy = (date: Date) => date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Kolkata" }).replace(/ /g, "").toUpperCase();
 
+const INSTRUMENT_MASTER_URL = "https://margincalculator.angelone.in/OpenAPI_File/files/OpenAPIScripMaster.json";
+const INSTRUMENT_MASTER_TTL_MS = 30 * 60 * 1000;
+let instrumentMasterCache: { fetchedAt: number; instruments: Instrument[] } | null = null;
+let instrumentMasterRequest: Promise<Instrument[]> | null = null;
+
+async function loadInstrumentMaster(): Promise<Instrument[]> {
+  if (instrumentMasterCache && Date.now() - instrumentMasterCache.fetchedAt < INSTRUMENT_MASTER_TTL_MS) {
+    return instrumentMasterCache.instruments;
+  }
+  if (instrumentMasterRequest) return instrumentMasterRequest;
+  instrumentMasterRequest = (async () => {
+    const response = await fetch(INSTRUMENT_MASTER_URL, { signal: AbortSignal.timeout(15000) });
+    if (!response.ok) throw new Error("Angel One instrument master returned HTTP " + response.status + ".");
+    const payload = await response.json() as unknown;
+    if (!Array.isArray(payload) || payload.length === 0) {
+      throw new Error("Angel One instrument master response was empty or malformed.");
+    }
+    const instruments = payload as Instrument[];
+    instrumentMasterCache = { fetchedAt: Date.now(), instruments };
+    return instruments;
+  })();
+  try {
+    return await instrumentMasterRequest;
+  } finally {
+    instrumentMasterRequest = null;
+  }
+}
+
 export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (req.method !== "GET") { res.setHeader("Allow", "GET"); return res.status(405).json({ error: "Method not allowed. Use GET." }); }
   const apiKey = process.env.ANGELONE_API_KEY, jwt = process.env.ANGELONE_JWT_TOKEN;
@@ -19,9 +47,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (!name) return res.status(400).json({ error: "Angel One currently supports NIFTY, BANKNIFTY, FINNIFTY and MIDCPNIFTY in this panel. SENSEX is not mapped here." });
   const headers: Record<string, string> = { Authorization: "Bearer " + jwt, "X-PrivateKey": apiKey, Accept: "application/json", "Content-Type": "application/json", "X-UserType": "USER", "X-SourceID": "WEB", "X-ClientLocalIP": localIp, "X-ClientPublicIP": publicIp, "X-MACAddress": mac };
   try {
-    const masterResponse = await fetch("https://margincalculator.angelone.in/OpenAPI_File/files/OpenAPIScripMaster.json", { signal: AbortSignal.timeout(15000) });
-    if (!masterResponse.ok) throw new Error("Angel One instrument master returned HTTP " + masterResponse.status + ".");
-    const master = await masterResponse.json() as Instrument[];
+    const master = await loadInstrumentMaster();
     const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
     const expiries = [...new Set(master.filter(i => i.exch_seg === "NFO" && i.name === name && (i.instrumenttype === "OPTIDX" || i.instrumenttype === "OPTSTK") && i.expiry).map(i => i.expiry!))]
       .map(value => ({ value, date: expiryDate(value) })).filter((x): x is { value: string; date: Date } => !!x.date && x.date >= new Date(today.getFullYear(), today.getMonth(), today.getDate()))
