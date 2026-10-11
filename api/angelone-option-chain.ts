@@ -73,7 +73,6 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     const catalog = master.filter(i => i.exch_seg === "NFO" && i.name === name && i.expiry === chosen.value && (i.instrumenttype === "OPTIDX" || i.instrumenttype === "OPTSTK") && /^\d+$/.test(i.token ?? ""));
     const greekRows = (greekPayload.data ?? []).map(g => ({ strike: n(g.strikePrice), type: g.optionType, delta: n(g.delta), gamma: n(g.gamma), theta: n(g.theta), vega: n(g.vega), iv: n(g.impliedVolatility), volume: n(g.tradeVolume) })).filter(g => g.strike !== null && (g.type === "CE" || g.type === "PE"));
     const strikes = [...new Set(greekRows.map(g => g.strike!))].sort((a,b) => a-b);
-    const indexToken = INDEX_TOKENS[name];
     const quoteIndex = await quoteIndexPromise;
     let spot: number | null = null;
     if (quoteIndex?.ok) { const q = await quoteIndex.json() as { status?: boolean; data?: { fetched?: Array<Record<string, unknown>> } }; if (q.status) spot = n(q.data?.fetched?.[0]?.ltp); }
