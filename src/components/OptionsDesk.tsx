@@ -24,9 +24,9 @@ const UNDERLYINGS = [
   { value: "SENSEX", label: "SENSEX" }
 ];
 const EXPIRIES = [
-  { value: "current_week", label: "Current week" },
-  { value: "next_week", label: "Next week" },
-  { value: "far_week", label: "Far week" },
+  { value: "current_week", label: "Nearest available expiry" },
+  { value: "next_week", label: "2nd available expiry" },
+  { value: "far_week", label: "3rd available expiry" },
   { value: "current_month", label: "Current month" },
   { value: "next_month", label: "Next month" },
   { value: "far_month", label: "Far month" }
