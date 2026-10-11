@@ -62,6 +62,10 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       chosen = expiries.find(x => x.date.getFullYear() + "-" + x.date.getMonth() === target) ?? chosen;
     } else chosen = expiries[Math.min(weekIndex, expiries.length - 1)]!;
     const expiry = ddMmmYyyy(chosen.date);
+    const quoteIndexPromise = fetch("https://apiconnect.angelone.in/rest/secure/angelbroking/market/v1/quote", {
+      method: "POST", headers, body: JSON.stringify({ mode: "LTP", exchangeTokens: { NSE: [INDEX_TOKENS[name]] } }),
+      signal: AbortSignal.timeout(12000)
+    }).catch(() => null);
     const greekResponse = await fetch("https://apiconnect.angelone.in/rest/secure/angelbroking/marketData/v1/optionGreek", { method: "POST", headers, body: JSON.stringify({ name, expirydate: expiry }), signal: AbortSignal.timeout(12000) });
     if (!greekResponse.ok) throw new Error("Angel One option Greeks returned HTTP " + greekResponse.status + ".");
     const greekPayload = await greekResponse.json() as { status?: boolean; message?: string; errorcode?: string; data?: Greek[] | null };
@@ -70,9 +74,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     const greekRows = (greekPayload.data ?? []).map(g => ({ strike: n(g.strikePrice), type: g.optionType, delta: n(g.delta), gamma: n(g.gamma), theta: n(g.theta), vega: n(g.vega), iv: n(g.impliedVolatility), volume: n(g.tradeVolume) })).filter(g => g.strike !== null && (g.type === "CE" || g.type === "PE"));
     const strikes = [...new Set(greekRows.map(g => g.strike!))].sort((a,b) => a-b);
     const indexToken = INDEX_TOKENS[name];
-    const quoteIndex = await fetch("https://apiconnect.angelone.in/rest/secure/angelbroking/market/v1/quote", { method: "POST", headers, body: JSON.stringify({ mode: "LTP", exchangeTokens: { NSE: [indexToken] } }), signal: AbortSignal.timeout(12000) });
+    const quoteIndex = await quoteIndexPromise;
     let spot: number | null = null;
-    if (quoteIndex.ok) { const q = await quoteIndex.json() as { status?: boolean; data?: { fetched?: Array<Record<string, unknown>> } }; if (q.status) spot = n(q.data?.fetched?.[0]?.ltp); }
+    if (quoteIndex?.ok) { const q = await quoteIndex.json() as { status?: boolean; data?: { fetched?: Array<Record<string, unknown>> } }; if (q.status) spot = n(q.data?.fetched?.[0]?.ltp); }
     const centre = spot ?? (strikes.length ? strikes[Math.floor(strikes.length/2)]! : null);
     const near = centre === null ? strikes.slice(0, 17) : strikes.slice().sort((a,b) => Math.abs(a-centre)-Math.abs(b-centre)).slice(0, 17).sort((a,b)=>a-b);
     const selected = greekRows.filter(g => near.includes(g.strike!));
