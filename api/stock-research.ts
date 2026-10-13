@@ -123,6 +123,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return res.status(400).json({ error: "Enter an NSE ticker such as RELIANCE, HDFCBANK or INFY." });
   }
   try {
+    const summaryPromise = getSummary(symbol);
     const url = new URL("https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(symbol));
     url.searchParams.set("range", "5y");
     url.searchParams.set("interval", "1d");
@@ -175,7 +176,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       }
     }
 
-    const summary = await getSummary(symbol);
+    const summary = await summaryPromise;
     const price = summary?.price ?? {};
     const detail = summary?.summaryDetail ?? {};
     const stats = summary?.defaultKeyStatistics ?? {};
