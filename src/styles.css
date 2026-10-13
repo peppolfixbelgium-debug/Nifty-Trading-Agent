@@ -664,3 +664,5 @@ tbody tr:hover{background:#141e27}
  .lt-flow-heading{margin-top:22px}
  .lt-table{min-width:760px}
 }
+
+.lt-window-clues{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:145px}
