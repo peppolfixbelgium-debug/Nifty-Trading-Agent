@@ -267,7 +267,7 @@ export default function LongTermInvestorDesk() {
           <tbody>{filteredMoves.slice(0, 40).map((move, index) => <tr key={move.clientName + move.symbol + index}>
             <td><strong>{move.clientName}</strong><small className="lt-company-name">{move.count} disclosed deals</small></td><td><button type="button" className="lt-ticker-link" onClick={() => openStockFromActivity(move.symbol)}>{move.symbol}</button></td>
             <td>₹{n.format(move.buys)} Cr</td><td>₹{n.format(move.sells)} Cr</td><td className={move.netBuyCrore > 0 ? "lt-positive" : move.netBuyCrore < 0 ? "lt-negative" : "lt-neutral"}><strong>{signedCrore(move.netBuyCrore)}</strong><small className="lt-company-name">{move.observedDirection}</small></td>
-            <td>{move.firstBuyObservedInWindow ? <span className="lt-side lt-buy">Buy seen from {dateLabel(move.firstBuyDate)}</span> : move.firstSellDate ? <span className="lt-side lt-sell">Sell seen from {dateLabel(move.firstSellDate)}</span> : "—"}</td>
+            <td><div className="lt-window-clues">{move.firstBuyDate && <span className="lt-side lt-buy">Buy reported from {dateLabel(move.firstBuyDate)}</span>}{move.firstSellDate && <span className="lt-side lt-sell">Sell reported from {dateLabel(move.firstSellDate)}</span>}{!move.firstBuyDate && !move.firstSellDate && "—"}</div></td>
           </tr>)}</tbody>
         </table></div> : <div className="lt-empty"><strong>No institution/client moves match the search.</strong></div>}
         <div className="lt-subheading"><div><span className="section-kicker">QUARTERLY OWNERSHIP CHANGE</span><h3>{(activity.ownershipSymbol ?? activitySymbol).toUpperCase().replace(/\.NS$/, "")} shareholding trail</h3></div><small>Latest exchange-filed summary rows.</small></div>
