@@ -99,6 +99,22 @@ async function getSummary(symbol: string): Promise<Record<string, any> | null> {
   }
 }
 
+function relativeStrengthIndex(values: number[], period = 14): Numeric {
+  if (values.length <= period) return null;
+  let gains = 0;
+  let losses = 0;
+  for (let index = values.length - period; index < values.length; index += 1) {
+    const change = values[index]! - values[index - 1]!;
+    if (change > 0) gains += change;
+    else losses -= change;
+  }
+  const averageGain = gains / period;
+  const averageLoss = losses / period;
+  if (averageLoss === 0) return averageGain > 0 ? 100 : 50;
+  const relativeStrength = averageGain / averageLoss;
+  return 100 - 100 / (1 + relativeStrength);
+}
+
 function returnAtYears(timestamps: number[], values: number[], years: number): Numeric {
   if (timestamps.length < 2 || values.length < 2) return null;
   const finalTime = timestamps[timestamps.length - 1]!;
@@ -161,6 +177,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     const sma = (length: number): Numeric => closes.length >= length ? medianAverage(closes.slice(-length)) : null;
     const sma50 = sma(50);
     const sma200 = sma(200);
+    const rsi14 = relativeStrengthIndex(closes);
     const return1yPct = returnAtYears(timestamps, adjusted, 1);
     const return3yPct = returnAtYears(timestamps, adjusted, 3);
     const return5yPct = returnAtYears(timestamps, adjusted, 5);
@@ -249,7 +266,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         analystRatingKey, analystRecommendationMean,
         yearHigh: numberOrNull(meta.fiftyTwoWeekHigh) ?? chartHigh,
         yearLow: numberOrNull(meta.fiftyTwoWeekLow) ?? chartLow,
-        sma50, sma200, return1yPct, return3yPct, return5yPct, maxDrawdownPct
+        sma50, sma200, rsi14, return1yPct, return3yPct, return5yPct, maxDrawdownPct
       },
       analystConsensus: latestTrend ? {
         period: latestTrend.period ?? "latest",
