@@ -13,6 +13,9 @@ A standalone, rule-based Nifty/NSE scanner. This project is intentionally separa
 - Includes an interactive OHLC chart terminal with 1D/5D/1M/6M/1Y/5Y ranges, SMA 20/50/200 overlays, volume and RSI.
 - Includes an optional authenticated options workspace for current option-chain premiums, bid/ask, OI, IV/Greeks, per-contract intraday history and entitled expired-contract history.
 - Includes read-only scan and historical backtest API routes, a protected weekday scheduled-scan endpoint, unit tests and a GitHub Actions verify workflow.
+- Adds a dedicated long-term Stock Research tab with valuation/fundamental metrics, 1/3/5-year price returns, explainable Buy/Hold/Sell screening, and named analyst/broker rating history when the public data source provides it.
+- The Stock Research tab displays GOOD / MIXED / WEAK or CONTEXT ONLY labels on the metrics and a separate long-term entry watch zone using the last completed daily close, 50-day/200-day averages and RSI(14). A stretched price or damaged trend is explicitly labelled WAIT / WATCH rather than suggesting an immediate buy.
+- Adds an Institutional Activity tab using NSE public bulk/block-deal disclosures, market-wide FII/FPI-DII net flows, and quarter-by-quarter promoter/public shareholding summaries with official filing links.
 
 ## Run locally
 
@@ -56,7 +59,9 @@ The cron schedule is weekdays at 03:00 UTC (08:30 India Standard Time). It calcu
 - `GET /api/options?underlying=NIFTY50&expiry=current_week` returns provider-backed option-chain premiums when `UPSTOX_ACCESS_TOKEN` is configured.
 - `GET /api/option-history?instrumentKey=...&range=1D` returns the selected option contract's history; supported ranges are `1D`, `5D`, `1M`, and `6M`, subject to current/expired data availability and provider permissions.
 - `GET /api/option-expiries?underlying=NIFTY50` and `GET /api/expired-options?underlying=NIFTY50&expiry=YYYY-MM-DD` are for the authenticated provider's expired-contract archive and require the applicable entitlement.
-- `GET /api/opportunities?years=5&capital=100000&risk=1000&costBps=15&minTrades=30&universe=all&strategy=all&direction=both&timeframe=daily` runs the Market Opportunity Scanner. Supported strategy IDs are `trend-following`, `breakout-volume`, `trend-pullback`, and `mean-reversion`; `strategy=all` evaluates all four. `universe=stocks` scans the registered 25-stock NSE list; `universe=indices` scans the broad/sector index list in `src/lib/index-universe.ts`; `universe=all` combines both. Index histories are checked at runtime against the requested window and incomplete/unavailable symbols are excluded with reasons. Yahoo Finance symbols are an unofficial research data source; an index-price backtest is not a tradable futures/options backtest.
+- `GET /api/opportunities?years=5&capital=100000&risk=1000&costBps=15&minTrades=30&universe=all&strategy=all&direction=both&timeframe=daily` runs the Market Opportunity Scanner.
+- `GET /api/stock-research?symbol=RELIANCE` returns completed daily history, available financial ratios, analyst-consensus data and an explainable long-term screening assessment. Accepts an NSE ticker with or without `.NS`. It also returns 50D/200D trend values and RSI(14) for the entry-zone guidance; entry ranges are technical watch bands, not intrinsic-value targets or automatic trade instructions.
+- `GET /api/institutional-activity?days=30&symbol=RELIANCE` returns public NSE bulk/block deals and FII/FPI-DII flows. `days` accepts `7`, `30`, `60` or `90`. Supplying `symbol` adds quarterly promoter/public shareholding summaries and XBRL filing links. Supported strategy IDs are `trend-following`, `breakout-volume`, `trend-pullback`, and `mean-reversion`; `strategy=all` evaluates all four. `universe=stocks` scans the registered 25-stock NSE list; `universe=indices` scans the broad/sector index list in `src/lib/index-universe.ts`; `universe=all` combines both. Index histories are checked at runtime against the requested window and incomplete/unavailable symbols are excluded with reasons. Yahoo Finance symbols are an unofficial research data source; an index-price backtest is not a tradable futures/options backtest.
 
 Responses include a generated timestamp, market regime, India VIX context, per-stock indicator values, a reason per result, and sizing details. Provider failures are represented as warnings or per-symbol errors rather than being silently treated as buy signals.
 
@@ -141,3 +146,20 @@ This UI is data-first, not a live feed bundled by default. Add the server-side `
 ### Feed limitations (important)
 
 The stock/index charts use Yahoo Finance chart data as an initial adapter because no licensed market-data key was supplied. Intraday candle freshness, completeness and availability are not guaranteed. For a professional launch, replace it with an entitled feed or add a first-party Upstox chart-data adapter for the underlying instrument keys. There is no automatic broker execution, and the app cannot guarantee a complete archive of every listed or expired premium.
+
+
+## Long-term investor desk
+
+The long-term investing desk has two dedicated tabs:
+
+- **Stock Research**: searches NSE tickers, shows valuation and fundamental fields where available, long-range returns, 52-week context, drawdown, moving averages, an explainable score and the most recent named analyst/broker rating actions returned by the public source. Fields with no source value remain blank.
+- **Institutional Activity**: shows NSE-disclosed bulk/block deal transactions by client and stock, aggregates disclosed buys/sells only within the selected window, reports market-wide FII/FPI and DII flows, and compares quarterly promoter/public shareholding summaries. An official XBRL filing link is shown where the exchange feed provides one.
+
+### Assessment safeguards and data limits
+
+- Buy/Hold/Sell is a simple, explainable screen using five domains: long-term price trend, 1-year/3-year performance, revenue/earnings growth, profitability, and leverage (leverage is not scored for financial-sector companies). The score is not a prediction, not personalised advice, and not a guarantee of returns.
+- At least three independent domains must be available before the screen emits Buy/Hold/Sell. Otherwise, it returns **Not enough data** rather than inventing an assessment. The score intentionally does not use P/E as a universal buy/sell threshold because valuation ranges differ by sector.
+- Financial ratios and broker/analyst records rely on public Yahoo Finance modules and may be incomplete, delayed or unavailable. Price-history data uses Yahoo Finance's unofficial chart endpoint. No paid market-data service or broker subscription is required by this code.
+- Institutional Activity uses NSE public disclosure endpoints. NSE can rate-limit those endpoints, and data publication or revisions can lag. Bulk/block deals report disclosed transactions, not an investor's complete portfolio. “First buy observed in window” means the first buy visible in the selected lookback only; it is **not** proof of a new position. Market-wide FII/DII flows are not stock-specific.
+- Quarterly public/promoter shareholding percentages are not a substitute for individual institution holdings. Use each company's detailed XBRL disclosure to verify mutual-fund, FPI, insurance and other categories and to confirm apparent new entries or reductions.
+- This feature is India/NSE-first in this repository; it does not claim comprehensive coverage of European or US institution filings.

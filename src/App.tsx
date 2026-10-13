@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import PremiumSelect from "./components/PremiumSelect";
 import MarketChart from "./components/MarketChart";
 import OptionsDesk from "./components/OptionsDesk";
+import LongTermInvestorDesk from "./components/LongTermInvestorDesk";
 import type { BacktestResponse, BacktestTrade } from "./lib/backtest-engine.js";
 import type { OpportunityScanResponse } from "./lib/opportunity-types.js";
 import type { MarketRegime, ScanAction, ScanResponse, ScanResult } from "./lib/types";
@@ -273,25 +274,25 @@ function App() {
       <header className="topbar">
         <a className="brand" href="/" aria-label="Nifty Trading Agent home">
           <span className="brand-mark"><span></span><span></span><span></span></span>
-          <span><strong>NIFTY</strong><small>TRADING AGENT</small></span>
+          <span><strong>NIFTY</strong><small>INVESTOR INTELLIGENCE</small></span>
         </a>
         <div className="topbar-right">
           <span className="live-dot"></span>
-          <span>RULE-BASED SCANNER</span>
+          <span>LONG-TERM RESEARCH</span>
           <span className="topbar-divider"></span>
-          <span className="topbar-muted">NSE · Daily timeframe</span>
+          <span className="topbar-muted">NSE · Investor-first</span>
         </div>
       </header>
       <nav className="terminal-nav" aria-label="Terminal navigation">
-        <a href="#market-chart">Charts</a><a href="#options-terminal">Options premiums</a><a href="#strategy-lab">Strategy lab</a><a href="#setup-watchlist">Watchlist</a><a href="#backtest-lab">Backtest</a>
+        <a href="#long-term-desk">Long-term investing</a><a href="#market-chart">Charts</a><a href="#options-terminal">Options premiums</a><a href="#strategy-lab">Strategy lab</a><a href="#setup-watchlist">Watchlist</a><a href="#backtest-lab">Backtest</a>
       </nav>
 
       <section className="hero">
         <div className="hero-copy">
           <div className="eyebrow"><span className="eyebrow-line"></span> MARKET INTELLIGENCE / 01</div>
-          <h1>Trade the plan.<br /><em>Not the noise.</em></h1>
-          <p>Scan trend, breakout, volume and risk conditions across a focused NSE universe. Every signal has a reason. Every setup has a defined risk.</p>
-          <div className="hero-note"><span className="note-icon">↗</span><span>Signals are screening outputs, not orders or investment advice.</span></div>
+          <h1>Own the business.<br /><em>Not the noise.</em></h1>
+          <p>Research NSE stocks for long-term ownership using financial metrics, valuation, historical performance, analyst ratings and disclosed institutional activity. Existing trading tools remain available further below.</p>
+          <div className="hero-note"><span className="note-icon">↗</span><span>Research outputs need source checks; no orders are placed.</span></div>
         </div>
         <div className="hero-stamp" aria-hidden="true">
           <div className="stamp-ring"><span>RULES</span><b>01</b><span>OVER HUNCHES</span></div>
@@ -302,30 +303,32 @@ function App() {
         </div>
       </section>
 
+      <LongTermInvestorDesk />
+
       <section className="quick-start" aria-labelledby="quick-start-title">
         <div className="quick-start-heading">
           <div>
-            <div className="section-kicker">START HERE / 30-SECOND GUIDE</div>
-            <h2 id="quick-start-title">How to use this app</h2>
-            <p>Use the watchlist for today’s screening context, and the opportunity scanner to compare fixed rules over history.</p>
+            <div className="section-kicker">LONG-TERM INVESTING / QUICK GUIDE</div>
+            <h2 id="quick-start-title">Research before you invest</h2>
+            <p>Start with the stock’s business and valuation, then cross-check disclosures and ownership changes. Trading tools are available below if needed.</p>
           </div>
           <span className="quick-start-badge"><span></span> Research mode · no orders placed</span>
         </div>
         <div className="quick-start-steps">
           <article className="quick-start-step">
             <span className="step-index">01</span>
-            <div><strong>Set your risk</strong><p>Enter total trading capital and your maximum planned loss for one trade. The sizing calculator caps requested risk at 1% of capital.</p></div>
+            <div><strong>Understand the business</strong><p>Open Stock Research. Review valuation, profitability, revenue and earnings growth, long-range returns and the evidence behind the Buy / Hold / Sell screen.</p></div>
           </article>
           <article className="quick-start-step">
             <span className="step-index">02</span>
-            <div><strong>Scan today’s watchlist</strong><p>Tap <b>Scan market</b> and read each status plus its reason. “Avoid” means the current rules block a setup; it is not a prediction that the stock will fall.</p></div>
+            <div><strong>Cross-check disclosed activity</strong><p>Use Institutional Activity for NSE bulk/block deals, FII/FPI and DII market-wide flows, and quarterly ownership disclosures. One large deal alone does not prove a fresh long-term holding.</p></div>
           </article>
           <article className="quick-start-step">
             <span className="step-index">03</span>
-            <div><strong>Compare historical evidence</strong><p>Run Market Opportunity Scanner. Check data coverage, sample sizes, validation expectancy and drawdown. The separate shortlist only shows current setups that pass its stated rules.</p></div>
+            <div><strong>Verify before deciding</strong><p>Open the linked source filings, compare brokers’ dated views, and assess valuation against sector peers. Existing charts, watchlists, backtests and options research remain secondary tools.</p></div>
           </article>
         </div>
-        <div className="quick-start-note"><span>Good to know</span> Use charts for context, inspect why a rule failed, and keep the research shortlist separate from executable trades. Do not force a winner.</div>
+        <div className="quick-start-note"><span>Good to know</span> The screen is a starting point, not personalised financial advice. No source value means “not available,” not zero; no signal or institution’s activity is a guarantee of future returns.</div>
       </section>
 
       <section className="market-strip" aria-label="Market overview">
