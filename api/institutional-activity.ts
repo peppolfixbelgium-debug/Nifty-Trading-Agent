@@ -64,6 +64,13 @@ function isoDate(value: unknown): string | null {
   const parsed = Date.parse(raw);
   return Number.isFinite(parsed) ? new Date(parsed).toISOString().slice(0, 10) : null;
 }
+function indiaToday(): Date {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit"
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map((part) => [part.type, Number(part.value)]));
+  return new Date(values.year!, values.month! - 1, values.day!);
+}
 function dateForNse(value: Date): string {
   const day = String(value.getDate()).padStart(2, "0");
   const month = String(value.getMonth() + 1).padStart(2, "0");
@@ -185,8 +192,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
   try {
     const cookie = await getNseCookies();
-    const today = new Date();
-    const from = new Date(today.getTime() - (days - 1) * 24 * 60 * 60 * 1000);
+    const today = indiaToday();
+    const from = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (days - 1));
     const fromText = dateForNse(from);
     const toText = dateForNse(today);
     const bulkUrl = new URL("https://www.nseindia.com/api/historicalOR/bulk-block-short-deals");
