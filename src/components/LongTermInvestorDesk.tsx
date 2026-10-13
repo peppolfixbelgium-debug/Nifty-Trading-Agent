@@ -22,7 +22,7 @@ type Deal = { date: string | null; symbol: string; company: string; clientName: 
 type Flow = { category: string; date: string | null; buyCrore: number | null; sellCrore: number | null; netCrore: number | null };
 type EntityMove = { symbol: string; company: string; clientName: string; buys: number; sells: number; firstBuyDate: string | null; firstSellDate: string | null; count: number; netBuyCrore: number; observedDirection: string; firstBuyObservedInWindow: boolean };
 type Holding = { symbol: string; name: string; date: string; promoterPct: number | null; publicPct: number | null; submissionDate: string | null; filingUrl: string | null; promoterChangePp: number | null; publicChangePp: number | null; previousDate: string | null; previousFilingUrl: string | null };
-type ActivityResponse = { generatedAt: string; cached: boolean; rangeDays: number; dateRange: { from: string; to: string }; source: string; sources: { deals: string; shareholding: string; fiiDii: string }; deals: Deal[]; entityMoves: EntityMove[]; flows: Flow[]; shareholding: Holding[]; warnings: string[]; notes: string[]; error?: string; detail?: string; hint?: string };
+type ActivityResponse = { ownershipSymbol?: string | null; generatedAt: string; cached: boolean; rangeDays: number; dateRange: { from: string; to: string }; source: string; sources: { deals: string; shareholding: string; fiiDii: string }; deals: Deal[]; entityMoves: EntityMove[]; flows: Flow[]; shareholding: Holding[]; warnings: string[]; notes: string[]; error?: string; detail?: string; hint?: string };
 
 const stocks = UNIVERSE.map((stock) => ({ symbol: stock.symbol.replace(/\.NS$/, ""), fullSymbol: stock.symbol, name: stock.name }));
 const n = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 });
@@ -44,6 +44,7 @@ function dateLabel(value: string | null | undefined): string {
   const parsed = Date.parse(value);
   return Number.isFinite(parsed) ? new Date(parsed).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Kolkata" }) : value;
 }
+function plainPct(value: number | null): string { return value === null || !Number.isFinite(value) ? "—" : value.toFixed(2) + "%"; }
 function actionName(action: Action): string {
   return action === "INSUFFICIENT_DATA" ? "Not enough data" : action === "BUY" ? "Buy / accumulate" : action === "SELL" ? "Sell / review thesis" : "Hold / monitor";
 }
@@ -117,10 +118,6 @@ export default function LongTermInvestorDesk() {
   }
 
   useEffect(() => { void loadResearch("RELIANCE"); }, []);
-  useEffect(() => {
-    if (tab === "institutional" && !activity && !activityBusy) void loadActivity(days, activitySymbol);
-  }, [tab]);
-
   const filteredDeals = useMemo(() => {
     const needle = activitySearch.trim().toLowerCase();
     const minimum = Math.max(0, Number(minimumDealCrore) || 0);
@@ -198,12 +195,12 @@ export default function LongTermInvestorDesk() {
           <MetricCard label="TRAILING P/E" value={research.metrics.trailingPe === null ? "—" : n.format(research.metrics.trailingPe) + "×"} detail="Price divided by trailing earnings; compare within the same sector." />
           <MetricCard label="FORWARD P/E" value={research.metrics.forwardPe === null ? "—" : n.format(research.metrics.forwardPe) + "×"} detail="Uses analyst-forward estimates when published." />
           <MetricCard label="PRICE / BOOK" value={research.metrics.priceToBook === null ? "—" : n.format(research.metrics.priceToBook) + "×"} detail="Price relative to reported book value." />
-          <MetricCard label="RETURN ON EQUITY" value={pct(research.metrics.roePct)} detail="Profitability relative to shareholder equity." tone={research.metrics.roePct === null ? "neutral" : research.metrics.roePct >= 15 ? "positive" : research.metrics.roePct < 5 ? "negative" : "neutral"} />
-          <MetricCard label="PROFIT MARGIN" value={pct(research.metrics.profitMarginPct)} detail="Net income as a share of revenue." tone={research.metrics.profitMarginPct === null ? "neutral" : research.metrics.profitMarginPct > 0 ? "positive" : "negative"} />
-          <MetricCard label="REVENUE GROWTH" value={pct(research.metrics.revenueGrowthPct)} detail="Latest public year-on-year growth reading." tone={research.metrics.revenueGrowthPct === null ? "neutral" : research.metrics.revenueGrowthPct > 0 ? "positive" : "negative"} />
-          <MetricCard label="EARNINGS GROWTH" value={pct(research.metrics.earningsGrowthPct)} detail="Latest public year-on-year earnings reading." tone={research.metrics.earningsGrowthPct === null ? "neutral" : research.metrics.earningsGrowthPct > 0 ? "positive" : "negative"} />
-          <MetricCard label="DEBT / EQUITY" value={pct(research.metrics.debtToEquityPct)} detail="Leverage ratio; not scored directly for financial-sector companies." tone={research.metrics.debtToEquityPct === null ? "neutral" : research.metrics.debtToEquityPct > 150 ? "negative" : research.metrics.debtToEquityPct < 60 ? "positive" : "neutral"} />
-          <MetricCard label="DIVIDEND YIELD" value={pct(research.metrics.dividendYieldPct)} detail="Indicated yield; dividends can change." />
+          <MetricCard label="RETURN ON EQUITY" value={plainPct(research.metrics.roePct)} detail="Profitability relative to shareholder equity." tone={research.metrics.roePct === null ? "neutral" : research.metrics.roePct >= 15 ? "positive" : research.metrics.roePct < 5 ? "negative" : "neutral"} />
+          <MetricCard label="PROFIT MARGIN" value={plainPct(research.metrics.profitMarginPct)} detail="Net income as a share of revenue." tone={research.metrics.profitMarginPct === null ? "neutral" : research.metrics.profitMarginPct > 0 ? "positive" : "negative"} />
+          <MetricCard label="REVENUE GROWTH" value={plainPct(research.metrics.revenueGrowthPct)} detail="Latest public year-on-year growth reading." tone={research.metrics.revenueGrowthPct === null ? "neutral" : research.metrics.revenueGrowthPct > 0 ? "positive" : "negative"} />
+          <MetricCard label="EARNINGS GROWTH" value={plainPct(research.metrics.earningsGrowthPct)} detail="Latest public year-on-year earnings reading." tone={research.metrics.earningsGrowthPct === null ? "neutral" : research.metrics.earningsGrowthPct > 0 ? "positive" : "negative"} />
+          <MetricCard label="DEBT / EQUITY" value={plainPct(research.metrics.debtToEquityPct)} detail="Leverage ratio; not scored directly for financial-sector companies." tone={research.metrics.debtToEquityPct === null ? "neutral" : research.metrics.debtToEquityPct > 150 ? "negative" : research.metrics.debtToEquityPct < 60 ? "positive" : "neutral"} />
+          <MetricCard label="DIVIDEND YIELD" value={plainPct(research.metrics.dividendYieldPct)} detail="Indicated yield; dividends can change." />
         </div>
         <div className="lt-subheading"><div><span className="section-kicker">HISTORICAL PRICE CONTEXT</span><h3>Returns and range</h3></div><small>Adjusted for dividends where Yahoo reports adjusted closes.</small></div>
         <div className="lt-metric-grid lt-returns-grid">
@@ -253,7 +250,7 @@ export default function LongTermInvestorDesk() {
           {(activity.flows.length ? activity.flows : [{ category: "FII/FPI", date: null, buyCrore: null, sellCrore: null, netCrore: null }, { category: "DII", date: null, buyCrore: null, sellCrore: null, netCrore: null }]).map((flow) => <article className="lt-flow-card" key={flow.category}>
             <div className="lt-flow-top"><span>{flow.category}</span><small>{dateLabel(flow.date)}</small></div>
             <strong className={sentimentClass(flow.netCrore)}>{signedCrore(flow.netCrore)}</strong>
-            <div className="lt-flow-values"><span>Buy <b>{signedCrore(flow.buyCrore)}</b></span><span>Sell <b>{signedCrore(flow.sellCrore === null ? null : -flow.sellCrore)}</b></span></div>
+            <div className="lt-flow-values"><span>Buy <b>{signedCrore(flow.buyCrore)}</b></span><span>Sell <b>{signedCrore(flow.sellCrore)}</b></span></div>
             <p>{flow.netCrore === null ? "Net flow not available." : flow.netCrore > 0 ? "Net buying in the reported market segment." : flow.netCrore < 0 ? "Net selling in the reported market segment." : "Reported buying and selling are balanced."}</p>
           </article>)}
         </div>
@@ -273,7 +270,7 @@ export default function LongTermInvestorDesk() {
             <td>{move.firstBuyObservedInWindow ? <span className="lt-side lt-buy">Buy seen from {dateLabel(move.firstBuyDate)}</span> : move.firstSellDate ? <span className="lt-side lt-sell">Sell seen from {dateLabel(move.firstSellDate)}</span> : "—"}</td>
           </tr>)}</tbody>
         </table></div> : <div className="lt-empty"><strong>No institution/client moves match the search.</strong></div>}
-        <div className="lt-subheading"><div><span className="section-kicker">QUARTERLY OWNERSHIP CHANGE</span><h3>{activitySymbol.toUpperCase().replace(/\.NS$/, "")} shareholding trail</h3></div><small>Latest exchange-filed summary rows.</small></div>
+        <div className="lt-subheading"><div><span className="section-kicker">QUARTERLY OWNERSHIP CHANGE</span><h3>{(activity.ownershipSymbol ?? activitySymbol).toUpperCase().replace(/\.NS$/, "")} shareholding trail</h3></div><small>Latest exchange-filed summary rows.</small></div>
         {activity.shareholding.length ? <div className="lt-table-wrap"><table className="lt-table">
           <thead><tr><th>As of</th><th>Promoter group</th><th>Change QoQ</th><th>Public shareholding</th><th>Change QoQ</th><th>Official filing</th></tr></thead>
           <tbody>{activity.shareholding.map((row) => <tr key={row.symbol + row.date}>
