@@ -147,7 +147,7 @@ function latestQuarterRows(payload: unknown): ShareholdingRow[] {
     if (!item || typeof item !== "object") return [];
     const row = item as RecordRow;
     const symbol = text(first(row, ["symbol", "SYMBOL"])).toUpperCase();
-    const date = text(first(row, ["date", "asOnDate", "as_on_date"]));
+    const date = isoDate(first(row, ["date", "asOnDate", "as_on_date"])) ?? text(first(row, ["date", "asOnDate", "as_on_date"]));
     if (!symbol || !date) return [];
     const filingUrl = text(first(row, ["xbrl", "xbrlFileLink", "xbrl_file_link"]));
     return [{
@@ -156,7 +156,7 @@ function latestQuarterRows(payload: unknown): ShareholdingRow[] {
       date,
       promoterPct: asNumber(first(row, ["pr_and_prgrp", "promoterHolding", "promoter_percentage"])),
       publicPct: asNumber(first(row, ["public_val", "publicHolding", "public_percentage"])),
-      submissionDate: text(first(row, ["submissionDate", "submission_date"])) || null,
+      submissionDate: isoDate(first(row, ["submissionDate", "submission_date"])) ?? (text(first(row, ["submissionDate", "submission_date"])) || null),
       filingUrl: /^https:\/\/nsearchives\.nseindia\.com\//i.test(filingUrl) ? filingUrl : null
     }];
   }).sort((a, b) => (Date.parse(b.date) || 0) - (Date.parse(a.date) || 0));
@@ -256,6 +256,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     });
 
     const payload = {
+      ownershipSymbol: rawSymbol || null,
       generatedAt: new Date().toISOString(),
       cached: false,
       rangeDays: days,
