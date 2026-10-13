@@ -308,27 +308,27 @@ function App() {
       <section className="quick-start" aria-labelledby="quick-start-title">
         <div className="quick-start-heading">
           <div>
-            <div className="section-kicker">START HERE / 30-SECOND GUIDE</div>
-            <h2 id="quick-start-title">How to use this app</h2>
-            <p>Use the watchlist for today’s screening context, and the opportunity scanner to compare fixed rules over history.</p>
+            <div className="section-kicker">LONG-TERM INVESTING / QUICK GUIDE</div>
+            <h2 id="quick-start-title">Research before you invest</h2>
+            <p>Start with the stock’s business and valuation, then cross-check disclosures and ownership changes. Trading tools are available below if needed.</p>
           </div>
           <span className="quick-start-badge"><span></span> Research mode · no orders placed</span>
         </div>
         <div className="quick-start-steps">
           <article className="quick-start-step">
             <span className="step-index">01</span>
-            <div><strong>Set your risk</strong><p>Enter total trading capital and your maximum planned loss for one trade. The sizing calculator caps requested risk at 1% of capital.</p></div>
+            <div><strong>Understand the business</strong><p>Open Stock Research. Review valuation, profitability, revenue and earnings growth, long-range returns and the evidence behind the Buy / Hold / Sell screen.</p></div>
           </article>
           <article className="quick-start-step">
             <span className="step-index">02</span>
-            <div><strong>Scan today’s watchlist</strong><p>Tap <b>Scan market</b> and read each status plus its reason. “Avoid” means the current rules block a setup; it is not a prediction that the stock will fall.</p></div>
+            <div><strong>Cross-check disclosed activity</strong><p>Use Institutional Activity for NSE bulk/block deals, FII/FPI and DII market-wide flows, and quarterly ownership disclosures. One large deal alone does not prove a fresh long-term holding.</p></div>
           </article>
           <article className="quick-start-step">
             <span className="step-index">03</span>
-            <div><strong>Compare historical evidence</strong><p>Run Market Opportunity Scanner. Check data coverage, sample sizes, validation expectancy and drawdown. The separate shortlist only shows current setups that pass its stated rules.</p></div>
+            <div><strong>Verify before deciding</strong><p>Open the linked source filings, compare brokers’ dated views, and assess valuation against sector peers. Existing charts, watchlists, backtests and options research remain secondary tools.</p></div>
           </article>
         </div>
-        <div className="quick-start-note"><span>Good to know</span> Use charts for context, inspect why a rule failed, and keep the research shortlist separate from executable trades. Do not force a winner.</div>
+        <div className="quick-start-note"><span>Good to know</span> The screen is a starting point, not personalised financial advice. No source value means “not available,” not zero; no signal or institution’s activity is a guarantee of future returns.</div>
       </section>
 
       <section className="market-strip" aria-label="Market overview">
