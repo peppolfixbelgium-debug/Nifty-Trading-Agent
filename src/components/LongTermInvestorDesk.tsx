@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { UNIVERSE } from "../lib/universe.js";
+import { planLongTermEntry } from "../lib/long-term-entry.js";
 
 type Action = "BUY" | "HOLD" | "SELL" | "INSUFFICIENT_DATA";
 type MetricSet = {
@@ -7,7 +8,7 @@ type MetricSet = {
   dividendYieldPct: number | null; roePct: number | null; profitMarginPct: number | null; revenueGrowthPct: number | null; earningsGrowthPct: number | null;
   debtToEquityPct: number | null; targetMeanPrice: number | null; targetLowPrice: number | null; targetHighPrice: number | null;
   analystRatingKey: string | null; analystRecommendationMean: number | null; yearHigh: number | null; yearLow: number | null;
-  sma50: number | null; sma200: number | null; return1yPct: number | null; return3yPct: number | null; return5yPct: number | null; maxDrawdownPct: number | null;
+  sma50: number | null; sma200: number | null; rsi14: number | null; return1yPct: number | null; return3yPct: number | null; return5yPct: number | null; maxDrawdownPct: number | null;
 };
 type Factor = { key: string; label: string; score: -1 | 0 | 1 | null; finding: string };
 type ResearchResponse = {
@@ -48,10 +49,39 @@ function plainPct(value: number | null): string { return value === null || !Numb
 function actionName(action: Action): string {
   return action === "INSUFFICIENT_DATA" ? "Not enough data" : action === "BUY" ? "Buy / accumulate" : action === "SELL" ? "Sell / review thesis" : "Hold / monitor";
 }
-function MetricCard(props: { label: string; value: string; detail: string; tone?: "positive" | "negative" | "neutral" }) {
-  return <article className="lt-metric-card">
-    <div className="lt-metric-label">{props.label}</div>
-    <strong className={props.tone ? "lt-metric-value lt-" + props.tone : "lt-metric-value"}>{props.value}</strong>
+type MetricTone = "positive" | "negative" | "neutral";
+type MetricSignal = { tone: MetricTone; status: string };
+function higherIsBetter(value: number | null, goodAt: number, weakBelow: number): MetricSignal {
+  if (value === null || !Number.isFinite(value)) return { tone: "neutral", status: "NO DATA" };
+  if (value >= goodAt) return { tone: "positive", status: "GOOD" };
+  if (value < weakBelow) return { tone: "negative", status: "WEAK" };
+  return { tone: "neutral", status: "MIXED" };
+}
+function lowerIsBetter(value: number | null, goodAtMost: number, neutralAtMost: number): MetricSignal {
+  if (value === null || !Number.isFinite(value)) return { tone: "neutral", status: "NO DATA" };
+  if (value <= 0) return { tone: "negative", status: "LOSS / N.M." };
+  if (value <= goodAtMost) return { tone: "positive", status: "LOWER MULTIPLE" };
+  if (value <= neutralAtMost) return { tone: "neutral", status: "MIXED" };
+  return { tone: "negative", status: "RICH MULTIPLE" };
+}
+function returnSignal(value: number | null): MetricSignal {
+  if (value === null || !Number.isFinite(value)) return { tone: "neutral", status: "NO DATA" };
+  if (value > 0) return { tone: "positive", status: "POSITIVE" };
+  if (value < 0) return { tone: "negative", status: "NEGATIVE" };
+  return { tone: "neutral", status: "FLAT" };
+}
+function drawdownSignal(value: number | null): MetricSignal {
+  if (value === null || !Number.isFinite(value)) return { tone: "neutral", status: "NO DATA" };
+  if (value >= -15) return { tone: "positive", status: "MORE MODEST" };
+  if (value >= -30) return { tone: "neutral", status: "ELEVATED" };
+  return { tone: "negative", status: "DEEP DRAWDOWN" };
+}
+function MetricCard(props: { label: string; value: string; detail: string; tone?: MetricTone; status?: string }) {
+  const tone = props.tone ?? "neutral";
+  const status = props.status ?? (tone === "positive" ? "GOOD" : tone === "negative" ? "WEAK" : "CONTEXT");
+  return <article className={"lt-metric-card lt-metric-card-" + tone}>
+    <div className="lt-metric-label"><span>{props.label}</span><strong className={"lt-metric-status lt-metric-status-" + tone}>{status}</strong></div>
+    <strong className={"lt-metric-value lt-" + tone}>{props.value}</strong>
     <p>{props.detail}</p>
   </article>;
 }
@@ -129,6 +159,10 @@ export default function LongTermInvestorDesk() {
     const needle = activitySearch.trim().toLowerCase();
     return (activity?.entityMoves ?? []).filter((move) => !needle || move.clientName.toLowerCase().includes(needle) || move.symbol.toLowerCase().includes(needle) || move.company.toLowerCase().includes(needle));
   }, [activity, activitySearch]);
+  const entryPlan = useMemo(
+    () => research ? planLongTermEntry(research.price, research.metrics.sma50, research.metrics.sma200, research.metrics.rsi14) : null,
+    [research]
+  );
 
   function openStockFromActivity(next: string) {
     setSymbol(next);
@@ -177,11 +211,31 @@ export default function LongTermInvestorDesk() {
           </div>
           <div className="lt-current-price"><small>LAST COMPLETED DAILY CLOSE</small><strong>{inr(research.price)}</strong><span>As of {dateLabel(research.asOf)}</span></div>
           <div className={"lt-decision lt-decision-" + research.assessment.action.toLowerCase().replaceAll("_", "-")}>
-            <small>LONG-TERM SCREEN</small><strong>{actionName(research.assessment.action)}</strong>
+            <small>LONG-TERM SCREEN</small><strong>{research.assessment.action === "BUY" && entryPlan && entryPlan.status !== "IN_ZONE" ? "BUY CANDIDATE · WAIT FOR ENTRY" : actionName(research.assessment.action)}</strong>
             <span>{research.assessment.confidence.replaceAll("_", " ")} confidence · score {research.assessment.score > 0 ? "+" : ""}{research.assessment.score}</span>
           </div>
         </div>
         <div className="lt-assessment-summary"><strong>What the screen says</strong><p>{research.assessment.summary}</p><span>Evidence available: {research.assessment.availableFactors} / {research.assessment.totalFactors} factors · {research.dataQuality.completedDailyCandles} completed daily candles.</span></div>
+        {entryPlan && <section className={"lt-entry-plan lt-entry-plan-" + entryPlan.status.toLowerCase().replaceAll("_", "-")} aria-label="Long-term entry timing">
+          <div className="lt-entry-plan-header">
+            <div><span className="section-kicker">ENTRY TIMING / COMPLETED DAILY DATA</span><h3>Suggested long-term entry zone</h3><p>Technical watch zone only. Business quality, valuation and filings must still support the thesis.</p></div>
+            <span className="lt-entry-status">{entryPlan.status.replaceAll("_", " ")}</span>
+          </div>
+          <div className="lt-entry-zone-main">
+            <div><small>LOWER WATCH LEVEL</small><strong>{inr(entryPlan.low)}</strong></div>
+            <span className="lt-entry-zone-separator">TO</span>
+            <div><small>UPPER WATCH LEVEL</small><strong>{inr(entryPlan.high)}</strong></div>
+          </div>
+          <div className="lt-entry-timing-grid">
+            <div><span>Current close</span><strong>{inr(research.price)}</strong></div>
+            <div><span>50-day average</span><strong>{inr(research.metrics.sma50)}</strong></div>
+            <div><span>200-day average</span><strong>{inr(research.metrics.sma200)}</strong></div>
+            <div><span>RSI (14)</span><strong>{research.metrics.rsi14 === null ? "—" : research.metrics.rsi14.toFixed(1)}</strong></div>
+            <div><span>Distance from 200D</span><strong>{pct(entryPlan.distanceFrom200Pct)}</strong></div>
+          </div>
+          <p className="lt-entry-plan-message">{entryPlan.message}</p>
+          <small className="lt-entry-plan-caveat">The zone is calculated from 50D/200D moving averages and RSI—not intrinsic value. Consider staged entries rather than investing the full amount at once; stop and re-evaluate if the business thesis or data changes.</small>
+        </section>}
         <div className="lt-factor-grid">
           {research.assessment.factors.map((factor) => <article className="lt-factor" key={factor.key}>
             <div><span className="lt-factor-dot" data-score={factor.score === null ? "na" : factor.score > 0 ? "positive" : factor.score < 0 ? "negative" : "neutral"}></span><strong>{factor.label}</strong></div>
@@ -191,25 +245,25 @@ export default function LongTermInvestorDesk() {
         </div>
         <div className="lt-subheading"><div><span className="section-kicker">BUSINESS AND VALUATION</span><h3>Fundamentals at a glance</h3></div><small>Missing fields display as —</small></div>
         <div className="lt-metric-grid">
-          <MetricCard label="MARKET CAPITALISATION" value={marketCap(research.metrics.marketCap)} detail="Size of listed equity value." />
-          <MetricCard label="TRAILING P/E" value={research.metrics.trailingPe === null ? "—" : n.format(research.metrics.trailingPe) + "×"} detail="Price divided by trailing earnings; compare within the same sector." />
-          <MetricCard label="FORWARD P/E" value={research.metrics.forwardPe === null ? "—" : n.format(research.metrics.forwardPe) + "×"} detail="Uses analyst-forward estimates when published." />
-          <MetricCard label="PRICE / BOOK" value={research.metrics.priceToBook === null ? "—" : n.format(research.metrics.priceToBook) + "×"} detail="Price relative to reported book value." />
-          <MetricCard label="RETURN ON EQUITY" value={plainPct(research.metrics.roePct)} detail="Profitability relative to shareholder equity." tone={research.metrics.roePct === null ? "neutral" : research.metrics.roePct >= 15 ? "positive" : research.metrics.roePct < 5 ? "negative" : "neutral"} />
-          <MetricCard label="PROFIT MARGIN" value={plainPct(research.metrics.profitMarginPct)} detail="Net income as a share of revenue." tone={research.metrics.profitMarginPct === null ? "neutral" : research.metrics.profitMarginPct > 0 ? "positive" : "negative"} />
-          <MetricCard label="REVENUE GROWTH" value={plainPct(research.metrics.revenueGrowthPct)} detail="Latest public year-on-year growth reading." tone={research.metrics.revenueGrowthPct === null ? "neutral" : research.metrics.revenueGrowthPct > 0 ? "positive" : "negative"} />
-          <MetricCard label="EARNINGS GROWTH" value={plainPct(research.metrics.earningsGrowthPct)} detail="Latest public year-on-year earnings reading." tone={research.metrics.earningsGrowthPct === null ? "neutral" : research.metrics.earningsGrowthPct > 0 ? "positive" : "negative"} />
-          <MetricCard label="DEBT / EQUITY" value={plainPct(research.metrics.debtToEquityPct)} detail="Leverage ratio; not scored directly for financial-sector companies." tone={research.metrics.debtToEquityPct === null ? "neutral" : research.metrics.debtToEquityPct > 150 ? "negative" : research.metrics.debtToEquityPct < 60 ? "positive" : "neutral"} />
-          <MetricCard label="DIVIDEND YIELD" value={plainPct(research.metrics.dividendYieldPct)} detail="Indicated yield; dividends can change." />
+          <MetricCard label="MARKET CAPITALISATION" value={marketCap(research.metrics.marketCap)} detail="Company size in listed equity value; size alone is not good or bad." status="CONTEXT ONLY" />
+          <MetricCard label="TRAILING P/E" value={research.metrics.trailingPe === null ? "—" : n.format(research.metrics.trailingPe) + "×"} detail="A broad valuation screen: lower is not automatically better; compare with growth, sector and the stock's own history." {...lowerIsBetter(research.metrics.trailingPe, 20, 35)} />
+          <MetricCard label="FORWARD P/E" value={research.metrics.forwardPe === null ? "—" : n.format(research.metrics.forwardPe) + "×"} detail="Uses analyst estimates, which can be wrong or revised. Compare with growth and sector peers." {...lowerIsBetter(research.metrics.forwardPe, 20, 35)} />
+          <MetricCard label="PRICE / BOOK" value={research.metrics.priceToBook === null ? "—" : n.format(research.metrics.priceToBook) + "×"} detail="Lower can be attractive in some sectors; asset-light companies may naturally trade higher." {...lowerIsBetter(research.metrics.priceToBook, 3, 6)} />
+          <MetricCard label="RETURN ON EQUITY" value={plainPct(research.metrics.roePct)} detail="General screen: 15%+ is strong, 5–15% mixed, below 5% weak. Sector context matters." {...higherIsBetter(research.metrics.roePct, 15, 5)} />
+          <MetricCard label="PROFIT MARGIN" value={plainPct(research.metrics.profitMarginPct)} detail="General screen: 15%+ is strong, 5–15% mixed, below 5% weak." {...higherIsBetter(research.metrics.profitMarginPct, 15, 5)} />
+          <MetricCard label="REVENUE GROWTH" value={plainPct(research.metrics.revenueGrowthPct)} detail="Latest public year-on-year reading; positive growth below 10% is labelled mixed." {...higherIsBetter(research.metrics.revenueGrowthPct, 10, 0)} />
+          <MetricCard label="EARNINGS GROWTH" value={plainPct(research.metrics.earningsGrowthPct)} detail="Latest public year-on-year reading; earnings can be volatile due to one-offs." {...higherIsBetter(research.metrics.earningsGrowthPct, 10, 0)} />
+          <MetricCard label="DEBT / EQUITY" value={plainPct(research.metrics.debtToEquityPct)} detail={/bank|financial|insurance|credit|capital market/i.test((research.sector ?? "") + " " + (research.industry ?? "")) ? "Financial-company leverage is structurally different; do not compare directly with non-financial firms." : "Lower leverage can improve resilience; very high leverage deserves scrutiny."} tone={/bank|financial|insurance|credit|capital market/i.test((research.sector ?? "") + " " + (research.industry ?? "")) ? "neutral" : research.metrics.debtToEquityPct === null ? "neutral" : research.metrics.debtToEquityPct < 60 ? "positive" : research.metrics.debtToEquityPct > 150 ? "negative" : "neutral"} status={/bank|financial|insurance|credit|capital market/i.test((research.sector ?? "") + " " + (research.industry ?? "")) ? "SECTOR CONTEXT" : research.metrics.debtToEquityPct === null ? "NO DATA" : research.metrics.debtToEquityPct < 60 ? "LOWER LEVERAGE" : research.metrics.debtToEquityPct > 150 ? "HIGH LEVERAGE" : "MIXED"} />
+          <MetricCard label="DIVIDEND YIELD" value={plainPct(research.metrics.dividendYieldPct)} detail="A low yield is not necessarily bad for a growth company; verify actual declared dividends." tone={research.metrics.dividendYieldPct !== null && research.metrics.dividendYieldPct >= 3 ? "positive" : "neutral"} status={research.metrics.dividendYieldPct === null ? "NO DATA" : research.metrics.dividendYieldPct >= 3 ? "INCOME" : research.metrics.dividendYieldPct >= 1 ? "MODEST" : "LOW / OPTIONAL"} />
         </div>
         <div className="lt-subheading"><div><span className="section-kicker">HISTORICAL PRICE CONTEXT</span><h3>Returns and range</h3></div><small>Adjusted for dividends where Yahoo reports adjusted closes.</small></div>
         <div className="lt-metric-grid lt-returns-grid">
-          <MetricCard label="1-YEAR RETURN" value={pct(research.metrics.return1yPct)} detail="Price performance over roughly one year." tone={sentimentClass(research.metrics.return1yPct) === "lt-neutral" ? "neutral" : research.metrics.return1yPct! > 0 ? "positive" : "negative"} />
-          <MetricCard label="3-YEAR RETURN" value={pct(research.metrics.return3yPct)} detail="Longer-horizon performance, not a forecast." tone={research.metrics.return3yPct === null ? "neutral" : research.metrics.return3yPct > 0 ? "positive" : "negative"} />
-          <MetricCard label="5-YEAR RETURN" value={pct(research.metrics.return5yPct)} detail="Long-range result; past performance is not a guarantee." tone={research.metrics.return5yPct === null ? "neutral" : research.metrics.return5yPct > 0 ? "positive" : "negative"} />
-          <MetricCard label="MAX 1-YEAR DRAWDOWN" value={pct(research.metrics.maxDrawdownPct)} detail="Largest peak-to-trough fall within the observed year." tone="negative" />
-          <MetricCard label="52-WEEK LOW" value={inr(research.metrics.yearLow)} detail="Observed trailing range low." />
-          <MetricCard label="52-WEEK HIGH" value={inr(research.metrics.yearHigh)} detail="Observed trailing range high." />
+          <MetricCard label="1-YEAR RETURN" value={pct(research.metrics.return1yPct)} detail="Adjusted price performance over roughly one year; past return does not predict future results." {...returnSignal(research.metrics.return1yPct)} />
+          <MetricCard label="3-YEAR RETURN" value={pct(research.metrics.return3yPct)} detail="Longer-horizon performance, not a forecast." {...returnSignal(research.metrics.return3yPct)} />
+          <MetricCard label="5-YEAR RETURN" value={pct(research.metrics.return5yPct)} detail="Long-range result; past performance is not a guarantee." {...returnSignal(research.metrics.return5yPct)} />
+          <MetricCard label="MAX 1-YEAR DRAWDOWN" value={pct(research.metrics.maxDrawdownPct)} detail="Largest peak-to-trough fall within the observed year. A deeper drawdown means more historical downside." {...drawdownSignal(research.metrics.maxDrawdownPct)} />
+          <MetricCard label="52-WEEK LOW" value={inr(research.metrics.yearLow)} detail="Observed trailing range low. Being near a low can mean value or worsening fundamentals." status="PRICE CONTEXT" />
+          <MetricCard label="52-WEEK HIGH" value={inr(research.metrics.yearHigh)} detail="Observed trailing range high. Being near a high is not automatically good or bad." status="PRICE CONTEXT" />
         </div>
         <div className="lt-subheading"><div><span className="section-kicker">BROKER / ANALYST VIEW</span><h3>Published ratings</h3></div><small>Third-party analyst data can lag and does not guarantee results.</small></div>
         {research.analystConsensus ? <div className="lt-analyst-summary">
