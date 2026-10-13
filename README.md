@@ -141,3 +141,21 @@ This UI is data-first, not a live feed bundled by default. Add the server-side `
 ### Feed limitations (important)
 
 The stock/index charts use Yahoo Finance chart data as an initial adapter because no licensed market-data key was supplied. Intraday candle freshness, completeness and availability are not guaranteed. For a professional launch, replace it with an entitled feed or add a first-party Upstox chart-data adapter for the underlying instrument keys. There is no automatic broker execution, and the app cannot guarantee a complete archive of every listed or expired premium.
+
+
+## Long-term Investing Workspace
+
+The long-term workspace adds two research tabs above the original scanner:
+
+- **Stock Research**: search listed NSE/BSE equities, view completed daily price history, 50/200-day averages, 52-week range, return, RSI, volatility and available fundamentals. Metrics carry explicit GOOD / NEUTRAL / WEAK / NO DATA labels. The research screen produces a transparent score, a cautious BUY / HOLD / SELL / AVOID-style assessment, a staged entry watch zone and trend confirmation / risk-watch levels. Broker rating changes and target estimates are shown only when returned by the free data source, with dates.
+- **Institutional Activity**: exchange-disclosed bulk/block deals and the NSE's available FII/DII flow rows, filterable by date window, stock/investor text and buy/sell side. The page clearly distinguishes disclosed deal activity from actual portfolio ownership.
+
+### Long-term data routes and limitations
+
+- \`GET /api/stock-search?q=Reliance\` searches free Yahoo Finance equity listings for NSE/BSE ticker suggestions.
+- \`GET /api/long-term-research?symbol=RELIANCE.NS\` returns completed daily candles, calculated long-term metrics, available Yahoo Finance fundamentals/analyst targets and broker rating changes. The quoteSummary modules can be unavailable or rate-limited; the API reports that instead of inventing metrics.
+- \`GET /api/institutional-activity?days=30\` requests NSE India bulk/block deal disclosures and the FII/DII daily activity feed. Supported windows are 7, 30 and 90 days. NSE may rate-limit or deny serverless access; a missing feed is surfaced as an error/warning, not replaced with demo records.
+
+Yahoo Finance endpoints are unofficial and can change or restrict access. NSE disclosures are the source for bulk/block deals and aggregate flow rows; deal reports are not a complete picture of any investor's holdings. "Disclosed buy" does not prove a first-time entry, and "disclosed sell" does not prove a complete exit. The application does not claim to know the full portfolios of public figures, nor does it infer quarterly FII/DII ownership changes from a small deal sample.
+
+Entry ranges and metric ratings are transparent heuristics for research, not intrinsic-value calculations, guaranteed forecasts, stop orders or personalized financial advice. Compare each company with sector peers and review official results, filings, debt, cash flow, dilution, corporate actions and your own portfolio before acting. This project adds no paid service, paid API or subscription.
