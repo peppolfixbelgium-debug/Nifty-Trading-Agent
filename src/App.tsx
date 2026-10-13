@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import PremiumSelect from "./components/PremiumSelect";
 import MarketChart from "./components/MarketChart";
 import OptionsDesk from "./components/OptionsDesk";
+import LongTermResearch from "./components/LongTermResearch";
+import InstitutionalActivity from "./components/InstitutionalActivity";
 import type { BacktestResponse, BacktestTrade } from "./lib/backtest-engine.js";
 import type { OpportunityScanResponse } from "./lib/opportunity-types.js";
 import type { MarketRegime, ScanAction, ScanResponse, ScanResult } from "./lib/types";
@@ -71,6 +73,7 @@ function ActionPill({ action }: { action: ScanAction }) {
 }
 
 function App() {
+  const [workspace, setWorkspace] = useState<"research" | "institutions" | "tools">("research");
   const [data, setData] = useState<ScanResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -245,10 +248,11 @@ function App() {
   );
 
   useEffect(() => {
+    if (workspace !== "tools" || data !== null) return;
     void scan(false);
-    // Load the first view once; manual refresh is explicit.
+    // Load the trading scanner only when the user opens its workspace.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [workspace, data]);
 
   function openChart(symbol: string) {
     setChartSymbol(symbol);
@@ -282,7 +286,13 @@ function App() {
           <span className="topbar-muted">NSE · Daily timeframe</span>
         </div>
       </header>
-      <nav className="terminal-nav" aria-label="Terminal navigation">
+      <nav className="workspace-tabs" aria-label="Main workspaces">
+        <button type="button" role="tab" aria-selected={workspace === "research"} className={workspace === "research" ? "active" : ""} onClick={() => setWorkspace("research")}><span>01</span> Stock Research</button>
+        <button type="button" role="tab" aria-selected={workspace === "institutions"} className={workspace === "institutions" ? "active" : ""} onClick={() => setWorkspace("institutions")}><span>02</span> Institutional Activity</button>
+        <button type="button" role="tab" aria-selected={workspace === "tools"} className={workspace === "tools" ? "active" : ""} onClick={() => setWorkspace("tools")}><span>03</span> Trading Tools</button>
+      </nav>
+      {workspace === "research" ? <LongTermResearch /> : workspace === "institutions" ? <InstitutionalActivity /> : <div className="trading-workspace">
+      <nav className="terminal-nav" aria-label="Trading tools navigation">
         <a href="#market-chart">Charts</a><a href="#options-terminal">Options premiums</a><a href="#strategy-lab">Strategy lab</a><a href="#setup-watchlist">Watchlist</a><a href="#backtest-lab">Backtest</a>
       </nav>
 
@@ -793,6 +803,7 @@ function App() {
         <p>For research and educational screening only. Prices may be delayed, incomplete or wrong. Signals are not personalized financial advice or guaranteed outcomes. Confirm data, liquidity, slippage, corporate actions and your own risk limits before trading. No broker connection or automatic order execution is implemented.</p>
         <span className="footer-version">V1.0 · RULE-BASED</span>
       </footer>
+      </div>}
     </main>
   );
 }
