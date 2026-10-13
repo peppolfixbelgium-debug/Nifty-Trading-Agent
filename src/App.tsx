@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import PremiumSelect from "./components/PremiumSelect";
 import MarketChart from "./components/MarketChart";
 import OptionsDesk from "./components/OptionsDesk";
+import LongTermInvesting from "./components/LongTermInvesting";
 import type { BacktestResponse, BacktestTrade } from "./lib/backtest-engine.js";
 import type { OpportunityScanResponse } from "./lib/opportunity-types.js";
 import type { MarketRegime, ScanAction, ScanResponse, ScanResult } from "./lib/types";
@@ -283,7 +284,7 @@ function App() {
         </div>
       </header>
       <nav className="terminal-nav" aria-label="Terminal navigation">
-        <a href="#market-chart">Charts</a><a href="#options-terminal">Options premiums</a><a href="#strategy-lab">Strategy lab</a><a href="#setup-watchlist">Watchlist</a><a href="#backtest-lab">Backtest</a>
+        <a href="#long-term-investing">Long-term research</a><a href="#market-chart">Charts</a><a href="#options-terminal">Options premiums</a><a href="#strategy-lab">Strategy lab</a><a href="#setup-watchlist">Watchlist</a><a href="#backtest-lab">Backtest</a>
       </nav>
 
       <section className="hero">
@@ -350,6 +351,8 @@ function App() {
           <div className="metric-foot">{watchCount} to watch · {errorCount} data errors</div>
         </div>
       </section>
+
+      <LongTermInvesting />
 
       <MarketChart symbol={chartSymbol} onSelectSymbol={setChartSymbol} />
 
