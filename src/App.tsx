@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import PremiumSelect from "./components/PremiumSelect";
 import MarketChart from "./components/MarketChart";
 import OptionsDesk from "./components/OptionsDesk";
+import LongTermInvestorDesk from "./components/LongTermInvestorDesk";
 import type { BacktestResponse, BacktestTrade } from "./lib/backtest-engine.js";
 import type { OpportunityScanResponse } from "./lib/opportunity-types.js";
 import type { MarketRegime, ScanAction, ScanResponse, ScanResult } from "./lib/types";
@@ -273,25 +274,25 @@ function App() {
       <header className="topbar">
         <a className="brand" href="/" aria-label="Nifty Trading Agent home">
           <span className="brand-mark"><span></span><span></span><span></span></span>
-          <span><strong>NIFTY</strong><small>TRADING AGENT</small></span>
+          <span><strong>NIFTY</strong><small>INVESTOR INTELLIGENCE</small></span>
         </a>
         <div className="topbar-right">
           <span className="live-dot"></span>
-          <span>RULE-BASED SCANNER</span>
+          <span>LONG-TERM RESEARCH</span>
           <span className="topbar-divider"></span>
-          <span className="topbar-muted">NSE · Daily timeframe</span>
+          <span className="topbar-muted">NSE · Investor-first</span>
         </div>
       </header>
       <nav className="terminal-nav" aria-label="Terminal navigation">
-        <a href="#market-chart">Charts</a><a href="#options-terminal">Options premiums</a><a href="#strategy-lab">Strategy lab</a><a href="#setup-watchlist">Watchlist</a><a href="#backtest-lab">Backtest</a>
+        <a href="#long-term-desk">Long-term investing</a><a href="#market-chart">Charts</a><a href="#options-terminal">Options premiums</a><a href="#strategy-lab">Strategy lab</a><a href="#setup-watchlist">Watchlist</a><a href="#backtest-lab">Backtest</a>
       </nav>
 
       <section className="hero">
         <div className="hero-copy">
           <div className="eyebrow"><span className="eyebrow-line"></span> MARKET INTELLIGENCE / 01</div>
-          <h1>Trade the plan.<br /><em>Not the noise.</em></h1>
-          <p>Scan trend, breakout, volume and risk conditions across a focused NSE universe. Every signal has a reason. Every setup has a defined risk.</p>
-          <div className="hero-note"><span className="note-icon">↗</span><span>Signals are screening outputs, not orders or investment advice.</span></div>
+          <h1>Own the business.<br /><em>Not the noise.</em></h1>
+          <p>Research NSE stocks for long-term ownership using financial metrics, valuation, historical performance, analyst ratings and disclosed institutional activity. Existing trading tools remain available further below.</p>
+          <div className="hero-note"><span className="note-icon">↗</span><span>Research outputs need source checks; no orders are placed.</span></div>
         </div>
         <div className="hero-stamp" aria-hidden="true">
           <div className="stamp-ring"><span>RULES</span><b>01</b><span>OVER HUNCHES</span></div>
@@ -301,6 +302,8 @@ function App() {
           </svg>
         </div>
       </section>
+
+      <LongTermInvestorDesk />
 
       <section className="quick-start" aria-labelledby="quick-start-title">
         <div className="quick-start-heading">
