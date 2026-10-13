@@ -1,3 +1,4 @@
+import "../long-term.css";
 import { useEffect, useMemo, useState } from "react";
 import type { LongTermAnalysis, LongTermFundamentals, LongTermMetric, MetricStatus, BrokerRating } from "../lib/long-term-analysis.js";
 
