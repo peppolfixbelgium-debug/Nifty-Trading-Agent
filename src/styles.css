@@ -666,3 +666,49 @@ tbody tr:hover{background:#141e27}
 }
 
 .lt-window-clues{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:145px}
+
+
+/* Long-term entry timing and metric health labels */
+.lt-metric-label{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.lt-metric-label>span:first-child{min-width:0}
+.lt-metric-status{display:inline-flex;flex:0 0 auto;align-items:center;border:1px solid #39444d;border-radius:3px;padding:3px 5px;font:7px var(--mono);letter-spacing:.045em;white-space:nowrap;color:#b2bdc5;background:#202830}
+.lt-metric-status-positive{border-color:#345943;background:#172b20;color:var(--mint)}
+.lt-metric-status-negative{border-color:#684044;background:#2b1b1e;color:#ffaaa4}
+.lt-metric-status-neutral{border-color:#554a32;background:#252116;color:#e4ce95}
+.lt-metric-card-positive{border-color:#315342;background:linear-gradient(135deg,#14231b,#101720)}
+.lt-metric-card-negative{border-color:#56373b;background:linear-gradient(135deg,#271a1d,#101720)}
+.lt-metric-card-neutral{border-color:#303b45}
+.lt-entry-plan{margin:17px 0 24px;padding:18px;border:1px solid #344b40;border-radius:6px;background:radial-gradient(ellipse at 88% 5%,rgba(36,94,61,.15),transparent 45%),#111a20}
+.lt-entry-plan-header{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+.lt-entry-plan-header h3{font:700 20px var(--display);letter-spacing:-.03em;margin:8px 0 5px}
+.lt-entry-plan-header p{font-size:10px;color:#91a09a;line-height:1.6;margin:0}
+.lt-entry-status{display:inline-flex;flex:0 0 auto;padding:6px 8px;border:1px solid #4d4734;border-radius:4px;color:#e8cd8a;background:#211e15;font:8px var(--mono);letter-spacing:.06em;white-space:nowrap}
+.lt-entry-plan-in-zone{border-color:#3c6b4e;background:radial-gradient(ellipse at 88% 5%,rgba(36,94,61,.21),transparent 45%),#111a20}
+.lt-entry-plan-in-zone .lt-entry-status{border-color:#345e44;color:var(--mint);background:#172c20}
+.lt-entry-plan-wait-pullback .lt-entry-status{border-color:#655537;color:#ead092;background:#252014}
+.lt-entry-plan-trend-damaged{border-color:#624043}
+.lt-entry-plan-trend-damaged .lt-entry-status{border-color:#6b3d42;color:#ffaaa4;background:#291a1d}
+.lt-entry-plan-no-data .lt-entry-status{border-color:#3b4650;background:#202830;color:#c0c9cf}
+.lt-entry-zone-main{display:flex;align-items:center;gap:16px;margin-top:15px;padding:15px 16px;border-left:2px solid var(--mint);background:#0d1513}
+.lt-entry-zone-main>div{display:flex;flex-direction:column;gap:7px;min-width:0;flex:1}
+.lt-entry-zone-main small{font:8px var(--mono);letter-spacing:.07em;color:#80988a}
+.lt-entry-zone-main strong{font:700 clamp(20px,2.5vw,30px) var(--display);letter-spacing:-.04em;color:#dff7e7;overflow-wrap:anywhere}
+.lt-entry-zone-separator{font:9px var(--mono);color:#82958a}
+.lt-entry-timing-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;padding:15px 0 13px;border-bottom:1px solid #293740}
+.lt-entry-timing-grid>div{display:flex;flex-direction:column;gap:6px;min-width:0}
+.lt-entry-timing-grid span{font:8px var(--mono);letter-spacing:.02em;color:#83939e}
+.lt-entry-timing-grid strong{font:600 13px var(--mono);color:#e1e8ec;overflow-wrap:anywhere}
+.lt-entry-plan-message{margin:13px 0 8px;font-size:11px;line-height:1.65;color:#c2d4c8}
+.lt-entry-plan-caveat{display:block;color:#7f8e98;font-size:9px;line-height:1.6}
+@media(max-width:700px){
+ .lt-metric-label{gap:5px}
+ .lt-metric-status{font-size:6px;padding:3px 4px;letter-spacing:0}
+ .lt-entry-plan{padding:12px}
+ .lt-entry-plan-header{flex-direction:column;gap:9px}
+ .lt-entry-plan-header h3{font-size:18px}
+ .lt-entry-zone-main{gap:8px;padding:12px 10px}
+ .lt-entry-zone-main strong{font-size:18px}
+ .lt-entry-zone-main small{font-size:7px}
+ .lt-entry-timing-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ .lt-entry-timing-grid strong{font-size:12px}
+}
