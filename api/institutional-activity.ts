@@ -2,7 +2,7 @@ import type { ApiRequest, ApiResponse } from "../src/lib/api-types.js";
 
 type Row = Record<string, unknown>;
 const TTL_MS = 5 * 60 * 1000;
-let cache: { expires: number; value: unknown } | null = null;
+const cache = new Map<string, { expires: number; value: unknown }>();
 const browserHeaders = {
   accept: "application/json,text/plain,*/*",
   "accept-language": "en-US,en;q=0.9",
@@ -76,9 +76,11 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return res.status(400).json({ error: "Choose a stock ticker such as RELIANCE, HDFCBANK or M&M." });
   }
   const refresh = req.query.refresh === "1" || req.query.refresh === "true";
-  if (!refresh && cache && cache.expires > Date.now()) {
+  const cacheKey = "activity:" + symbol;
+  const cached = cache.get(cacheKey);
+  if (!refresh && cached && cached.expires > Date.now()) {
     res.setHeader("Cache-Control", "private, max-age=60");
-    return res.status(200).json({ ...row(cache.value), cached: true });
+    return res.status(200).json({ ...row(cached.value), cached: true });
   }
 
   const warnings: string[] = [];
@@ -92,9 +94,13 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   } catch (error) {
     const detail = error instanceof Error ? error.message : "NSE session could not be started.";
     res.setHeader("Cache-Control", "private, max-age=60");
+    const now = new Date();
     return res.status(200).json({
-      generatedAt: new Date().toISOString(), symbol, deals: [], shareholding: [], warnings: [detail],
-      sources: { deals: "https://www.nseindia.com/market-data/large-deals", shareholding: "https://www.nseindia.com/companies-listing/corporate-filings-shareholding-pattern" },
+      generatedAt: now.toISOString(), period: { from: indiaDate(new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)), to: indiaDate(now), days: 30 },
+      symbol, deals: [], shareholding: [],
+      summary: { reportedDeals: 0, buyDeals: 0, sellDeals: 0, buyNotional: 0, sellNotional: 0, firstReportedBuysInWindow: 0 },
+      warnings: [detail],
+      sources: { deals: "https://www.nseindia.com/market-data/large-deals", shareholding: symbol === "ALL" ? "https://www.nseindia.com/companies-listing/corporate-filings-shareholding-pattern" : "https://www.nseindia.com/companies-listing/corporate-filings-shareholding-pattern?symbol=" + encodeURIComponent(symbol) },
       note: "No sample institutional activity is used. Retry when NSE's public disclosure endpoints are reachable."
     });
   }
@@ -173,7 +179,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     },
     note: "A bulk/block deal is a reported transaction, not proof of a long-term portfolio entry or overall institutional conviction. The 'first reported buy' flag means first BUY print observed for that client/stock in this 30-day feed window, not a confirmed new holding. Quarterly promoter/public percentages are not a substitute for detailed FII/DII category holdings."
   };
-  cache = { expires: Date.now() + TTL_MS, value: output };
+  cache.set(cacheKey, { expires: Date.now() + TTL_MS, value: output });
   res.setHeader("Cache-Control", "private, max-age=60");
   res.setHeader("X-Content-Type-Options", "nosniff");
   return res.status(200).json(output);
