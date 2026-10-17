@@ -222,7 +222,7 @@ export default function LongTermWorkspace() {
       <div className="lt-intro-stat"><small>RESEARCH HORIZON</small><strong>3–5 years</strong><span>Research, not orders</span></div>
     </div>
 
-    <div className="lt-tabs" role="tablist" aria-label="Investment research sections">
+    <div id="investment-tabs" className="lt-tabs" role="tablist" aria-label="Investment research sections">
       <button type="button" role="tab" aria-selected={tab === "research"} className={tab === "research" ? "active" : ""} onClick={() => setTab("research")}><span className="lt-tab-icon">↗</span><span><strong>Stock Research</strong><small>Metrics · entry view · brokers</small></span></button>
       <button type="button" role="tab" aria-selected={tab === "institutions"} className={tab === "institutions" ? "active" : ""} onClick={() => setTab("institutions")}><span className="lt-tab-icon">◎</span><span><strong>Institutional Activity</strong><small>Bulk/block deals · disclosures</small></span></button>
     </div>
