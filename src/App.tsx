@@ -284,9 +284,14 @@ function App() {
         </div>
       </header>
       <nav className="terminal-nav" aria-label="Terminal navigation">
-        <a href="#long-term-desk">Long-term investing</a><a href="#market-chart">Charts</a><a href="#options-terminal">Options premiums</a><a href="#strategy-lab">Strategy lab</a><a href="#setup-watchlist">Watchlist</a><a href="#backtest-lab">Backtest</a>
+        <a href="#long-term-desk">Overview</a><a href="#long-term-tabs">Stock research</a><a href="#long-term-tabs">Institutional activity</a><a href="#quant-lab">Advanced tools</a>
       </nav>
 
+      <LongTermInvestorDesk />
+
+      <details id="quant-lab" className="quant-lab-details">
+        <summary>Advanced tools — technical charts, daily scanner, options research and backtesting</summary>
+        <div className="quant-lab-content">
       <section className="hero">
         <div className="hero-copy">
           <div className="eyebrow"><span className="eyebrow-line"></span> MARKET INTELLIGENCE / 01</div>
@@ -302,8 +307,6 @@ function App() {
           </svg>
         </div>
       </section>
-
-      <LongTermInvestorDesk />
 
       <section className="quick-start" aria-labelledby="quick-start-title">
         <div className="quick-start-heading">
@@ -790,6 +793,9 @@ function App() {
         <div className="rule-card"><span className="rule-number">03</span><div><strong>Market + momentum filter</strong><p>Nifty must be bullish; RSI(14) must be between 50 and 70. A bearish regime blocks new long triggers.</p></div></div>
         <div className="rule-card"><span className="rule-number">04</span><div><strong>Defined risk sizing</strong><p>Stop is 1.5 × ATR below the trigger, target is 2R, risk is capped at 1% and position value at 10% of capital.</p></div></div>
       </section>
+
+        </div>
+      </details>
 
       <footer className="footer">
         <div className="footer-brand"><span className="brand-mark"><span></span><span></span><span></span></span><strong>NIFTY TRADING AGENT</strong></div>
