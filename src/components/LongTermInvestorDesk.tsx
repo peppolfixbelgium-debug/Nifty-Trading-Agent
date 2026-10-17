@@ -181,7 +181,7 @@ export default function LongTermInvestorDesk() {
       <div className="lt-heading-stamp"><span>LONG TERM</span><strong>01–05Y</strong><small>NSE · public data</small></div>
     </div>
 
-    <div className="lt-tabs" role="tablist" aria-label="Long-term investing tools">
+    <div id="long-term-tabs" className="lt-tabs" role="tablist" aria-label="Long-term investing tools">
       <button type="button" role="tab" aria-selected={tab === "research"} className={tab === "research" ? "active" : ""} onClick={() => setTab("research")}>
         <span className="lt-tab-num">01</span><span><strong>Stock research</strong><small>Fundamentals · valuation · analyst views</small></span>
       </button>

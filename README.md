@@ -163,3 +163,8 @@ The long-term investing desk has two dedicated tabs:
 - Institutional Activity uses NSE public disclosure endpoints. NSE can rate-limit those endpoints, and data publication or revisions can lag. Bulk/block deals report disclosed transactions, not an investor's complete portfolio. “First buy observed in window” means the first buy visible in the selected lookback only; it is **not** proof of a new position. Market-wide FII/DII flows are not stock-specific.
 - Quarterly public/promoter shareholding percentages are not a substitute for individual institution holdings. Use each company's detailed XBRL disclosure to verify mutual-fund, FPI, insurance and other categories and to confirm apparent new entries or reductions.
 - This feature is India/NSE-first in this repository; it does not claim comprehensive coverage of European or US institution filings.
+
+
+### Investor-first dashboard layout
+
+The landing screen now opens on the two primary long-term-investing tabs: **Stock Research** and **Institutional Activity**. The UI uses a warm ivory canvas, rounded surface cards, and clearly separated green/ochre/terracotta status states inspired by the supplied dashboard reference. The previous technical chart, scanner, options and backtest workspace remains accessible inside **Advanced tools** so the investor research flow is the default without removing existing capabilities.
