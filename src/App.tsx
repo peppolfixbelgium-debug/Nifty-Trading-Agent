@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import PremiumSelect from "./components/PremiumSelect";
 import MarketChart from "./components/MarketChart";
 import OptionsDesk from "./components/OptionsDesk";
+import LongTermWorkspace from "./components/LongTermWorkspace";
 import type { BacktestResponse, BacktestTrade } from "./lib/backtest-engine.js";
 import type { OpportunityScanResponse } from "./lib/opportunity-types.js";
 import type { MarketRegime, ScanAction, ScanResponse, ScanResult } from "./lib/types";
@@ -273,19 +274,24 @@ function App() {
       <header className="topbar">
         <a className="brand" href="/" aria-label="Nifty Trading Agent home">
           <span className="brand-mark"><span></span><span></span><span></span></span>
-          <span><strong>NIFTY</strong><small>TRADING AGENT</small></span>
+          <span><strong>NIFTY</strong><small>LONG-TERM INVESTING</small></span>
         </a>
         <div className="topbar-right">
           <span className="live-dot"></span>
-          <span>RULE-BASED SCANNER</span>
+          <span>INVESTOR DESK</span>
           <span className="topbar-divider"></span>
-          <span className="topbar-muted">NSE · Daily timeframe</span>
+          <span className="topbar-muted">NSE · Long horizon</span>
         </div>
       </header>
-      <nav className="terminal-nav" aria-label="Terminal navigation">
-        <a href="#market-chart">Charts</a><a href="#options-terminal">Options premiums</a><a href="#strategy-lab">Strategy lab</a><a href="#setup-watchlist">Watchlist</a><a href="#backtest-lab">Backtest</a>
+      <nav className="terminal-nav" aria-label="Workspace navigation">
+        <a href="#investment-tabs">Stock research</a><a href="#investment-tabs">Institutional activity</a><a href="#quant-lab">Advanced tools</a>
       </nav>
 
+      <LongTermWorkspace />
+
+      <details id="quant-lab" className="quant-lab-details">
+        <summary>Advanced quantitative tools — technical charts, daily scanner, options, strategy lab and backtesting</summary>
+        <div className="quant-lab-content">
       <section className="hero">
         <div className="hero-copy">
           <div className="eyebrow"><span className="eyebrow-line"></span> MARKET INTELLIGENCE / 01</div>
@@ -787,6 +793,9 @@ function App() {
         <div className="rule-card"><span className="rule-number">03</span><div><strong>Market + momentum filter</strong><p>Nifty must be bullish; RSI(14) must be between 50 and 70. A bearish regime blocks new long triggers.</p></div></div>
         <div className="rule-card"><span className="rule-number">04</span><div><strong>Defined risk sizing</strong><p>Stop is 1.5 × ATR below the trigger, target is 2R, risk is capped at 1% and position value at 10% of capital.</p></div></div>
       </section>
+
+        </div>
+      </details>
 
       <footer className="footer">
         <div className="footer-brand"><span className="brand-mark"><span></span><span></span><span></span></span><strong>NIFTY TRADING AGENT</strong></div>
