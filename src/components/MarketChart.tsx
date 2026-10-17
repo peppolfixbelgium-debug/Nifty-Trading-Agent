@@ -3,6 +3,7 @@ import type { PointerEvent } from "react";
 import { INDEX_UNIVERSE } from "../lib/index-universe.js";
 import { UNIVERSE } from "../lib/universe.js";
 import type { Candle } from "../lib/types.js";
+import PremiumSelect from "./PremiumSelect.js";
 
 type ChartRange = "1D" | "5D" | "1M" | "6M" | "1Y" | "5Y";
 type ChartResponse = {
@@ -157,14 +158,16 @@ export default function MarketChart({ symbol: initialSymbol, onSelectSymbol }: P
     <div className="terminal-chart-toolbar">
       <label className="chart-instrument-picker">
         <span>INSTRUMENT</span>
-        <select value={symbol} onChange={(event) => { setSymbol(event.target.value); onSelectSymbol?.(event.target.value); setHoverIndex(null); }}>
-          <optgroup label="Broad and sector indices">
-            {INDEX_UNIVERSE.map((item) => <option key={item.symbol} value={item.symbol}>{item.name}</option>)}
-          </optgroup>
-          <optgroup label="NSE stocks">
-            {UNIVERSE.map((item) => <option key={item.symbol} value={item.symbol}>{item.name} · {item.symbol.replace(".NS", "")}</option>)}
-          </optgroup>
-        </select>
+        <PremiumSelect
+          value={symbol}
+          onChange={(nextSymbol) => { setSymbol(nextSymbol); onSelectSymbol?.(nextSymbol); setHoverIndex(null); }}
+          ariaLabel="Chart instrument"
+          className="chart-premium-select"
+          options={[
+            ...INDEX_UNIVERSE.map((item) => ({ value: item.symbol, label: item.name, hint: "Index" })),
+            ...UNIVERSE.map((item) => ({ value: item.symbol, label: item.name, hint: item.symbol.replace(".NS", "") }))
+          ]}
+        />
       </label>
       <div className="chart-range-tabs" role="tablist" aria-label="Chart timeframe">
         {ranges.map((item) => <button key={item} type="button" className={range === item ? "active" : ""} aria-selected={range === item} role="tab" onClick={() => { setRange(item); setHoverIndex(null); }}>{item}</button>)}
