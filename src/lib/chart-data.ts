@@ -64,8 +64,10 @@ export function listChartSymbols(): ChartSymbol[] {
 }
 
 export async function getMarketChart(symbolValue: string, rangeValue: string, forceRefresh = false): Promise<MarketChartResponse> {
-  const stock = SYMBOLS.get(symbolValue);
-  if (!stock) throw new Error("That instrument is not in the supported chart universe.");
+  const stock = SYMBOLS.get(symbolValue) ?? (/^[A-Z0-9&^-]{1,18}\\.NS$/.test(symbolValue)
+    ? { symbol: symbolValue, name: symbolValue.slice(0, -3) }
+    : undefined);
+  if (!stock) throw new Error("Choose a listed NSE symbol such as RELIANCE or HDFCBANK. Only NSE .NS tickers are supported in research mode.");
   const range = (Object.keys(PRESETS) as ChartRange[]).includes(rangeValue as ChartRange)
     ? rangeValue as ChartRange : "1Y";
   const preset = PRESETS[range];
