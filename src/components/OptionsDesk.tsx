@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Candle } from "../lib/types.js";
+import PremiumSelect from "./PremiumSelect.js";
 
 type OptionSide = {
   instrumentKey: string | null; ltp: number | null; close: number | null;
@@ -234,9 +235,15 @@ export default function OptionsDesk() {
       <button role="tab" aria-selected={mode === "archive"} className={mode === "archive" ? "active" : ""} onClick={() => setMode("archive")}>Expired contracts &amp; history</button>
     </div>
     <div className="options-controls">
-      <label className="chart-instrument-picker"><span>UNDERLYING</span><select value={underlying} onChange={(event) => { setUnderlying(event.target.value); setChain(null); setSelectedContract(""); }} >{UNDERLYINGS.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}</select></label>
-      {mode === "live" ? <label className="chart-instrument-picker"><span>EXPIRY</span><select value={expiry} onChange={(event) => { setExpiry(event.target.value); setSelectedContract(""); }} >{EXPIRIES.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}</select></label>
-        : <label className="chart-instrument-picker"><span>HISTORICAL EXPIRY</span><select value={archiveExpiry} onChange={(event) => setArchiveExpiry(event.target.value)} disabled={!archiveDates.length}>{archiveDates.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>}
+      <label className="chart-instrument-picker"><span>UNDERLYING</span>
+        <PremiumSelect value={underlying} ariaLabel="Options underlying" className="chart-premium-select" onChange={(nextUnderlying) => { setUnderlying(nextUnderlying); setChain(null); setSelectedContract(""); }} options={UNDERLYINGS.map((item) => ({ value: item.value, label: item.label, hint: "Options underlying" }))} />
+      </label>
+      {mode === "live" ? <label className="chart-instrument-picker"><span>EXPIRY</span>
+        <PremiumSelect value={expiry} ariaLabel="Options expiry" className="chart-premium-select" onChange={(nextExpiry) => { setExpiry(nextExpiry); setSelectedContract(""); }} options={EXPIRIES.map((item) => ({ value: item.value, label: item.label, hint: "Expiry selector" }))} />
+      </label>
+        : <label className="chart-instrument-picker"><span>HISTORICAL EXPIRY</span>
+          <PremiumSelect value={archiveExpiry} ariaLabel="Historical option expiry" className="chart-premium-select" onChange={setArchiveExpiry} options={archiveDates.map((item) => ({ value: item, label: item, hint: "Expired contract date" }))} />
+        </label>}
       <button className="chart-refresh" onClick={() => setRefreshKey((value) => value + 1)} disabled={chainBusy || archiveBusy} aria-label="Refresh option data">↻</button>
     </div>
     {mode === "live" && chainBusy && <div className="chart-loading"><span className="spinner" /> Loading authorised option chain…</div>}
@@ -264,7 +271,9 @@ export default function OptionsDesk() {
       <p className="options-note">Chain data as of {chain.generatedAt ? new Date(chain.generatedAt).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit" }) + " IST" : "provider response"} · Snapshot timing follows the provider, not a guaranteed exchange tick feed. Click Chart beside a contract to inspect its own premium history.</p>
     </>}
     {mode === "archive" && contracts.length > 0 && !archiveBusy && <>
-      <div className="archive-contract-picker"><label className="chart-instrument-picker"><span>EXPIRED CONTRACT</span><select value={selectedContract} onChange={(event) => setSelectedContract(event.target.value)}>{contracts.map((item) => <option key={item.instrumentKey} value={item.instrumentKey}>{item.tradingSymbol} · lot {item.lotSize ?? "—"}</option>)}</select></label><span>{contracts.length} contracts returned</span></div>
+      <div className="archive-contract-picker"><label className="chart-instrument-picker"><span>EXPIRED CONTRACT</span>
+        <PremiumSelect value={selectedContract} ariaLabel="Expired option contract" className="chart-premium-select" onChange={setSelectedContract} options={contracts.map((item) => ({ value: item.instrumentKey, label: item.tradingSymbol, hint: "Strike " + number.format(item.strike) + " · " + item.type + " · lot " + (item.lotSize ?? "—") }))} />
+      </label><span>{contracts.length} contracts returned</span></div>
       <p className="options-note">Historical contract data is not a continuous option series. Each strike and expiry is a distinct instrument; review the selected contract's actual candle coverage.</p>
     </>}
     {(mode === "live" ? !!activeKey : !!selectedContract) && <div className="premium-chart-section">
