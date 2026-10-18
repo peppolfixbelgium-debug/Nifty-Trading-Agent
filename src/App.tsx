@@ -8,6 +8,17 @@ import type { OpportunityScanResponse } from "./lib/opportunity-types.js";
 import type { MarketRegime, ScanAction, ScanResponse, ScanResult } from "./lib/types";
 
 type Filter = "ALL" | "TRIGGERED" | "WATCH" | "AVOID";
+type Page = "overview" | "research" | "institutional" | "charts" | "options" | "scanner" | "strategy" | "backtest";
+const PAGE_OPTIONS: Array<{ id: Page; label: string }> = [
+  { id: "overview", label: "Overview" }, { id: "research", label: "Stock research" },
+  { id: "institutional", label: "Institutional activity" }, { id: "charts", label: "Charts" },
+  { id: "options", label: "Options" }, { id: "scanner", label: "Market scanner" },
+  { id: "strategy", label: "Strategy lab" }, { id: "backtest", label: "Backtest" }
+];
+function readPageFromLocation(): Page {
+  const value = new URLSearchParams(window.location.search).get("view");
+  return PAGE_OPTIONS.some((page) => page.id === value) ? value as Page : "overview";
+}
 
 const inr0 = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
 const integer = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 });
@@ -72,6 +83,8 @@ function ActionPill({ action }: { action: ScanAction }) {
 }
 
 function App() {
+  const [activePage, setActivePage] = useState<Page>(readPageFromLocation);
+  const [researchSymbol, setResearchSymbol] = useState("RELIANCE");
   const [data, setData] = useState<ScanResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -246,14 +259,33 @@ function App() {
   );
 
   useEffect(() => {
-    void scan(false);
-    // Load the first view once; manual refresh is explicit.
+    if (activePage === "overview" || activePage === "scanner") void scan(false);
+    // Server-side cache helps avoid repeated market-data requests on navigation.
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePage]);
+
+  useEffect(() => {
+    const handlePopState = () => setActivePage(readPageFromLocation());
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
   }, []);
+
+  function navigate(page: Page) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("view", page);
+    window.history.pushState({}, "", url);
+    setActivePage(page);
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }
+
+  function openResearchSymbol(symbol: string) {
+    setResearchSymbol(symbol.trim().toUpperCase().replace(/\.NS$/, ""));
+    navigate("research");
+  }
 
   function openChart(symbol: string) {
     setChartSymbol(symbol);
-    document.getElementById("market-chart")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    navigate("charts");
   }
 
   const rows = useMemo(() => {
@@ -272,10 +304,10 @@ function App() {
   return (
     <main className="app-shell">
       <header className="topbar">
-        <a className="brand" href="/" aria-label="Nifty Trading Agent home">
+        <button className="brand brand-button" type="button" onClick={() => navigate("overview")} aria-label="Nifty Trading Agent home">
           <span className="brand-mark"><span></span><span></span><span></span></span>
           <span><strong>NIFTY</strong><small>INVESTOR INTELLIGENCE</small></span>
-        </a>
+        </button>
         <div className="topbar-right">
           <span className="live-dot"></span>
           <span>LONG-TERM RESEARCH</span>
@@ -284,14 +316,20 @@ function App() {
         </div>
       </header>
       <nav className="terminal-nav" aria-label="Main navigation">
-        <a href="#long-term-desk">Overview</a><a href="#long-term-tabs">Stock research</a><a href="#long-term-tabs">Institutional activity</a><a className="terminal-nav-primary" href="#quant-lab">Trading dashboard</a>
+        {PAGE_OPTIONS.map((page) => <button key={page.id} type="button"
+          className={(activePage === page.id ? "active " : "") + (page.id === "research" || page.id === "institutional" ? "terminal-nav-investor" : "")}
+          aria-current={activePage === page.id ? "page" : undefined}
+          onClick={() => navigate(page.id)}>{page.label}</button>)}
       </nav>
 
-      <LongTermInvestorDesk />
+      {(activePage === "research" || activePage === "institutional") && <LongTermInvestorDesk
+        key={activePage + ":" + researchSymbol}
+        initialTab={activePage === "institutional" ? "institutional" : "research"}
+        initialSymbol={researchSymbol} showTabs={false} onNavigateStock={openResearchSymbol}
+      />}
 
-      <details id="quant-lab" className="quant-lab-details" open>
-        <summary>Trading dashboard — charts, daily scanner, options research and backtesting</summary>
-        <div className="quant-lab-content">
+      <div className="quant-lab-content page-content-shell">
+      {activePage === "overview" && <div className="page-view page-overview">
       <section className="hero">
         <div className="hero-copy">
           <div className="eyebrow"><span className="eyebrow-line"></span> MARKET INTELLIGENCE / 01</div>
@@ -357,8 +395,10 @@ function App() {
         </div>
       </section>
 
-      <MarketChart symbol={chartSymbol} onSelectSymbol={setChartSymbol} />
+      </div>}
+      {activePage === "charts" && <MarketChart symbol={chartSymbol} onSelectSymbol={setChartSymbol} />}
 
+      {activePage === "scanner" && <>
       <section className="control-panel">
         <div className="control-intro">
           <div className="section-kicker">YOUR RISK SETTINGS</div>
@@ -383,9 +423,10 @@ function App() {
       {data?.warnings.map((warning) => <div className="inline-warning" key={warning}>{warning}</div>)}
       {error && <div className="error-banner"><strong>Scanner unavailable</strong><span>{error}</span><button onClick={() => void scan(true)}>Try again</button></div>}
 
-      <OptionsDesk />
+      </>}
+      {activePage === "options" && <OptionsDesk />}
 
-      <section id="strategy-lab" className="opportunity-section" aria-labelledby="opportunity-title">
+      {activePage === "strategy" && <section id="strategy-lab" className="opportunity-section" aria-labelledby="opportunity-title">
         <div className="backtest-heading">
           <div>
             <div className="section-kicker">MARKET RESEARCH / OPPORTUNITY SCANNER</div>
@@ -588,9 +629,8 @@ function App() {
           </div>
           <div className="backtest-assumptions"><strong>Research and execution limitations</strong><p>{opportunityData.limitations.join(" ")}</p></div>
         </>}
-      </section>
-
-      <section id="setup-watchlist" className="results-section">
+      </section>}
+      {activePage === "scanner" && <section id="setup-watchlist" className="results-section">
         <div className="results-heading">
           <div>
             <div className="section-kicker">SCANNER OUTPUT / 02</div>
@@ -661,9 +701,8 @@ function App() {
           </table>
         </div>
         <div className="table-foot"><span>* Theoretical quantity only, capped at {data?.params.maxPositionPct ?? 10}% of capital and {data?.params.maxRiskPct ?? 1}% risk per trade.</span><span>{data?.dataSource ?? "Awaiting market data"}</span></div>
-      </section>
-
-      <section id="backtest-lab" className="backtest-section" aria-labelledby="backtest-title">
+      </section>}
+      {activePage === "backtest" && <section id="backtest-lab" className="backtest-section" aria-labelledby="backtest-title">
         <div className="backtest-heading">
           <div>
             <div className="section-kicker">STRATEGY VALIDATION / 03</div>
@@ -784,18 +823,15 @@ function App() {
             </table>
           </div>
         </>}
-      </section>
-
-      <section className="rules-grid">
+      </section>}
+      {activePage === "scanner" && <section className="rules-grid">
         <div className="rules-heading"><div className="section-kicker">BUILT-IN DISCIPLINE / 04</div><h2>How a trigger is earned</h2><p>No black box. The screening rules are visible and testable.</p></div>
         <div className="rule-card"><span className="rule-number">01</span><div><strong>Trend alignment</strong><p>Close &gt; SMA 20 &gt; SMA 50 &gt; SMA 200.</p></div></div>
         <div className="rule-card"><span className="rule-number">02</span><div><strong>Breakout confirmation</strong><p>Daily close clears the prior 5-session high plus 0.1 × ATR(14), with relative volume at least 1.1×.</p></div></div>
         <div className="rule-card"><span className="rule-number">03</span><div><strong>Market + momentum filter</strong><p>Nifty must be bullish; RSI(14) must be between 50 and 70. A bearish regime blocks new long triggers.</p></div></div>
         <div className="rule-card"><span className="rule-number">04</span><div><strong>Defined risk sizing</strong><p>Stop is 1.5 × ATR below the trigger, target is 2R, risk is capped at 1% and position value at 10% of capital.</p></div></div>
-      </section>
-
-        </div>
-      </details>
+      </section>}
+      </div>
 
       <footer className="footer">
         <div className="footer-brand"><span className="brand-mark"><span></span><span></span><span></span></span><strong>NIFTY TRADING AGENT</strong></div>

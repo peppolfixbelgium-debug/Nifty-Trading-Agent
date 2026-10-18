@@ -92,9 +92,11 @@ function sentimentClass(value: number | null): string {
   return value === null || value === 0 ? "lt-neutral" : value > 0 ? "lt-positive" : "lt-negative";
 }
 
-export default function LongTermInvestorDesk() {
-  const [tab, setTab] = useState<"research" | "institutional">("research");
-  const [symbol, setSymbol] = useState("RELIANCE");
+type DeskTab = "research" | "institutional";
+type LongTermInvestorDeskProps = { initialTab?: DeskTab; initialSymbol?: string; showTabs?: boolean; onNavigateStock?: (symbol: string) => void };
+export default function LongTermInvestorDesk({ initialTab = "research", initialSymbol = "RELIANCE", showTabs = true, onNavigateStock }: LongTermInvestorDeskProps) {
+  const [tab, setTab] = useState<DeskTab>(initialTab);
+  const [symbol, setSymbol] = useState(initialSymbol);
   const [research, setResearch] = useState<ResearchResponse | null>(null);
   const [researchBusy, setResearchBusy] = useState(false);
   const [researchError, setResearchError] = useState<string | null>(null);
@@ -147,7 +149,12 @@ export default function LongTermInvestorDesk() {
     }
   }
 
-  useEffect(() => { void loadResearch("RELIANCE"); }, []);
+  useEffect(() => {
+    if (initialTab === "research") void loadResearch(initialSymbol);
+    else void loadActivity(days, activitySymbol);
+    // This component is remounted when the focused page changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const filteredDeals = useMemo(() => {
     const needle = activitySearch.trim().toLowerCase();
     const minimum = Math.max(0, Number(minimumDealCrore) || 0);
@@ -165,6 +172,7 @@ export default function LongTermInvestorDesk() {
   );
 
   function openStockFromActivity(next: string) {
+    if (!showTabs && onNavigateStock) { onNavigateStock(next); return; }
     setSymbol(next);
     setActivitySymbol(next);
     setTab("research");
@@ -181,14 +189,14 @@ export default function LongTermInvestorDesk() {
       <div className="lt-heading-stamp"><span>LONG TERM</span><strong>01–05Y</strong><small>NSE · public data</small></div>
     </div>
 
-    <div id="long-term-tabs" className="lt-tabs" role="tablist" aria-label="Long-term investing tools">
+    {showTabs && <div id="long-term-tabs" className="lt-tabs" role="tablist" aria-label="Long-term investing tools">
       <button type="button" role="tab" aria-selected={tab === "research"} className={tab === "research" ? "active" : ""} onClick={() => setTab("research")}>
         <span className="lt-tab-num">01</span><span><strong>Stock research</strong><small>Fundamentals · valuation · analyst views</small></span>
       </button>
       <button type="button" role="tab" aria-selected={tab === "institutional"} className={tab === "institutional" ? "active" : ""} onClick={() => { setTab("institutional"); if (!activity && !activityBusy) void loadActivity(days, activitySymbol); }}>
         <span className="lt-tab-num">02</span><span><strong>Institutional activity</strong><small>Large deals · FII/DII flows · disclosures</small></span>
       </button>
-    </div>
+    </div>}
 
     {tab === "research" ? <div className="lt-panel" role="tabpanel" aria-label="Stock research">
       <form className="lt-search-form" onSubmit={(event) => { event.preventDefault(); void loadResearch(); }}>

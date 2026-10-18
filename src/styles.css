@@ -999,3 +999,27 @@ body{min-width:320px;background:radial-gradient(ellipse at 78% 0%,rgba(231,211,1
 .terminal-nav a.terminal-nav-primary:hover,.terminal-nav a.terminal-nav-primary:focus-visible{background:#3b5f46;color:#fffdf7;border-color:#3b5f46;outline:none}
 .quant-lab-details{scroll-margin-top:76px}
 .quant-lab-details>summary{cursor:pointer}
+
+
+/* Each navigation item opens a focused screen instead of jumping down one long page. */
+.brand-button{display:flex;align-items:center;gap:12px;padding:0;border:0;background:transparent;color:inherit;text-align:left}
+.brand-button:hover{opacity:.9}
+.terminal-nav{scrollbar-width:none}
+.terminal-nav::-webkit-scrollbar{display:none}
+.terminal-nav button{flex:0 0 auto;padding:9px 13px;border:1px solid transparent;border-radius:999px;background:transparent;color:#61675d;text-decoration:none;font:inherit;font-size:11px;white-space:nowrap;transition:background .15s,color .15s,border-color .15s}
+.terminal-nav button:hover{background:#e7e0d3;color:#282d27}
+.terminal-nav button.active{background:#29342c;color:#fffdf7;border-color:#29342c;font-weight:700;box-shadow:0 3px 10px rgba(40,48,41,.1)}
+.terminal-nav button.terminal-nav-investor:not(.active){color:#344f3b}
+.page-content-shell{padding:0;border:0;background:transparent}
+.page-view{animation:page-in .18s ease-out}
+.page-view .hero{margin-top:20px}
+.page-overview .market-strip{margin-bottom:8px}
+.long-term-desk{border-bottom:0}
+.long-term-desk>.lt-heading{margin-bottom:18px}
+@keyframes page-in{from{opacity:.7;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:760px){
+ .terminal-nav{margin:0 -16px;padding:9px 16px;gap:5px}
+ .terminal-nav button{padding:9px 12px;font-size:10px}
+ .long-term-desk{padding-top:23px}
+}
+@media(prefers-reduced-motion:reduce){.page-view{animation:none}}
