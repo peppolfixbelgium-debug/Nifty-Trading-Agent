@@ -992,3 +992,10 @@ body{min-width:320px;background:radial-gradient(ellipse at 78% 0%,rgba(231,211,1
   .lt-factor{padding:9px}
   .lt-factor p{min-height:91px}
 }
+
+
+/* Keep the original trading workflow discoverable next to the investor desk. */
+.terminal-nav a.terminal-nav-primary{background:#29342c;color:#fffdf7;border:1px solid #29342c;font-weight:700;box-shadow:0 3px 10px rgba(40,48,41,.1)}
+.terminal-nav a.terminal-nav-primary:hover,.terminal-nav a.terminal-nav-primary:focus-visible{background:#3b5f46;color:#fffdf7;border-color:#3b5f46;outline:none}
+.quant-lab-details{scroll-margin-top:76px}
+.quant-lab-details>summary{cursor:pointer}
