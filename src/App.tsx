@@ -283,14 +283,14 @@ function App() {
           <span className="topbar-muted">NSE · Investor-first</span>
         </div>
       </header>
-      <nav className="terminal-nav" aria-label="Terminal navigation">
-        <a href="#long-term-desk">Overview</a><a href="#long-term-tabs">Stock research</a><a href="#long-term-tabs">Institutional activity</a><a href="#quant-lab">Advanced tools</a>
+      <nav className="terminal-nav" aria-label="Main navigation">
+        <a href="#long-term-desk">Overview</a><a href="#long-term-tabs">Stock research</a><a href="#long-term-tabs">Institutional activity</a><a className="terminal-nav-primary" href="#quant-lab">Trading dashboard</a>
       </nav>
 
       <LongTermInvestorDesk />
 
-      <details id="quant-lab" className="quant-lab-details">
-        <summary>Advanced tools — technical charts, daily scanner, options research and backtesting</summary>
+      <details id="quant-lab" className="quant-lab-details" open>
+        <summary>Trading dashboard — charts, daily scanner, options research and backtesting</summary>
         <div className="quant-lab-content">
       <section className="hero">
         <div className="hero-copy">
