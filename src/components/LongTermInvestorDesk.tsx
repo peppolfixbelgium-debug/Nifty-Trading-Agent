@@ -24,6 +24,12 @@ type Flow = { category: string; date: string | null; buyCrore: number | null; se
 type EntityMove = { symbol: string; company: string; clientName: string; buys: number; sells: number; firstBuyDate: string | null; firstSellDate: string | null; count: number; netBuyCrore: number; observedDirection: string; firstBuyObservedInWindow: boolean };
 type Holding = { symbol: string; name: string; date: string; promoterPct: number | null; publicPct: number | null; submissionDate: string | null; filingUrl: string | null; promoterChangePp: number | null; publicChangePp: number | null; previousDate: string | null; previousFilingUrl: string | null };
 type ActivityResponse = { ownershipSymbol?: string | null; generatedAt: string; cached: boolean; rangeDays: number; dateRange: { from: string; to: string }; source: string; sources: { deals: string; shareholding: string; fiiDii: string }; deals: Deal[]; entityMoves: EntityMove[]; flows: Flow[]; shareholding: Holding[]; warnings: string[]; notes: string[]; error?: string; detail?: string; hint?: string };
+type ScanSignal = { symbol: string; name: string; action: string; reason: string; lastPrice: number | null; changePct: number | null; sma50: number | null; sma200: number | null; rsi14: number | null; relativeVolume: number | null };
+type AccumulationResponse = { generatedAt: string; dataSource?: string; results: ScanSignal[]; warnings: string[] };
+type DealSideFilter = "ALL" | "BUY" | "SELL";
+type DealTypeFilter = "ALL" | "BULK" | "BLOCK";
+type AccumulationFilter = "ALL" | "POTENTIAL" | "EXTENDED";
+type MoveFilter = "ALL" | "NET_BUYING" | "NET_SELLING" | "BUY_OBSERVED";
 
 const stocks = UNIVERSE.map((stock) => ({ symbol: stock.symbol.replace(/\.NS$/, ""), fullSymbol: stock.symbol, name: stock.name }));
 const n = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 });
@@ -39,6 +45,11 @@ function marketCap(value: number | null): string {
   if (value >= 1000000000000) return "₹" + (value / 1000000000000).toFixed(2) + " T";
   if (value >= 10000000000) return "₹" + (value / 10000000000).toFixed(2) + " K Cr";
   return "₹" + (value / 10000000).toFixed(0) + " Cr";
+}
+function indiaDateInput(offsetDays = 0): string {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map((part) => [part.type, Number(part.value)]));
+  return new Date(Date.UTC(values.year!, values.month! - 1, values.day! + offsetDays)).toISOString().slice(0, 10);
 }
 function dateLabel(value: string | null | undefined): string {
   if (!value) return "—";
@@ -104,9 +115,20 @@ export default function LongTermInvestorDesk({ initialTab = "research", initialS
   const [activityBusy, setActivityBusy] = useState(false);
   const [activityError, setActivityError] = useState<string | null>(null);
   const [days, setDays] = useState(30);
+  const [fromDate, setFromDate] = useState(() => indiaDateInput(-29));
+  const [toDate, setToDate] = useState(() => indiaDateInput());
   const [activitySymbol, setActivitySymbol] = useState("RELIANCE");
   const [activitySearch, setActivitySearch] = useState("");
   const [minimumDealCrore, setMinimumDealCrore] = useState("1");
+  const [dealSideFilter, setDealSideFilter] = useState<DealSideFilter>("ALL");
+  const [dealTypeFilter, setDealTypeFilter] = useState<DealTypeFilter>("ALL");
+  const [dealSort, setDealSort] = useState<"DATE" | "VALUE">("DATE");
+  const [moveFilter, setMoveFilter] = useState<MoveFilter>("ALL");
+  const [accumulation, setAccumulation] = useState<AccumulationResponse | null>(null);
+  const [accumulationBusy, setAccumulationBusy] = useState(false);
+  const [accumulationError, setAccumulationError] = useState<string | null>(null);
+  const [accumulationFilter, setAccumulationFilter] = useState<AccumulationFilter>("ALL");
+  const [accumulationSearch, setAccumulationSearch] = useState("");
 
   async function loadResearch(raw = symbol) {
     const next = raw.trim().toUpperCase().replace(/\.NS$/, "");
@@ -130,11 +152,25 @@ export default function LongTermInvestorDesk({ initialTab = "research", initialS
     }
   }
 
-  async function loadActivity(nextDays = days, nextSymbol = activitySymbol) {
+  async function loadActivity(nextDays = days, nextSymbol = activitySymbol, nextFromDate = fromDate, nextToDate = toDate) {
+    const startMs = Date.parse(nextFromDate + "T00:00:00Z");
+    const endMs = Date.parse(nextToDate + "T00:00:00Z");
+    if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || nextFromDate > nextToDate) {
+      setActivityError("Choose a valid start date and end date.");
+      return;
+    }
+    if (nextToDate > indiaDateInput()) {
+      setActivityError("The end date cannot be in the future for India-market disclosures.");
+      return;
+    }
+    if (Math.floor((endMs - startMs) / 86_400_000) + 1 > 365) {
+      setActivityError("Choose a date range of 365 days or less.");
+      return;
+    }
     setActivityBusy(true);
     setActivityError(null);
     try {
-      const query = new URLSearchParams({ days: String(nextDays) });
+      const query = new URLSearchParams({ days: String(nextDays), from: nextFromDate, to: nextToDate });
       const cleanSymbol = nextSymbol.trim().toUpperCase().replace(/\.NS$/, "");
       if (cleanSymbol && /^[A-Z0-9&-]{1,20}$/.test(cleanSymbol)) query.set("symbol", cleanSymbol);
       const response = await fetch("/api/institutional-activity?" + query.toString(), { headers: { accept: "application/json" } });
@@ -149,23 +185,69 @@ export default function LongTermInvestorDesk({ initialTab = "research", initialS
     }
   }
 
+  async function loadAccumulationWatch(forceRefresh = false) {
+    setAccumulationBusy(true);
+    setAccumulationError(null);
+    try {
+      const response = await fetch("/api/scan" + (forceRefresh ? "?refresh=1" : ""), { headers: { accept: "application/json" } });
+      const payload = await response.json() as AccumulationResponse & { error?: string; detail?: string };
+      if (!response.ok) throw new Error([payload.error, payload.detail].filter(Boolean).join(" "));
+      setAccumulation(payload);
+    } catch (error) {
+      setAccumulationError(error instanceof Error ? error.message : "The daily price/volume scan could not be loaded.");
+      setAccumulation(null);
+    } finally {
+      setAccumulationBusy(false);
+    }
+  }
+
   useEffect(() => {
     if (initialTab === "research") void loadResearch(initialSymbol);
-    else void loadActivity(days, activitySymbol);
+    else {
+      void loadActivity(days, activitySymbol, fromDate, toDate);
+      void loadAccumulationWatch();
+    }
     // This component is remounted when the focused page changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const filteredDeals = useMemo(() => {
     const needle = activitySearch.trim().toLowerCase();
     const minimum = Math.max(0, Number(minimumDealCrore) || 0);
-    return (activity?.deals ?? []).filter((deal) => deal.valueCrore >= minimum)
+    return (activity?.deals ?? [])
+      .filter((deal) => deal.valueCrore >= minimum)
+      .filter((deal) => dealSideFilter === "ALL" || deal.side === dealSideFilter)
+      .filter((deal) => dealTypeFilter === "ALL" || deal.dealType === dealTypeFilter)
       .filter((deal) => !needle || deal.clientName.toLowerCase().includes(needle) || deal.symbol.toLowerCase().includes(needle) || deal.company.toLowerCase().includes(needle))
-      .slice(0, 100);
-  }, [activity, activitySearch, minimumDealCrore]);
+      .sort((a, b) => dealSort === "VALUE"
+        ? b.valueCrore - a.valueCrore || (b.date ?? "").localeCompare(a.date ?? "")
+        : (b.date ?? "").localeCompare(a.date ?? "") || b.valueCrore - a.valueCrore)
+      .slice(0, 200);
+  }, [activity, activitySearch, minimumDealCrore, dealSideFilter, dealTypeFilter, dealSort]);
   const filteredMoves = useMemo(() => {
     const needle = activitySearch.trim().toLowerCase();
-    return (activity?.entityMoves ?? []).filter((move) => !needle || move.clientName.toLowerCase().includes(needle) || move.symbol.toLowerCase().includes(needle) || move.company.toLowerCase().includes(needle));
-  }, [activity, activitySearch]);
+    return (activity?.entityMoves ?? [])
+      .filter((move) => dealSideFilter === "ALL" || (dealSideFilter === "BUY" ? move.netBuyCrore > 0 : move.netBuyCrore < 0))
+      .filter((move) => moveFilter === "ALL" || (moveFilter === "NET_BUYING" ? move.netBuyCrore > 0
+        : moveFilter === "NET_SELLING" ? move.netBuyCrore < 0 : move.firstBuyObservedInWindow))
+      .filter((move) => !needle || move.clientName.toLowerCase().includes(needle) || move.symbol.toLowerCase().includes(needle) || move.company.toLowerCase().includes(needle));
+  }, [activity, activitySearch, dealSideFilter, moveFilter]);
+  const accumulationRows = useMemo(() => (accumulation?.results ?? [])
+    .map((row) => {
+      const volumeRatio = row.relativeVolume;
+      const change = row.changePct;
+      const above50 = row.lastPrice !== null && row.sma50 !== null && row.lastPrice > row.sma50;
+      const potential = volumeRatio !== null && volumeRatio >= 1.8 && change !== null && change > 0 && change < 5 && above50;
+      const extended = volumeRatio !== null && volumeRatio >= 1.8 && change !== null && change >= 5;
+      return { ...row, potential, extended };
+    })
+    .filter((row) => row.relativeVolume !== null && row.relativeVolume >= (accumulationFilter === "ALL" ? 1.5 : 1.8))
+    .filter((row) => accumulationFilter === "ALL" || (accumulationFilter === "POTENTIAL" ? row.potential : row.extended))
+    .filter((row) => {
+      const needle = accumulationSearch.trim().toLowerCase();
+      return !needle || row.symbol.toLowerCase().includes(needle) || row.name.toLowerCase().includes(needle);
+    })
+    .sort((a, b) => (b.relativeVolume ?? 0) - (a.relativeVolume ?? 0))
+    .slice(0, 20), [accumulation, accumulationFilter, accumulationSearch]);
   const entryPlan = useMemo(
     () => research ? planLongTermEntry(research.price, research.metrics.sma50, research.metrics.sma200, research.metrics.rsi14) : null,
     [research]
@@ -193,7 +275,7 @@ export default function LongTermInvestorDesk({ initialTab = "research", initialS
       <button type="button" role="tab" aria-selected={tab === "research"} className={tab === "research" ? "active" : ""} onClick={() => setTab("research")}>
         <span className="lt-tab-num">01</span><span><strong>Stock research</strong><small>Fundamentals · valuation · analyst views</small></span>
       </button>
-      <button type="button" role="tab" aria-selected={tab === "institutional"} className={tab === "institutional" ? "active" : ""} onClick={() => { setTab("institutional"); if (!activity && !activityBusy) void loadActivity(days, activitySymbol); }}>
+      <button type="button" role="tab" aria-selected={tab === "institutional"} className={tab === "institutional" ? "active" : ""} onClick={() => { setTab("institutional"); if (!activity && !activityBusy) void loadActivity(days, activitySymbol, fromDate, toDate); if (!accumulation && !accumulationBusy) void loadAccumulationWatch(); }}>
         <span className="lt-tab-num">02</span><span><strong>Institutional activity</strong><small>Large deals · FII/DII flows · disclosures</small></span>
       </button>
     </div>}
@@ -295,14 +377,25 @@ export default function LongTermInvestorDesk({ initialTab = "research", initialS
         <div className="lt-data-note"><strong>Source / freshness</strong><p>{research.source}. Data as of {dateLabel(research.asOf)}; retrieved {dateLabel(research.generatedAt)}. {research.dataQuality.note}</p><p>This is a transparent screening aid, not personalised investment advice. Sector-adjust ratios, review annual reports and quarterly filings, and do not buy/sell on this score alone.</p></div>
       </>}
     </div> : <div className="lt-panel" role="tabpanel" aria-label="Institutional activity">
-      <form className="lt-activity-controls" onSubmit={(event) => { event.preventDefault(); void loadActivity(days, activitySymbol); }}>
+      <form className="lt-activity-controls" onSubmit={(event) => { event.preventDefault(); void loadActivity(days, activitySymbol, fromDate, toDate); }}>
         <label className="lt-search-field"><span>OWNERSHIP DISCLOSURE FOR STOCK</span><input value={activitySymbol} onChange={(event) => setActivitySymbol(event.target.value.toUpperCase())} placeholder="e.g. RELIANCE" /></label>
-        <label className="lt-search-field lt-days-select"><span>DEAL LOOKBACK</span><select value={String(days)} onChange={(event) => setDays(Number(event.target.value))}><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="60">Last 60 days</option><option value="90">Last 90 days</option></select></label>
-        <button className="lt-primary-btn" type="submit" disabled={activityBusy}>{activityBusy ? <><span className="spinner" /> Loading disclosures…</> : "Refresh institutional data ↻"}</button>
+        <label className="lt-search-field lt-days-select"><span>DATE PRESET</span><select value={String(days)} onChange={(event) => { const nextDays = Number(event.target.value); setDays(nextDays); setFromDate(indiaDateInput(-(nextDays - 1))); setToDate(indiaDateInput()); }}><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="60">Last 60 days</option><option value="90">Last 90 days</option></select></label>
+        <label className="lt-search-field lt-date-field"><span>FROM DATE (INDIA)</span><input type="date" value={fromDate} max={toDate || indiaDateInput()} onChange={(event) => setFromDate(event.target.value)} required /></label>
+        <label className="lt-search-field lt-date-field"><span>TO DATE (INDIA)</span><input type="date" value={toDate} min={fromDate || undefined} max={indiaDateInput()} onChange={(event) => setToDate(event.target.value)} required /></label>
+        <button className="lt-primary-btn" type="submit" disabled={activityBusy}>{activityBusy ? <><span className="spinner" /> Loading disclosures…</> : "Apply dates & refresh ↻"}</button>
       </form>
       <div className="lt-activity-search">
         <label className="lt-search-field"><span>FIND AN INVESTOR OR STOCK</span><input value={activitySearch} onChange={(event) => setActivitySearch(event.target.value)} placeholder="Investor name, ticker or company…" /></label>
         <label className="lt-search-field lt-days-select"><span>MINIMUM DEAL VALUE</span><select value={minimumDealCrore} onChange={(event) => setMinimumDealCrore(event.target.value)}><option value="0">Any disclosed value</option><option value="1">₹1 Cr+</option><option value="5">₹5 Cr+</option><option value="10">₹10 Cr+</option><option value="25">₹25 Cr+</option><option value="100">₹100 Cr+</option></select></label>
+      </div>
+      <div className="lt-deal-filter-bar">
+        <div className="lt-direction-filter" role="group" aria-label="Filter deal direction">
+          <span>TRANSACTION SIDE</span>
+          {(["ALL", "BUY", "SELL"] as DealSideFilter[]).map((value) => <button key={value} type="button" className={dealSideFilter === value ? "active" : ""} aria-pressed={dealSideFilter === value} onClick={() => setDealSideFilter(value)}>{value === "ALL" ? "All" : value === "BUY" ? "Buys" : "Sells"}</button>)}
+        </div>
+        <label className="lt-search-field lt-days-select"><span>DEAL TYPE</span><select value={dealTypeFilter} onChange={(event) => setDealTypeFilter(event.target.value as DealTypeFilter)}><option value="ALL">Bulk + block</option><option value="BULK">Bulk deals</option><option value="BLOCK">Block deals</option></select></label>
+        <label className="lt-search-field lt-days-select"><span>SORT BY</span><select value={dealSort} onChange={(event) => setDealSort(event.target.value as "DATE" | "VALUE")}><option value="DATE">Newest first</option><option value="VALUE">Largest disclosed value</option></select></label>
+        <label className="lt-search-field lt-days-select"><span>INSTITUTION MOVE FILTER</span><select value={moveFilter} onChange={(event) => setMoveFilter(event.target.value as MoveFilter)}><option value="ALL">All observed moves</option><option value="NET_BUYING">Net buying / possible increase</option><option value="NET_SELLING">Net selling / possible reduction</option><option value="BUY_OBSERVED">A buy was disclosed in range</option></select></label>
       </div>
       {activityError && <div className="lt-error"><strong>NSE disclosure feed unavailable</strong><span>{activityError}</span><a href={activity?.sources.deals ?? "https://www.nseindia.com/report-detail/display-bulk-and-block-deals"} target="_blank" rel="noreferrer">Open official NSE deals page ↗</a></div>}
       {activityBusy && !activity && <div className="lt-loading"><span className="spinner" /> Requesting public NSE disclosures…</div>}
@@ -316,7 +409,33 @@ export default function LongTermInvestorDesk({ initialTab = "research", initialS
             <p>{flow.netCrore === null ? "Net flow not available." : flow.netCrore > 0 ? "Net buying in the reported market segment." : flow.netCrore < 0 ? "Net selling in the reported market segment." : "Reported buying and selling are balanced."}</p>
           </article>)}
         </div>
-        <div className="lt-subheading"><div><span className="section-kicker">DISCLOSED LARGE TRANSACTIONS</span><h3>Who bought or sold what?</h3></div><small>{filteredDeals.length} rows shown · Value is quantity × disclosed price.</small></div>
+        <section className="lt-accumulation-panel" aria-labelledby="lt-accumulation-title">
+          <div className="lt-accumulation-heading">
+            <div><span className="section-kicker">EARLY ACTIVITY / PUBLIC PRICE-VOLUME PROXY</span><h3 id="lt-accumulation-title">Possible accumulation watch</h3></div>
+            <button className="lt-ghost-btn" type="button" onClick={() => void loadAccumulationWatch(true)} disabled={accumulationBusy}>{accumulationBusy ? "Refreshing…" : "Refresh daily scan ↻"}</button>
+          </div>
+          <p className="lt-accumulation-caveat">This flags unusual volume alongside price/trend behaviour on the latest daily bars. It cannot identify who traded, see hidden orders, or confirm institutional buying. The source is an unofficial daily market-data feed, so treat these as leads to investigate—not early proof of a large buyer.</p>
+          <div className="lt-accumulation-controls">
+            <label className="lt-search-field"><span>SEARCH STOCK</span><input value={accumulationSearch} onChange={(event) => setAccumulationSearch(event.target.value)} placeholder="Ticker or company…" /></label>
+            <label className="lt-search-field lt-days-select"><span>ACTIVITY PATTERN</span><select value={accumulationFilter} onChange={(event) => setAccumulationFilter(event.target.value as AccumulationFilter)}><option value="ALL">All unusual volume (≥1.5×)</option><option value="POTENTIAL">Positive trend + volume</option><option value="EXTENDED">Already moved ≥5%</option></select></label>
+          </div>
+          {accumulationError && <div className="lt-error"><strong>Price / volume watch unavailable</strong><span>{accumulationError}</span><button type="button" onClick={() => void loadAccumulationWatch()}>Retry</button></div>}
+          {accumulationBusy && !accumulation && <div className="lt-loading"><span className="spinner" /> Checking daily price and volume history…</div>}
+          {accumulation && <div className="lt-accumulation-meta">Scan refreshed {dateLabel(accumulation.generatedAt)} · {accumulation.dataSource ?? "public daily price / volume history"} · a candidate is not a confirmed institution signal.</div>}
+          {accumulation && !accumulationBusy && accumulationRows.length > 0 && <div className="lt-table-wrap"><table className="lt-table lt-accumulation-table">
+            <thead><tr><th>Stock</th><th>Last daily move</th><th>Relative volume</th><th>Trend vs 50D</th><th>Screen status</th></tr></thead>
+            <tbody>{accumulationRows.map((row) => <tr key={row.symbol}>
+              <td><button type="button" className="lt-ticker-link" onClick={() => openStockFromActivity(row.symbol)}>{row.symbol.replace(/\.NS$/, "")}</button><small className="lt-company-name">{row.name}</small></td>
+              <td className={sentimentClass(row.changePct)}>{pct(row.changePct)}</td>
+              <td><strong>{row.relativeVolume === null ? "—" : row.relativeVolume.toFixed(2) + "×"}</strong><small className="lt-company-name">vs prior 20-session average</small></td>
+              <td>{row.lastPrice === null || row.sma50 === null ? "Not available" : row.lastPrice > row.sma50 ? "Above 50D" : "Below 50D"}</td>
+              <td><span className={"lt-accumulation-status " + (row.extended ? "is-extended" : row.potential ? "is-potential" : "is-watch")}>{row.extended ? "EXTENDED · ≥5% MOVE" : row.potential ? "POSITIVE TREND + VOLUME" : "VOLUME ANOMALY · REVIEW"}</span><small className="lt-company-name">RSI {row.rsi14 === null ? "—" : row.rsi14.toFixed(1)} · {row.action}</small></td>
+            </tr>)}</tbody>
+          </table></div>}
+          {accumulation && !accumulationBusy && !accumulationRows.length && <div className="lt-empty"><strong>No stocks match this activity pattern.</strong><p>That is a valid outcome. Expand the pattern filter or refresh when a new completed daily bar is available.</p></div>}
+          <div className="lt-data-note"><strong>How to use this before a disclosed deal</strong><p>A volume spike is only a possible early research clue; it can also reflect news, rebalancing, exits or noise. Large deal disclosures are not secret institutional-order telemetry. Confirm company filings, delivery data, financial quality and valuation, and avoid chasing a stock after a sharp jump.</p><a href="https://www.nseindia.com/all-reports" target="_blank" rel="noreferrer">NSE market and security-wise delivery reports ↗</a></div>
+        </section>
+        <div className="lt-subheading"><div><span className="section-kicker">DISCLOSED LARGE TRANSACTIONS</span><h3>Who bought or sold what?</h3></div><small>{filteredDeals.length} rows shown · {activity.dateRange.from} to {activity.dateRange.to} · Value is quantity × disclosed price.</small></div>
         {filteredDeals.length ? <div className="lt-table-wrap"><table className="lt-table lt-deal-table">
           <thead><tr><th>Date</th><th>Stock</th><th>Client / reported institution</th><th>Type</th><th>Side</th><th>Quantity</th><th>Price</th><th>Value</th></tr></thead>
           <tbody>{filteredDeals.map((deal, index) => <tr key={deal.symbol + deal.clientName + deal.date + index}>
@@ -325,13 +444,13 @@ export default function LongTermInvestorDesk({ initialTab = "research", initialS
         </table></div> : <div className="lt-empty"><strong>No disclosed deals match these filters.</strong><p>Try a smaller minimum deal value, a longer lookback, or search another client/stock. An empty result is valid; the app does not fabricate transactions.</p></div>}
         <div className="lt-subheading"><div><span className="section-kicker">OBSERVED BUYING / SELLING</span><h3>Net activity by client and stock</h3></div><small>Aggregated only within this selected date window.</small></div>
         {filteredMoves.length ? <div className="lt-table-wrap"><table className="lt-table">
-          <thead><tr><th>Client / institution</th><th>Stock</th><th>Buys</th><th>Sells</th><th>Net disclosed value</th><th>Window clue</th></tr></thead>
+          <thead><tr><th>Client / institution</th><th>Stock</th><th>Buys</th><th>Sells</th><th>Net disclosed value</th><th>Observed move</th></tr></thead>
           <tbody>{filteredMoves.slice(0, 40).map((move, index) => <tr key={move.clientName + move.symbol + index}>
-            <td><strong>{move.clientName}</strong><small className="lt-company-name">{move.count} disclosed deals</small></td><td><button type="button" className="lt-ticker-link" onClick={() => openStockFromActivity(move.symbol)}>{move.symbol}</button></td>
+            <td><strong>{move.clientName}</strong><small className="lt-company-name">{move.count} disclosed deals in range</small></td><td><button type="button" className="lt-ticker-link" onClick={() => openStockFromActivity(move.symbol)}>{move.symbol}</button></td>
             <td>₹{n.format(move.buys)} Cr</td><td>₹{n.format(move.sells)} Cr</td><td className={move.netBuyCrore > 0 ? "lt-positive" : move.netBuyCrore < 0 ? "lt-negative" : "lt-neutral"}><strong>{signedCrore(move.netBuyCrore)}</strong><small className="lt-company-name">{move.observedDirection}</small></td>
-            <td><div className="lt-window-clues">{move.firstBuyDate && <span className="lt-side lt-buy">Buy reported from {dateLabel(move.firstBuyDate)}</span>}{move.firstSellDate && <span className="lt-side lt-sell">Sell reported from {dateLabel(move.firstSellDate)}</span>}{!move.firstBuyDate && !move.firstSellDate && "—"}</div></td>
+            <td><div className="lt-window-clues">{move.netBuyCrore > 0 ? <span className="lt-side lt-buy">NET BUYING / POSSIBLE INCREASE</span> : move.netBuyCrore < 0 ? <span className="lt-side lt-sell">NET SELLING / POSSIBLE REDUCTION</span> : <span className="lt-side lt-mixed">MIXED ACTIVITY</span>}{move.firstBuyDate && <small>First buy disclosure in window: {dateLabel(move.firstBuyDate)}</small>}{move.firstSellDate && <small>First sell disclosure in window: {dateLabel(move.firstSellDate)}</small>}</div></td>
           </tr>)}</tbody>
-        </table></div> : <div className="lt-empty"><strong>No institution/client moves match the search.</strong></div>}
+        </table></div> : <div className="lt-empty"><strong>No institution/client moves match the current filters.</strong><p>Try another direction, wider dates or a smaller minimum deal size. These are exchange-disclosed bulk/block transactions, not a complete institutional portfolio.</p></div>}
         <div className="lt-subheading"><div><span className="section-kicker">QUARTERLY OWNERSHIP CHANGE</span><h3>{(activity.ownershipSymbol ?? activitySymbol).toUpperCase().replace(/\.NS$/, "")} shareholding trail</h3></div><small>Latest exchange-filed summary rows.</small></div>
         {activity.shareholding.length ? <div className="lt-table-wrap"><table className="lt-table">
           <thead><tr><th>As of</th><th>Promoter group</th><th>Change QoQ</th><th>Public shareholding</th><th>Change QoQ</th><th>Official filing</th></tr></thead>
@@ -344,7 +463,7 @@ export default function LongTermInvestorDesk({ initialTab = "research", initialS
         </table></div> : <div className="lt-empty"><strong>Quarterly shareholding summary unavailable for {activitySymbol || "this stock"}.</strong><p>Search the official NSE shareholding pattern page directly. The summary feed reports promoter/public totals; the linked filing provides the detailed holder categories.</p><a href={activity.sources.shareholding + "?symbol=" + encodeURIComponent(activitySymbol.toUpperCase().replace(/\.NS$/, ""))} target="_blank" rel="noreferrer">Open official shareholding disclosures ↗</a></div>}
         <div className="lt-source-row">{sourceLink("NSE bulk / block deals", activity.sources.deals)}{sourceLink("NSE shareholding filings", activity.sources.shareholding)}{sourceLink("NSE FII / DII flows", activity.sources.fiiDii)}</div>
         {activity.warnings.map((warning) => <div className="lt-warning" key={warning}>{warning}</div>)}
-        <div className="lt-data-note"><strong>How to interpret this tab</strong><ul>{activity.notes.map((note) => <li key={note}>{note}</li>)}</ul><p>“First buy observed” only means the earliest buy record in the selected window. It must not be described as a confirmed fresh entry unless filings or earlier holding data support that conclusion. The NSE public feed can be delayed or temporarily throttled.</p></div>
+        <div className="lt-data-note"><strong>How to interpret this tab</strong><ul>{activity.notes.map((note) => <li key={note}>{note}</li>)}</ul><p>“First buy observed” means the earliest record found within this selected window, not proof of a new position. Use previous quarterly shareholding/XBRL filings to confirm a genuinely fresh disclosed holding. Price/volume anomalies can suggest further research, but they cannot identify a buyer.</p></div>
       </>}
     </div>}
   </section>;

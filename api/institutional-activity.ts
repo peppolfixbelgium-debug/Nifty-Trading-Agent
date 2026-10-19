@@ -1,4 +1,5 @@
 import type { ApiRequest, ApiResponse } from "../src/lib/api-types.js";
+import { resolveDealDateRange } from "../src/lib/institutional-date-range.js";
 
 type RecordRow = Record<string, unknown>;
 type Deal = {
@@ -64,17 +65,12 @@ function isoDate(value: unknown): string | null {
   const parsed = Date.parse(raw);
   return Number.isFinite(parsed) ? new Date(parsed).toISOString().slice(0, 10) : null;
 }
-function indiaToday(): Date {
+function indiaTodayIso(): string {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit"
   }).formatToParts(new Date());
-  const values = Object.fromEntries(parts.map((part) => [part.type, Number(part.value)]));
-  return new Date(values.year!, values.month! - 1, values.day!);
-}
-function dateForNse(value: Date): string {
-  const day = String(value.getDate()).padStart(2, "0");
-  const month = String(value.getMonth() + 1).padStart(2, "0");
-  return day + "-" + month + "-" + value.getFullYear();
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return String(values.year) + "-" + String(values.month) + "-" + String(values.day);
 }
 function parseDeals(payload: unknown, kind: "BULK" | "BLOCK"): Deal[] {
   let rows: unknown[] = [];
@@ -179,12 +175,14 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return res.status(405).json({ error: "Method not allowed. Use GET." });
   }
   const daysRaw = typeof req.query.days === "string" ? Number(req.query.days) : 30;
-  const days = [7, 30, 60, 90].includes(daysRaw) ? daysRaw : 30;
   const rawSymbol = typeof req.query.symbol === "string" ? req.query.symbol.trim().toUpperCase().replace(/\.NS$/, "") : "";
   if (rawSymbol && !/^[A-Z0-9&-]{1,20}$/.test(rawSymbol)) {
     return res.status(400).json({ error: "Enter a valid NSE symbol, for example RELIANCE." });
   }
-  const cacheKey = String(days) + ":" + rawSymbol;
+  const resolvedDateRange = resolveDealDateRange(req.query.from, req.query.to, daysRaw, indiaTodayIso());
+  if (!resolvedDateRange.ok) return res.status(400).json({ error: resolvedDateRange.error });
+  const days = resolvedDateRange.days;
+  const cacheKey = resolvedDateRange.fromIso + ":" + resolvedDateRange.toIso + ":" + rawSymbol;
   if (cache && cache.key === cacheKey && cache.until > Date.now()) {
     res.setHeader("Cache-Control", "public, s-maxage=180, stale-while-revalidate=300");
     return res.status(200).json({ ...cache.payload, cached: true });
@@ -192,10 +190,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
   try {
     const cookie = await getNseCookies();
-    const today = indiaToday();
-    const from = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (days - 1));
-    const fromText = dateForNse(from);
-    const toText = dateForNse(today);
+    const fromText = resolvedDateRange.fromNse;
+    const toText = resolvedDateRange.toNse;
     const bulkUrl = new URL("https://www.nseindia.com/api/historicalOR/bulk-block-short-deals");
     bulkUrl.searchParams.set("optionType", "bulk_deals");
     bulkUrl.searchParams.set("from", fromText);

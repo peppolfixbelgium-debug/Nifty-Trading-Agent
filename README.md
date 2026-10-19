@@ -168,3 +168,10 @@ The long-term investing desk has two dedicated tabs:
 ### Investor-first dashboard layout
 
 The landing screen now opens on the two primary long-term-investing tabs: **Stock Research** and **Institutional Activity**. The UI uses a warm ivory canvas, rounded surface cards, and clearly separated green/ochre/terracotta status states inspired by the supplied dashboard reference. The previous technical chart, scanner, options and backtest workspace remains accessible inside **Advanced tools** so the investor research flow is the default without removing existing capabilities.
+
+
+### Institutional filters and early activity watch
+
+The Institutional Activity screen accepts an exact India-market start/end date (maximum 365 days), plus quick 7/30/60/90-day presets. Transactions can be filtered to buys, sells, bulk deals or block deals, searched by client/company/ticker, filtered by minimum disclosed value, and sorted by newest or largest disclosed value. The market-wide FII/FPI and DII cards always show the latest source report available; their figures are not stock-specific and are not restricted to the transaction date filter.
+
+The **Possible accumulation watch** reuses the existing daily scanner's price and relative-volume metrics. A volume anomaly (1.5x or more versus the prior 20-session average) is shown as a research clue; its stronger pattern requires at least 1.8x relative volume, a positive daily move below 5%, and price above the 50-day average. A move of 5% or more is labelled extended rather than a preferred chase entry. This cannot identify the buyer, see undisclosed orders, or prove institutional accumulation. It is an end-of-day proxy using an unofficial daily price source, not an intraday alert or a promise of advance notice. Check NSE's official [market reports](https://www.nseindia.com/all-reports), including security-wise delivery positions, alongside public company filings and valuation.
