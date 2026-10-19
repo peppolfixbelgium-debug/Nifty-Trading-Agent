@@ -1514,3 +1514,45 @@ body:has(.app-shell[data-page="backtest"]){background:radial-gradient(ellipse at
   .long-term-desk .lt-search-field input,
   .long-term-desk .lt-search-field select{font-size:16px}
 }
+
+
+/* Contrast guardrails for investor pages: dark cards must use bright readable copy,
+   while pale cards must not inherit muted dark-terminal text. */
+.app-shell[data-page] .long-term-desk .lt-entry-plan .lt-entry-plan-header p,
+.app-shell[data-page] .long-term-desk .lt-entry-plan .lt-entry-plan-caveat,
+.app-shell[data-page] .long-term-desk .lt-entry-plan .lt-entry-zone-separator,
+.app-shell[data-page] .long-term-desk .lt-entry-plan .lt-entry-timing-grid span,
+.app-shell[data-page] .long-term-desk .lt-entry-plan .lt-entry-plan-message {
+  color: #f3f7fb;
+}
+.app-shell[data-page] .long-term-desk .lt-entry-plan .lt-entry-zone-main {
+  background: rgba(7, 16, 25, .32);
+  border-left-color: #ffffff;
+}
+.app-shell[data-page] .long-term-desk .lt-entry-plan .lt-entry-zone-main small {
+  color: #e8f0f8;
+}
+.app-shell[data-page] .long-term-desk .lt-entry-plan .lt-entry-zone-main strong,
+.app-shell[data-page] .long-term-desk .lt-entry-plan .lt-entry-timing-grid strong {
+  color: #ffffff;
+}
+.app-shell[data-page] .long-term-desk .lt-flow-card p,
+.app-shell[data-page] .long-term-desk .lt-flow-values {
+  color: #46566a;
+}
+.app-shell[data-page] .long-term-desk .lt-flow-values b {
+  color: #202e42;
+}
+.app-shell[data-page] .long-term-desk .lt-flow-top {
+  color: #45566b;
+}
+.app-shell[data-page] .long-term-desk .lt-company-name,
+.app-shell[data-page] .long-term-desk .lt-table td small {
+  color: #536175;
+}
+.app-shell[data-page] .long-term-desk .lt-metric-card p,
+.app-shell[data-page] .long-term-desk .lt-factor p,
+.app-shell[data-page] .long-term-desk .lt-analyst-key span,
+.app-shell[data-page] .long-term-desk .lt-target-range span {
+  color: #4f5b6d;
+}
