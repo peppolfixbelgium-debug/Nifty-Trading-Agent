@@ -1395,3 +1395,42 @@ body{min-width:320px;background:radial-gradient(ellipse at 78% 0%,rgba(231,211,1
   .app-shell[data-page="charts"] .terminal-chart-section,
   .app-shell[data-page="options"] .options-desk-section{padding:17px 12px;border-radius:17px;margin-inline:0}
 }
+
+
+/* Override legacy palette tokens too, so older charts and scanner cards inherit the active page accent. */
+.app-shell[data-page]{
+  --mint:var(--page-accent);--mint-dark:var(--page-soft);--red:var(--metric-negative);
+  --amber:var(--metric-warning);--muted:var(--page-muted);--line:var(--page-border);
+}
+body:has(.app-shell[data-page="overview"]){background:radial-gradient(ellipse at 86% 0%,rgba(53,87,199,.08),transparent 34%),#f3f6fc}
+body:has(.app-shell[data-page="research"]){background:radial-gradient(ellipse at 86% 0%,rgba(91,75,196,.09),transparent 34%),#f6f4ff}
+body:has(.app-shell[data-page="institutional"]){background:radial-gradient(ellipse at 86% 0%,rgba(184,117,38,.10),transparent 34%),#fbf5ed}
+body:has(.app-shell[data-page="charts"]){background:radial-gradient(ellipse at 86% 0%,rgba(8,127,158,.09),transparent 34%),#f0f7fa}
+body:has(.app-shell[data-page="options"]){background:radial-gradient(ellipse at 86% 0%,rgba(124,85,217,.10),transparent 34%),#f7f3ff}
+body:has(.app-shell[data-page="scanner"]){background:radial-gradient(ellipse at 86% 0%,rgba(47,103,200,.08),transparent 34%),#f3f6fc}
+body:has(.app-shell[data-page="strategy"]){background:radial-gradient(ellipse at 86% 0%,rgba(101,84,189,.09),transparent 34%),#f5f3ff}
+body:has(.app-shell[data-page="backtest"]){background:radial-gradient(ellipse at 86% 0%,rgba(175,121,38,.10),transparent 34%),#fbf5e9}
+.app-shell[data-page] .chart-instrument-picker select:focus,
+.app-shell[data-page] .backtest-controls select:focus,
+.app-shell[data-page] .backtest-number:focus,
+.app-shell[data-page] .opportunity-controls select:focus,
+.app-shell[data-page] .opportunity-controls input:focus{border-color:var(--page-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--page-accent) 12%,transparent)}
+.app-shell[data-page] .watch-chart-open{border-color:var(--page-border);background:var(--page-soft);color:var(--page-strong)}
+.app-shell[data-page] .watch-chart-open:hover{border-color:var(--page-accent);background:var(--page-accent);color:#fff}
+.app-shell[data-page] .coverage-summary{color:var(--page-muted)!important}
+.app-shell[data-page] .out-of-sample-panel h3,
+.app-shell[data-page] .out-of-sample-panel strong{color:#283247}
+.app-shell[data-page] .out-of-sample-panel p,
+.app-shell[data-page] .out-of-sample-panel small{color:var(--page-muted)}
+.app-shell[data-page] .backtest-progress .spinner{border-color:var(--page-accent);border-top-color:transparent}
+.app-shell[data-page] .lt-tabs button:not(.active) .lt-tab-num{border-color:var(--page-border);color:var(--page-strong);background:var(--page-soft)}
+.app-shell[data-page] .lt-metric-card-neutral .lt-metric-value{color:#293349}
+.app-shell[data-page] .lt-rating-count strong{color:#293349}
+.app-shell[data-page] .lt-current-price strong{color:#26334c}
+.app-shell[data-page] .lt-assessment-summary{background:var(--page-soft);border-color:var(--page-border)}
+.app-shell[data-page] .lt-assessment-summary>strong{color:var(--page-strong)}
+.app-shell[data-page] .lt-assessment-summary p,
+.app-shell[data-page] .lt-assessment-summary span{color:#667189}
+.app-shell[data-page] .lt-data-note a{color:var(--page-strong)}
+.app-shell[data-page="overview"] .quick-start-steps{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:900px){.app-shell[data-page="overview"] .quick-start-steps{grid-template-columns:1fr}}
