@@ -1434,3 +1434,83 @@ body:has(.app-shell[data-page="backtest"]){background:radial-gradient(ellipse at
 .app-shell[data-page] .lt-data-note a{color:var(--page-strong)}
 .app-shell[data-page="overview"] .quick-start-steps{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:900px){.app-shell[data-page="overview"] .quick-start-steps{grid-template-columns:1fr}}
+
+
+/* Long-term investor desk: accessible contrast on the warm light theme. */
+.long-term-desk{color:#282b26}
+.long-term-desk .lt-heading p,
+.long-term-desk .lt-assessment-summary p,
+.long-term-desk .lt-entry-plan-header p,
+.long-term-desk .lt-entry-plan-caveat,
+.long-term-desk .lt-factor p,
+.long-term-desk .lt-metric-card p,
+.long-term-desk .lt-analyst-key small,
+.long-term-desk .lt-target-range small,
+.long-term-desk .lt-tabs button small{color:#5f665e}
+.long-term-desk .lt-tabs button{background:#fffdf7;border-color:#d9d1c3;color:#282b26}
+.long-term-desk .lt-tabs button.active{background:#edf3e9;border-color:#477653}
+.long-term-desk .lt-tabs button small{color:#606a60}
+.long-term-desk .lt-tab-num{border-color:#b9cbb7;color:#315c40}
+.long-term-desk .lt-search-form,
+.long-term-desk .lt-activity-controls,
+.long-term-desk .lt-activity-search{background:#f8f4eb;border-color:#ddd4c4}
+.long-term-desk .lt-search-field,
+.long-term-desk .lt-search-field>span{color:#414a41}
+.long-term-desk .lt-search-field input,
+.long-term-desk .lt-search-field select{background:#fffefa;color:#242b25;border-color:#b9b09f}
+.long-term-desk .lt-search-field input::placeholder{color:#747b71;opacity:1}
+.long-term-desk .lt-search-field input:focus,
+.long-term-desk .lt-search-field select:focus{border-color:#39694f;box-shadow:0 0 0 3px rgba(57,105,79,.16)}
+.long-term-desk .lt-ghost-btn{background:#fffefa;color:#39483b;border-color:#c6bdad}
+.long-term-desk .lt-primary-btn{background:#386b4c;color:#fff;border-color:#386b4c}
+.long-term-desk .lt-primary-btn:hover{background:#2c573d}
+.long-term-desk .lt-stock-shortcuts>span{color:#5e685d}
+.long-term-desk .lt-stock-shortcuts button{background:#fffefa;color:#414a41;border-color:#d0c8b9}
+.long-term-desk .lt-stock-shortcuts button.active{background:#e7f0e3;color:#275638;border-color:#6f9673}
+.long-term-desk .lt-stock-hero,
+.long-term-desk .lt-assessment-summary,
+.long-term-desk .lt-factor,
+.long-term-desk .lt-metric-card,
+.long-term-desk .lt-analyst-key,
+.long-term-desk .lt-rating-count,
+.long-term-desk .lt-target-range,
+.long-term-desk .lt-table-wrap,
+.long-term-desk .lt-entry-plan{color:#282b26;background:#fffdf7;border-color:#ded6c7}
+.long-term-desk .lt-entry-plan{background:linear-gradient(135deg,#f0f5eb,#fffdf7)}
+.long-term-desk .lt-entry-plan-in-zone{background:linear-gradient(135deg,#e3f1e2,#fffdf7)}
+.long-term-desk .lt-entry-plan .lt-entry-plan-header p,
+.long-term-desk .lt-entry-plan .lt-entry-plan-caveat{color:#555f55}
+.long-term-desk .lt-entry-status{background:#f5edcf;color:#6b4c12;border-color:#d4bd78}
+.long-term-desk .lt-entry-plan-in-zone .lt-entry-status{background:#e2f0df;color:#245c35;border-color:#9fbea0}
+.long-term-desk .lt-metric-label,
+.long-term-desk .lt-analyst-key small,
+.long-term-desk .lt-target-range small{color:#596258}
+.long-term-desk .lt-metric-value{color:#252c26}
+.long-term-desk .lt-metric-card-positive{background:linear-gradient(135deg,#e8f3e6,#fffdf7);border-color:#bad4b7}
+.long-term-desk .lt-metric-card-negative{background:linear-gradient(135deg,#fae9e3,#fffdf7);border-color:#e1b7a8}
+.long-term-desk .lt-metric-card-neutral{background:#fffdf7;border-color:#ded6c7}
+.long-term-desk .lt-factor-score.lt-positive{color:#24683d}
+.long-term-desk .lt-factor-score.lt-negative{color:#a53c26}
+.long-term-desk .lt-factor-score.lt-neutral{color:#6c685b}
+.long-term-desk .lt-decision{color:#252c26}
+.long-term-desk .lt-decision-buy{background:#e3f1e2;border-color:#8ab68e}
+.long-term-desk .lt-decision-hold{background:#f6efda;border-color:#d9c17d}
+.long-term-desk .lt-decision-sell{background:#fae8e1;border-color:#dfa997}
+.long-term-desk .lt-decision-insufficient-data{background:#f0ede5;border-color:#d2c9b8}
+.long-term-desk .lt-loading{color:#4e5b4f}
+.long-term-desk .lt-error{background:#fae8e1;color:#762d1e;border-color:#dfa997}
+.long-term-desk .lt-error span{color:#762d1e}
+.long-term-desk .lt-subheading>small{color:#596258}
+.long-term-desk .lt-analyst-key strong,
+.long-term-desk .lt-target-range strong,
+.long-term-desk .lt-rating-count strong{color:#252c26}
+.long-term-desk .lt-table-wrap th{background:#f0ebdf;color:#525b51}
+.long-term-desk .lt-table-wrap td{color:#343b34;border-color:#e2dacb}
+.long-term-desk .lt-table-wrap tr:hover td{background:#f5f1e8}
+@media(max-width:700px){
+  .long-term-desk .lt-search-form,
+  .long-term-desk .lt-activity-controls,
+  .long-term-desk .lt-activity-search{padding:12px}
+  .long-term-desk .lt-search-field input,
+  .long-term-desk .lt-search-field select{font-size:16px}
+}
