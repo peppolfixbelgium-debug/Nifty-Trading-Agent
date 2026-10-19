@@ -1556,3 +1556,334 @@ body:has(.app-shell[data-page="backtest"]){background:radial-gradient(ellipse at
 .app-shell[data-page] .long-term-desk .lt-target-range span {
   color: #4f5b6d;
 }
+
+
+/* Investor desk contrast pass: deep ink for headers, a true high-contrast selected tab,
+   and a warm/cool surface hierarchy. Keep the investor workspace readable across page themes. */
+.app-shell[data-page] .long-term-desk .lt-heading h2,
+.app-shell[data-page] .long-term-desk .lt-subheading h3,
+.app-shell[data-page] .long-term-desk .lt-accumulation-heading h3,
+.app-shell[data-page] .long-term-desk .lt-accumulation-panel h3 {
+  color: #17253d !important;
+}
+.app-shell[data-page] .long-term-desk .lt-heading p,
+.app-shell[data-page] .long-term-desk .lt-assessment-summary p,
+.app-shell[data-page] .long-term-desk .lt-subheading > small {
+  color: #4b5b72 !important;
+}
+.app-shell[data-page] .long-term-desk .lt-heading .section-kicker,
+.app-shell[data-page] .long-term-desk .lt-entry-plan .section-kicker {
+  color: #dce9ff !important;
+}
+.app-shell[data-page] .long-term-desk .lt-tabs {
+  gap: 12px;
+}
+.app-shell[data-page] .long-term-desk .lt-tabs button {
+  background: #ffffff !important;
+  color: #1c2b43 !important;
+  border: 1px solid #c8d2e2 !important;
+  box-shadow: 0 7px 20px rgba(19, 36, 66, .06);
+}
+.app-shell[data-page] .long-term-desk .lt-tabs button strong {
+  color: #1b2b44 !important;
+}
+.app-shell[data-page] .long-term-desk .lt-tabs button small {
+  color: #526179 !important;
+}
+.app-shell[data-page] .long-term-desk .lt-tabs button .lt-tab-num {
+  background: #edf2fa !important;
+  color: #243c67 !important;
+  border-color: #c9d4e7 !important;
+}
+.app-shell[data-page] .long-term-desk .lt-tabs button.active {
+  background: linear-gradient(125deg, #14243d 0%, #263f68 100%) !important;
+  color: #ffffff !important;
+  border-color: #243b60 !important;
+  box-shadow: 0 12px 28px rgba(24, 43, 73, .20);
+}
+.app-shell[data-page] .long-term-desk .lt-tabs button.active strong {
+  color: #ffffff !important;
+}
+.app-shell[data-page] .long-term-desk .lt-tabs button.active small {
+  color: #d5e1f2 !important;
+}
+.app-shell[data-page] .long-term-desk .lt-tabs button.active .lt-tab-num {
+  background: #e8effa !important;
+  color: #182d4e !important;
+  border-color: #e8effa !important;
+}
+.app-shell[data-page] .long-term-desk .lt-tabs button:focus-visible,
+.app-shell[data-page] .long-term-desk .lt-activity-controls input:focus-visible,
+.app-shell[data-page] .long-term-desk .lt-activity-controls select:focus-visible,
+.app-shell[data-page] .long-term-desk .lt-deal-filter-bar button:focus-visible,
+.app-shell[data-page] .long-term-desk .lt-deal-filter-bar select:focus-visible {
+  outline: 3px solid #3c65a6 !important;
+  outline-offset: 2px;
+}
+.app-shell[data-page] .long-term-desk .lt-metric-card,
+.app-shell[data-page] .long-term-desk .lt-factor,
+.app-shell[data-page] .long-term-desk .lt-analyst-key,
+.app-shell[data-page] .long-term-desk .lt-rating-count,
+.app-shell[data-page] .long-term-desk .lt-target-range,
+.app-shell[data-page] .long-term-desk .lt-assessment-summary,
+.app-shell[data-page] .long-term-desk .lt-stock-hero {
+  box-shadow: 0 6px 18px rgba(20, 37, 65, .045);
+}
+.app-shell[data-page] .long-term-desk .lt-metric-card-positive {
+  background: linear-gradient(145deg, #e5f5ec, #ffffff 90%) !important;
+  border-color: #aad5bc !important;
+}
+.app-shell[data-page] .long-term-desk .lt-metric-card-positive .lt-metric-label,
+.app-shell[data-page] .long-term-desk .lt-metric-card-positive .lt-metric-value {
+  color: #126143 !important;
+}
+.app-shell[data-page] .long-term-desk .lt-metric-card-negative {
+  background: linear-gradient(145deg, #8b2636, #b53d4b) !important;
+  border-color: #9c2f40 !important;
+}
+.app-shell[data-page] .long-term-desk .lt-metric-card-negative .lt-metric-label,
+.app-shell[data-page] .long-term-desk .lt-metric-card-negative .lt-metric-value,
+.app-shell[data-page] .long-term-desk .lt-metric-card-negative p {
+  color: #ffffff !important;
+}
+.app-shell[data-page] .long-term-desk .lt-metric-card-neutral {
+  background: linear-gradient(145deg, #f0f4fa, #ffffff 92%) !important;
+  border-color: #d0dae9 !important;
+}
+.app-shell[data-page] .long-term-desk .lt-metric-card-neutral .lt-metric-label,
+.app-shell[data-page] .long-term-desk .lt-metric-card-neutral .lt-metric-value,
+.app-shell[data-page] .long-term-desk .lt-metric-card-neutral p {
+  color: #263650 !important;
+}
+.app-shell[data-page] .long-term-desk .lt-metric-card p,
+.app-shell[data-page] .long-term-desk .lt-factor p,
+.app-shell[data-page] .long-term-desk .lt-analyst-key span,
+.app-shell[data-page] .long-term-desk .lt-target-range span {
+  color: #4b5b72 !important;
+}
+.app-shell[data-page] .long-term-desk .lt-entry-plan .lt-entry-plan-header p,
+.app-shell[data-page] .long-term-desk .lt-entry-plan .lt-entry-plan-caveat,
+.app-shell[data-page] .long-term-desk .lt-entry-plan .lt-entry-zone-separator,
+.app-shell[data-page] .long-term-desk .lt-entry-plan .lt-entry-timing-grid span,
+.app-shell[data-page] .long-term-desk .lt-entry-plan .lt-entry-plan-message {
+  color: #f3f7fd !important;
+}
+.app-shell[data-page] .long-term-desk .lt-entry-plan .lt-entry-zone-main {
+  background: rgba(7, 16, 25, .38) !important;
+  border-left-color: #dbe7f7 !important;
+}
+.app-shell[data-page] .long-term-desk .lt-entry-plan .lt-entry-zone-main small {
+  color: #d9e5f4 !important;
+}
+.app-shell[data-page] .long-term-desk .lt-entry-plan .lt-entry-zone-main strong,
+.app-shell[data-page] .long-term-desk .lt-entry-plan .lt-entry-timing-grid strong {
+  color: #ffffff !important;
+}
+.app-shell[data-page] .long-term-desk .lt-flow-card p,
+.app-shell[data-page] .long-term-desk .lt-flow-values {
+  color: #394c64 !important;
+}
+.app-shell[data-page] .long-term-desk .lt-flow-values b,
+.app-shell[data-page] .long-term-desk .lt-flow-top span {
+  color: #1e304b !important;
+}
+.app-shell[data-page] .long-term-desk .lt-company-name,
+.app-shell[data-page] .long-term-desk .lt-table td small {
+  color: #506078 !important;
+}
+
+/* Custom date and transaction filters */
+.app-shell[data-page] .long-term-desk .lt-activity-controls {
+  grid-template-columns: minmax(190px, 1.15fr) minmax(140px, .7fr) minmax(155px, .75fr) minmax(155px, .75fr) auto;
+  align-items: end;
+}
+.app-shell[data-page] .long-term-desk .lt-date-field { min-width: 0; }
+.app-shell[data-page] .long-term-desk .lt-date-field input {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  border: 1px solid #becada;
+  background: #ffffff;
+  color: #1d2c43;
+  color-scheme: light;
+  font: 500 12px "DM Sans", sans-serif;
+}
+.app-shell[data-page] .long-term-desk .lt-date-field input:focus-visible {
+  outline: 3px solid rgba(60, 101, 166, .26);
+  outline-offset: 1px;
+  border-color: #3c65a6;
+}
+.app-shell[data-page] .long-term-desk .lt-deal-filter-bar {
+  display: grid;
+  grid-template-columns: minmax(245px, 1fr) minmax(180px, .55fr) minmax(180px, .55fr);
+  align-items: end;
+  gap: 12px;
+  margin: 12px 0 20px;
+  padding: 14px;
+  border: 1px solid #d6deeb;
+  border-radius: 14px;
+  background: linear-gradient(120deg, #f2f5fb, #ffffff);
+}
+.app-shell[data-page] .long-term-desk .lt-direction-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+}
+.app-shell[data-page] .long-term-desk .lt-direction-filter > span {
+  flex-basis: 100%;
+  margin-bottom: 2px;
+  font: 600 9px "DM Mono", monospace;
+  letter-spacing: .08em;
+  color: #526179;
+}
+.app-shell[data-page] .long-term-desk .lt-direction-filter button {
+  min-height: 37px;
+  padding: 8px 14px;
+  border-radius: 9px;
+  border: 1px solid #cad4e4;
+  background: #ffffff;
+  color: #263650;
+  font-size: 11px;
+  font-weight: 700;
+}
+.app-shell[data-page] .long-term-desk .lt-direction-filter button.active {
+  background: #1c3152;
+  color: #ffffff;
+  border-color: #1c3152;
+  box-shadow: 0 5px 12px rgba(28, 49, 82, .16);
+}
+.app-shell[data-page] .long-term-desk .lt-direction-filter button:not(.active):hover {
+  background: #e7edf7;
+  border-color: #97abc8;
+}
+.app-shell[data-page] .long-term-desk .lt-deal-filter-bar .lt-search-field select {
+  min-height: 40px;
+  background: #ffffff;
+  color: #263650;
+  border-color: #becada;
+}
+.app-shell[data-page] .long-term-desk .lt-accumulation-panel {
+  margin: 22px 0 26px;
+  padding: 22px;
+  border: 1px solid #cfd9e8;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #f4f7fc, #ffffff 70%);
+  color: #1d2c43;
+  box-shadow: 0 14px 32px rgba(30, 54, 88, .07);
+}
+.app-shell[data-page] .long-term-desk .lt-accumulation-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.app-shell[data-page] .long-term-desk .lt-accumulation-heading .section-kicker {
+  color: #385b8d !important;
+}
+.app-shell[data-page] .long-term-desk .lt-accumulation-heading h3 {
+  margin: 7px 0 0;
+  font: 750 clamp(20px, 2.2vw, 27px)/1.2 var(--display);
+  letter-spacing: -.035em;
+}
+.app-shell[data-page] .long-term-desk .lt-accumulation-caveat {
+  max-width: 980px;
+  margin: 12px 0 18px;
+  color: #465670 !important;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.app-shell[data-page] .long-term-desk .lt-accumulation-controls {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) minmax(220px, .55fr);
+  gap: 12px;
+  margin: 12px 0;
+}
+.app-shell[data-page] .long-term-desk .lt-accumulation-meta {
+  margin: 9px 0 12px;
+  color: #56647b;
+  font-size: 10px;
+}
+.app-shell[data-page] .long-term-desk .lt-accumulation-table {
+  width: 100%;
+}
+.app-shell[data-page] .long-term-desk .lt-accumulation-status {
+  display: inline-flex;
+  align-items: center;
+  max-width: 210px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  border: 1px solid #c2cedf;
+  background: #eef2f8;
+  color: #354660;
+  font: 700 9px/1.35 "DM Mono", monospace;
+  letter-spacing: .02em;
+}
+.app-shell[data-page] .long-term-desk .lt-accumulation-status.is-potential {
+  background: #e1f3e9;
+  border-color: #a5d0b8;
+  color: #155c40;
+}
+.app-shell[data-page] .long-term-desk .lt-accumulation-status.is-extended {
+  background: #fae9df;
+  border-color: #e8b89d;
+  color: #8c3b21;
+}
+.app-shell[data-page] .long-term-desk .lt-accumulation-status + small {
+  display: block;
+  margin-top: 5px;
+}
+.app-shell[data-page] .long-term-desk .lt-accumulation-panel .lt-table-wrap {
+  background: #ffffff;
+  border-color: #d7e0ec;
+}
+.app-shell[data-page] .long-term-desk .lt-accumulation-panel .lt-table td {
+  background: #ffffff;
+  color: #263650;
+}
+.app-shell[data-page] .long-term-desk .lt-accumulation-panel .lt-table th {
+  background: #e7edf6;
+  color: #293d5c;
+}
+.app-shell[data-page] .long-term-desk .lt-accumulation-panel .lt-data-note {
+  background: #fff7e8;
+  border-color: #ead6a9;
+  border-left-color: #ac7427;
+}
+.app-shell[data-page] .long-term-desk .lt-accumulation-panel .lt-data-note strong {
+  color: #704817;
+}
+.app-shell[data-page] .long-term-desk .lt-accumulation-panel .lt-data-note p,
+.app-shell[data-page] .long-term-desk .lt-accumulation-panel .lt-data-note a {
+  color: #5b4c35;
+}
+@media(max-width:1050px) {
+  .app-shell[data-page] .long-term-desk .lt-activity-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .app-shell[data-page] .long-term-desk .lt-deal-filter-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media(max-width:700px) {
+  .app-shell[data-page] .long-term-desk .lt-activity-controls,
+  .app-shell[data-page] .long-term-desk .lt-deal-filter-bar,
+  .app-shell[data-page] .long-term-desk .lt-accumulation-controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .app-shell[data-page] .long-term-desk .lt-accumulation-panel {
+    padding: 14px;
+    border-radius: 14px;
+    margin-inline: 0;
+  }
+  .app-shell[data-page] .long-term-desk .lt-deal-filter-bar {
+    padding: 12px;
+  }
+  .app-shell[data-page] .long-term-desk .lt-direction-filter button {
+    flex: 1;
+  }
+}
