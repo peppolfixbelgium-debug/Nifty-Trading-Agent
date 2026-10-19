@@ -994,6 +994,41 @@ body{min-width:320px;background:radial-gradient(ellipse at 78% 0%,rgba(231,211,1
 }
 
 
+
+/* Accessibility fix: investor overview guide cards must keep readable contrast on mobile and desktop. */
+.page-overview .quick-start-steps{
+  background:#fffdf7;
+  border-color:#ded7c9;
+}
+.page-overview .quick-start-step{
+  background:#fffdf7;
+  color:#292e28;
+}
+.page-overview .quick-start-step strong{
+  display:block;
+  color:#292e28;
+  font-size:12px;
+  line-height:1.45;
+}
+.page-overview .quick-start-step p{
+  color:#646b61;
+  font-size:11px;
+  line-height:1.7;
+}
+.page-overview .quick-start-step .step-index{
+  color:#315f44;
+  border-color:#9ab6a0;
+  background:#edf3e9;
+}
+.page-overview .quick-start-note{
+  background:#f7f4ed;
+  color:#596257;
+  border-left-color:#54765b;
+}
+.page-overview .quick-start-note span{
+  color:#315f44;
+}
+
 /* Keep the original trading workflow discoverable next to the investor desk. */
 .terminal-nav a.terminal-nav-primary{background:#29342c;color:#fffdf7;border:1px solid #29342c;font-weight:700;box-shadow:0 3px 10px rgba(40,48,41,.1)}
 .terminal-nav a.terminal-nav-primary:hover,.terminal-nav a.terminal-nav-primary:focus-visible{background:#3b5f46;color:#fffdf7;border-color:#3b5f46;outline:none}
