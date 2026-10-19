@@ -29,6 +29,7 @@ type AccumulationResponse = { generatedAt: string; dataSource?: string; results:
 type DealSideFilter = "ALL" | "BUY" | "SELL";
 type DealTypeFilter = "ALL" | "BULK" | "BLOCK";
 type AccumulationFilter = "ALL" | "POTENTIAL" | "EXTENDED";
+type MoveFilter = "ALL" | "NET_BUYING" | "NET_SELLING" | "BUY_OBSERVED";
 
 const stocks = UNIVERSE.map((stock) => ({ symbol: stock.symbol.replace(/\.NS$/, ""), fullSymbol: stock.symbol, name: stock.name }));
 const n = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 });
@@ -122,6 +123,7 @@ export default function LongTermInvestorDesk({ initialTab = "research", initialS
   const [dealSideFilter, setDealSideFilter] = useState<DealSideFilter>("ALL");
   const [dealTypeFilter, setDealTypeFilter] = useState<DealTypeFilter>("ALL");
   const [dealSort, setDealSort] = useState<"DATE" | "VALUE">("DATE");
+  const [moveFilter, setMoveFilter] = useState<MoveFilter>("ALL");
   const [accumulation, setAccumulation] = useState<AccumulationResponse | null>(null);
   const [accumulationBusy, setAccumulationBusy] = useState(false);
   const [accumulationError, setAccumulationError] = useState<string | null>(null);
@@ -225,8 +227,10 @@ export default function LongTermInvestorDesk({ initialTab = "research", initialS
     const needle = activitySearch.trim().toLowerCase();
     return (activity?.entityMoves ?? [])
       .filter((move) => dealSideFilter === "ALL" || (dealSideFilter === "BUY" ? move.netBuyCrore > 0 : move.netBuyCrore < 0))
+      .filter((move) => moveFilter === "ALL" || (moveFilter === "NET_BUYING" ? move.netBuyCrore > 0
+        : moveFilter === "NET_SELLING" ? move.netBuyCrore < 0 : move.firstBuyObservedInWindow))
       .filter((move) => !needle || move.clientName.toLowerCase().includes(needle) || move.symbol.toLowerCase().includes(needle) || move.company.toLowerCase().includes(needle));
-  }, [activity, activitySearch, dealSideFilter]);
+  }, [activity, activitySearch, dealSideFilter, moveFilter]);
   const accumulationRows = useMemo(() => (accumulation?.results ?? [])
     .map((row) => {
       const volumeRatio = row.relativeVolume;
@@ -391,6 +395,7 @@ export default function LongTermInvestorDesk({ initialTab = "research", initialS
         </div>
         <label className="lt-search-field lt-days-select"><span>DEAL TYPE</span><select value={dealTypeFilter} onChange={(event) => setDealTypeFilter(event.target.value as DealTypeFilter)}><option value="ALL">Bulk + block</option><option value="BULK">Bulk deals</option><option value="BLOCK">Block deals</option></select></label>
         <label className="lt-search-field lt-days-select"><span>SORT BY</span><select value={dealSort} onChange={(event) => setDealSort(event.target.value as "DATE" | "VALUE")}><option value="DATE">Newest first</option><option value="VALUE">Largest disclosed value</option></select></label>
+        <label className="lt-search-field lt-days-select"><span>INSTITUTION MOVE FILTER</span><select value={moveFilter} onChange={(event) => setMoveFilter(event.target.value as MoveFilter)}><option value="ALL">All observed moves</option><option value="NET_BUYING">Net buying / possible increase</option><option value="NET_SELLING">Net selling / possible reduction</option><option value="BUY_OBSERVED">A buy was disclosed in range</option></select></label>
       </div>
       {activityError && <div className="lt-error"><strong>NSE disclosure feed unavailable</strong><span>{activityError}</span><a href={activity?.sources.deals ?? "https://www.nseindia.com/report-detail/display-bulk-and-block-deals"} target="_blank" rel="noreferrer">Open official NSE deals page ↗</a></div>}
       {activityBusy && !activity && <div className="lt-loading"><span className="spinner" /> Requesting public NSE disclosures…</div>}
@@ -439,13 +444,13 @@ export default function LongTermInvestorDesk({ initialTab = "research", initialS
         </table></div> : <div className="lt-empty"><strong>No disclosed deals match these filters.</strong><p>Try a smaller minimum deal value, a longer lookback, or search another client/stock. An empty result is valid; the app does not fabricate transactions.</p></div>}
         <div className="lt-subheading"><div><span className="section-kicker">OBSERVED BUYING / SELLING</span><h3>Net activity by client and stock</h3></div><small>Aggregated only within this selected date window.</small></div>
         {filteredMoves.length ? <div className="lt-table-wrap"><table className="lt-table">
-          <thead><tr><th>Client / institution</th><th>Stock</th><th>Buys</th><th>Sells</th><th>Net disclosed value</th><th>Window clue</th></tr></thead>
+          <thead><tr><th>Client / institution</th><th>Stock</th><th>Buys</th><th>Sells</th><th>Net disclosed value</th><th>Observed move</th></tr></thead>
           <tbody>{filteredMoves.slice(0, 40).map((move, index) => <tr key={move.clientName + move.symbol + index}>
-            <td><strong>{move.clientName}</strong><small className="lt-company-name">{move.count} disclosed deals</small></td><td><button type="button" className="lt-ticker-link" onClick={() => openStockFromActivity(move.symbol)}>{move.symbol}</button></td>
+            <td><strong>{move.clientName}</strong><small className="lt-company-name">{move.count} disclosed deals in range</small></td><td><button type="button" className="lt-ticker-link" onClick={() => openStockFromActivity(move.symbol)}>{move.symbol}</button></td>
             <td>₹{n.format(move.buys)} Cr</td><td>₹{n.format(move.sells)} Cr</td><td className={move.netBuyCrore > 0 ? "lt-positive" : move.netBuyCrore < 0 ? "lt-negative" : "lt-neutral"}><strong>{signedCrore(move.netBuyCrore)}</strong><small className="lt-company-name">{move.observedDirection}</small></td>
-            <td><div className="lt-window-clues">{move.firstBuyDate && <span className="lt-side lt-buy">Buy reported from {dateLabel(move.firstBuyDate)}</span>}{move.firstSellDate && <span className="lt-side lt-sell">Sell reported from {dateLabel(move.firstSellDate)}</span>}{!move.firstBuyDate && !move.firstSellDate && "—"}</div></td>
+            <td><div className="lt-window-clues">{move.netBuyCrore > 0 ? <span className="lt-side lt-buy">NET BUYING / POSSIBLE INCREASE</span> : move.netBuyCrore < 0 ? <span className="lt-side lt-sell">NET SELLING / POSSIBLE REDUCTION</span> : <span className="lt-side lt-mixed">MIXED ACTIVITY</span>}{move.firstBuyDate && <small>First buy disclosure in window: {dateLabel(move.firstBuyDate)}</small>}{move.firstSellDate && <small>First sell disclosure in window: {dateLabel(move.firstSellDate)}</small>}</div></td>
           </tr>)}</tbody>
-        </table></div> : <div className="lt-empty"><strong>No institution/client moves match the search.</strong></div>}
+        </table></div> : <div className="lt-empty"><strong>No institution/client moves match the current filters.</strong><p>Try another direction, wider dates or a smaller minimum deal size. These are exchange-disclosed bulk/block transactions, not a complete institutional portfolio.</p></div>}
         <div className="lt-subheading"><div><span className="section-kicker">QUARTERLY OWNERSHIP CHANGE</span><h3>{(activity.ownershipSymbol ?? activitySymbol).toUpperCase().replace(/\.NS$/, "")} shareholding trail</h3></div><small>Latest exchange-filed summary rows.</small></div>
         {activity.shareholding.length ? <div className="lt-table-wrap"><table className="lt-table">
           <thead><tr><th>As of</th><th>Promoter group</th><th>Change QoQ</th><th>Public shareholding</th><th>Change QoQ</th><th>Official filing</th></tr></thead>
