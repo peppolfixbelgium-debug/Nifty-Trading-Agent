@@ -1571,7 +1571,9 @@ body:has(.app-shell[data-page="backtest"]){background:radial-gradient(ellipse at
 .app-shell[data-page] .long-term-desk .lt-subheading > small {
   color: #4b5b72 !important;
 }
-.app-shell[data-page] .long-term-desk .lt-heading .section-kicker,
+.app-shell[data-page] .long-term-desk .lt-heading .section-kicker {
+  color: #314f80 !important;
+}
 .app-shell[data-page] .long-term-desk .lt-entry-plan .section-kicker {
   color: #dce9ff !important;
 }
