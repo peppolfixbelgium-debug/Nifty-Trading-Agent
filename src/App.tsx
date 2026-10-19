@@ -302,7 +302,7 @@ function App() {
   const riskCapHit = data !== null && data.params.effectiveRiskInr < data.params.requestedRiskInr;
 
   return (
-    <main className="app-shell">
+    <main className="app-shell" data-page={activePage}>
       <header className="topbar">
         <button className="brand brand-button" type="button" onClick={() => navigate("overview")} aria-label="Nifty Trading Agent home">
           <span className="brand-mark"><span></span><span></span><span></span></span>
