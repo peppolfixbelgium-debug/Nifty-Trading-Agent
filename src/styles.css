@@ -1717,7 +1717,7 @@ body:has(.app-shell[data-page="backtest"]){background:radial-gradient(ellipse at
 }
 .app-shell[data-page] .long-term-desk .lt-deal-filter-bar {
   display: grid;
-  grid-template-columns: minmax(245px, 1fr) minmax(180px, .55fr) minmax(180px, .55fr);
+  grid-template-columns: minmax(245px, 1fr) minmax(180px, .48fr) minmax(180px, .48fr) minmax(230px, .75fr);
   align-items: end;
   gap: 12px;
   margin: 12px 0 20px;
@@ -1759,6 +1759,11 @@ body:has(.app-shell[data-page="backtest"]){background:radial-gradient(ellipse at
 .app-shell[data-page] .long-term-desk .lt-direction-filter button:not(.active):hover {
   background: #e7edf7;
   border-color: #97abc8;
+}
+.app-shell[data-page] .long-term-desk .lt-side.lt-mixed {
+  background: #edf0f5;
+  border-color: #c6cfdd;
+  color: #40516a !important;
 }
 .app-shell[data-page] .long-term-desk .lt-deal-filter-bar .lt-search-field select {
   min-height: 40px;
