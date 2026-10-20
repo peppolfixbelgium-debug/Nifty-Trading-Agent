@@ -1908,3 +1908,387 @@ body:has(.app-shell[data-page="backtest"]){background:radial-gradient(ellipse at
   .terminal-nav{gap:6px;padding:10px 0}
   .terminal-nav button{min-height:42px;padding:9px 13px;font-size:12px}
 }
+
+
+/* --------------------------------------------------------------------------
+   Investor Intelligence redesign — visual language inspired by IPO Intelligence
+   Warm ivory canvas, navy typography, blue research accents and spacious cards.
+   Existing research logic and API routes remain unchanged.
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+  --bg: #f3f0e7;
+  --panel: #fffdf8;
+  --line: #e3dece;
+  --muted: #7e8794;
+  --text: #293449;
+  --mint: #285fbd;
+  --mint-dark: #e5edfc;
+  --amber: #b97920;
+  --red: #bd5146;
+  --mono: "DM Mono", monospace;
+  --display: "Manrope", sans-serif;
+}
+html { scroll-behavior: smooth; background: #f3f0e7; }
+body {
+  color: #293449;
+  background: radial-gradient(ellipse at 78% 0%, rgba(99,151,232,.10), transparent 35%), #f3f0e7;
+}
+.app-shell {
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  color: #293449;
+  background: transparent;
+}
+.app-shell .topbar {
+  position: fixed;
+  z-index: 70;
+  inset: 0 auto 0 0;
+  width: 252px;
+  height: 100vh;
+  padding: 25px 16px 17px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 22px;
+  background: #f8f5ed;
+  border-right: 1px solid #e3dece;
+  border-bottom: 0;
+}
+.app-shell .brand {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 5px;
+  border: 0;
+  color: #293449;
+  background: transparent;
+  text-align: left;
+}
+.app-shell .brand-mark {
+  position: relative;
+  width: 39px;
+  height: 39px;
+  flex: 0 0 39px;
+  display: grid;
+  place-items: center;
+  align-items: flex-end;
+  gap: 3px;
+  padding: 7px;
+  border: 1px solid #7698cf;
+  border-radius: 12px;
+  background: #e5edfc;
+}
+.app-shell .brand-mark span { background: #285fbd; border-radius: 2px; }
+.app-shell .brand strong { color: #293449; font: 800 13px var(--display); letter-spacing: .1em; }
+.app-shell .brand small { color: #7e8794; font: 500 8px var(--mono); letter-spacing: .12em; }
+.app-shell .topbar-right {
+  width: 100%;
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: 8px minmax(0,1fr);
+  align-items: center;
+  gap: 6px 9px;
+  padding: 13px 10px;
+  border: 1px solid #e3dece;
+  border-radius: 10px;
+  background: #fffdf8;
+  color: #536175;
+  font: 9px var(--mono);
+  letter-spacing: .04em;
+}
+.app-shell .topbar-right .live-dot { grid-row: 1; background: #2f9b75; box-shadow: none; }
+.app-shell .topbar-right .topbar-divider { display: none; }
+.app-shell .topbar-right .topbar-muted { grid-column: 2; color: #7e8794; font-size: 8px; }
+.app-shell .terminal-nav {
+  position: fixed;
+  z-index: 69;
+  inset: 111px auto 92px 0;
+  width: 252px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 5px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 18px 16px;
+  border: 0;
+  border-right: 1px solid #e3dece;
+  background: #f8f5ed;
+  backdrop-filter: none;
+}
+.app-shell .terminal-nav:before {
+  content: "WORKSPACE";
+  padding: 0 10px 8px;
+  color: #97a0ac;
+  font: 500 9px var(--mono);
+  letter-spacing: .17em;
+}
+.app-shell .terminal-nav button {
+  position: relative;
+  width: 100%;
+  min-height: 41px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 11px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: #687681;
+  font: 500 11px "DM Sans", sans-serif;
+  text-align: left;
+  opacity: 1;
+}
+.app-shell .terminal-nav button:hover {
+  border-color: #e3dece;
+  background: #fffdf8;
+  color: #293449;
+}
+.app-shell .terminal-nav button.active {
+  border-color: #cdddf7;
+  background: #e5edfc;
+  color: #285fbd;
+  font-weight: 700;
+  box-shadow: none;
+}
+.app-shell .terminal-nav button.active:before {
+  content: "";
+  position: absolute;
+  left: -12px;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 3px;
+  background: #285fbd;
+}
+.app-shell .terminal-nav button.terminal-nav-investor { color: #536175; }
+.app-shell .terminal-nav button.active.terminal-nav-investor { color: #285fbd; }
+.app-shell > .long-term-desk,
+.app-shell > .quant-lab-content,
+.app-shell > .footer {
+  margin-left: 252px;
+}
+.app-shell > .long-term-desk { padding: 28px clamp(20px, 3vw, 44px) 0; }
+.app-shell > .quant-lab-content { padding: 0 clamp(20px, 3vw, 44px); min-width: 0; }
+.app-shell > .footer { padding: 22px clamp(20px, 3vw, 44px) 25px; }
+.app-shell .hero {
+  min-height: 250px;
+  padding: 34px 34px;
+  margin-top: 14px;
+  border: 1px solid #dbe1e9;
+  border-radius: 18px;
+  background: radial-gradient(ellipse at 88% 44%,rgba(99,151,232,.18),transparent 33%),linear-gradient(120deg,#fffdf7 0%,#f5f0e2 75%);
+  box-shadow: 0 12px 34px rgba(58,58,39,.045);
+  color: #293449;
+}
+.app-shell .eyebrow,.app-shell .section-kicker { color: #285fbd; }
+.app-shell .eyebrow-line { background: #285fbd; }
+.app-shell .hero h1 { color: #172c48; }
+.app-shell .hero h1 em { color: #285fbd; }
+.app-shell .hero-copy>p,.app-shell .hero-note { color: #657184; }
+.app-shell .note-icon { color: #285fbd; border-color: #cdddf7; }
+.app-shell .hero-stamp { color: #285fbd; }
+.app-shell .stamp-ring { border-color: #cdddf7; }
+.app-shell .market-strip {
+  gap: 12px;
+  margin: 20px 0 24px;
+  border: 0;
+}
+.app-shell .market-card {
+  min-width: 0;
+  min-height: 116px;
+  padding: 17px 18px;
+  border: 1px solid #e3dece;
+  border-radius: 14px;
+  background: #fffdf8;
+  box-shadow: 0 8px 24px rgba(58,58,39,.035);
+}
+.app-shell .market-card+.market-card { padding-left: 18px; }
+.app-shell .metric-label,.app-shell .metric-foot,.app-shell .metric-change span { color: #7e8794; }
+.app-shell .metric-value { color: #293449; }
+.app-shell .tiny-tag { border-color: #e3dece; color: #7e8794; }
+.app-shell .positive { color: #2b8a69!important; }
+.app-shell .negative { color: #bd5146!important; }
+.app-shell .control-panel,.app-shell .results-section,.app-shell .backtest-section,.app-shell .opportunity-section,.app-shell .rules-grid {
+  border-color: #e3dece;
+}
+.app-shell .control-panel { gap: 16px; }
+.app-shell .control-intro h2,.app-shell .results-heading h2,.app-shell .rules-heading h2,.app-shell .backtest-heading h2,.app-shell .opportunity-section h2 { color: #293449; }
+.app-shell .control-intro p,.app-shell .rules-heading>p { color: #7e8794; }
+.app-shell .field { color: #536175; }
+.app-shell .input-wrap,.app-shell .search-wrap,.app-shell .chart-instrument-picker select,.app-shell .chart-range-tabs,.app-shell .options-mode-tabs {
+  background: #fffdf8;
+  border-color: #d9deE6;
+  color: #293449;
+}
+.app-shell .input-wrap input,.app-shell .search-wrap input,.app-shell .chart-instrument-picker select { color: #293449; }
+.app-shell .input-wrap>span { color: #285fbd; }
+.app-shell .scan-button { background: #285fbd; color: #fff; border-radius: 9px; }
+.app-shell .scan-button:hover:not(:disabled) { background: #214f9e; }
+.app-shell .filter-tab { color: #687681; }
+.app-shell .filter-tab.selected { color: #285fbd; background: #e5edfc; border-color: #cdddf7; }
+.app-shell .filter-tab.selected span { color: #285fbd; }
+.app-shell .table-scroll,.app-shell .chain-table-wrap {
+  border-color: #e3dece;
+  border-radius: 13px;
+  background: #fffdf8;
+}
+.app-shell table { color: #293449; }
+.app-shell thead,.app-shell th { background: #f6f2e8; color: #687681; border-color: #e3dece; }
+.app-shell td { color: #536175; border-color: #eee9dd; }
+.app-shell tbody tr:hover { background: #f5f7fb; }
+.app-shell .stock-cell strong { color: #293449; }
+.app-shell .stock-cell small,.app-shell .last-updated { color: #7e8794; }
+.app-shell .export-button { background: #fffdf8; color: #536175; border-color: #d9deE6; border-radius: 9px; }
+.app-shell .export-button:hover:not(:disabled) { border-color: #9bb8eb; color: #285fbd; }
+.app-shell .terminal-chart-section,.app-shell .options-desk-section { border-color: #e3dece; }
+.app-shell .terminal-section-top h2 { color: #293449; }
+.app-shell .terminal-section-top p,.app-shell .chart-source-note,.app-shell .options-note { color: #7e8794; }
+.app-shell .terminal-data-badge { background: #e5edfc; border-color: #cdddf7; color: #285fbd; border-radius: 100px; }
+.app-shell .terminal-data-badge i { background: #285fbd; box-shadow: none; }
+.app-shell .terminal-data-badge-amber { background: #fff1ca; border-color: #f0d99d; color: #8a6b20; }
+.app-shell .terminal-svg-wrap { border-color: #e3dece; border-radius: 13px; background: #fffdf8; }
+.app-shell .chart-grid-line { stroke: #e9e5db; }
+.app-shell .chart-axis-label,.app-shell .chart-time-label,.app-shell .chart-pane-label { fill: #7e8794; }
+.app-shell .chart-hover-dot { fill: #285fbd; stroke: #fffdf8; }
+.app-shell .chart-range-tabs button,.app-shell .options-mode-tabs button { color: #687681; }
+.app-shell .chart-range-tabs button.active,.app-shell .options-mode-tabs button.active { background: #e5edfc; border-color: #cdddf7; color: #285fbd; }
+.app-shell .options-kpi-grid { border-color: #e3dece; }
+.app-shell .options-kpi-grid>div { border-color: #e3dece; }
+.app-shell .options-kpi-grid strong,.app-shell .chart-summary-extra b,.app-shell .terminal-chart-summary>div:first-child>strong { color: #293449; }
+.app-shell .options-kpi-grid span,.app-shell .options-kpi-grid small,.app-shell .chart-summary-extra span { color: #7e8794; }
+.app-shell .premium-chain-table th,.app-shell .premium-chain-table thead tr:first-child th { background: #f6f2e8; color: #687681; border-color: #e3dece; }
+.app-shell .premium-chain-table td { color: #536175; border-color: #eee9dd; }
+.app-shell .premium-chain-table .strike-column { background: #f3f0e7; color: #293449; border-color: #e3dece; }
+.app-shell .premium-chain-table .chain-atm td,.app-shell .premium-chain-table .chain-atm th { background: #eaf1fd; }
+.app-shell .premium-chain-table .chain-atm .strike-column { background: #dce8fb; color: #285fbd; }
+.app-shell .chain-call-ltp { color: #2b8a69; }
+.app-shell .chain-put-ltp { color: #bd5146; }
+.app-shell .chain-chart-button { background: #e5edfc; border-color: #cdddf7; color: #285fbd; }
+.app-shell .provider-setup-callout,.app-shell .options-history-message { border-color: #ead9a8; background: #fffaf0; color: #8a6b20; }
+.app-shell .provider-setup-callout>strong { color: #6c5119; }
+.app-shell .provider-setup-callout p,.app-shell .provider-setup-callout ol,.app-shell .provider-setup-callout small { color: #8b7d5b; }
+.app-shell .provider-setup-callout code { background: #fff1ca; border-color: #ead9a8; color: #6c5119; }
+.app-shell .footer { border-color: #e3dece; color: #7e8794; }
+.app-shell .footer-brand strong { color: #293449; }
+.app-shell .footer-version { color: #7e8794; }
+.app-shell .inline-warning,.app-shell .error-banner { border-radius: 10px; }
+.app-shell .inline-warning { background: #fffaf0; border-color: #ead9a8; color: #8a6b20; }
+.app-shell .error-banner { background: #fff4f2; border-color: #efcfca; color: #9f3e35; }
+.app-shell .long-term-desk { color: #293449; }
+.app-shell .long-term-desk .lt-heading {
+  padding: 25px 0 22px;
+  border-bottom-color: #e3dece;
+}
+.app-shell .long-term-desk .lt-heading h2 { color: #172c48; }
+.app-shell .long-term-desk .lt-heading p { color: #657184; }
+.app-shell .long-term-desk .lt-heading-stamp { border-color: #cdddf7; background: #e5edfc; color: #285fbd; border-radius: 13px; }
+.app-shell .long-term-desk .lt-tabs { gap: 12px; border: 0; margin: 22px 0; }
+.app-shell .long-term-desk .lt-tabs button {
+  min-height: 78px; padding: 15px 18px; border: 1px solid #e3dece; border-radius: 14px;
+  background: #fffdf8; color: #536175; box-shadow: 0 8px 24px rgba(58,58,39,.035);
+}
+.app-shell .long-term-desk .lt-tabs button.active { background: #eaf1fd; border-color: #b8cff3; color: #17345e; box-shadow: 0 10px 25px rgba(40,95,189,.07); }
+.app-shell .long-term-desk .lt-tab-num { color: #285fbd; }
+.app-shell .long-term-desk .lt-tabs small { color: #7e8794; }
+.app-shell .long-term-desk .lt-panel { border: 1px solid #e3dece; border-radius: 16px; background: #fffdf8; box-shadow: 0 12px 34px rgba(58,58,39,.045); }
+.app-shell .long-term-desk .lt-search-field input,.app-shell .long-term-desk input,.app-shell .long-term-desk select {
+  color: #293449; background: #fffdf8; border-color: #d9deE6;
+}
+.app-shell .long-term-desk .lt-search-field,.app-shell .long-term-desk .lt-filter-control { color: #687681; }
+.app-shell .long-term-desk .lt-primary-btn { background: #285fbd; color: #fff; border-color: #285fbd; border-radius: 9px; }
+.app-shell .long-term-desk .lt-ghost-btn,.app-shell .long-term-desk .lt-stock-shortcuts button {
+  background: #fffdf8; color: #536175; border-color: #d9deE6; border-radius: 8px;
+}
+.app-shell .long-term-desk .lt-stock-shortcuts button.active { background: #e5edfc; border-color: #cdddf7; color: #285fbd; }
+.app-shell .long-term-desk .lt-stock-hero,.app-shell .long-term-desk .lt-assessment-summary,.app-shell .long-term-desk .lt-entry-plan,
+.app-shell .long-term-desk .lt-factor,.app-shell .long-term-desk .lt-activity-card,.app-shell .long-term-desk .lt-flow-card,
+.app-shell .long-term-desk .lt-data-note,.app-shell .long-term-desk .lt-accumulation-panel {
+  background: #fffdf8; border-color: #e3dece; color: #293449; border-radius: 13px; box-shadow: 0 8px 24px rgba(58,58,39,.03);
+}
+.app-shell .long-term-desk .lt-stock-hero { background: linear-gradient(120deg,#fffdf8,#f5f0e2); }
+.app-shell .long-term-desk .lt-stock-identity h3,.app-shell .long-term-desk .lt-factor strong,.app-shell .long-term-desk .lt-entry-plan h3 { color: #293449; }
+.app-shell .long-term-desk .lt-stock-identity p,.app-shell .long-term-desk .lt-current-price small,.app-shell .long-term-desk .lt-current-price span,
+.app-shell .long-term-desk .lt-factor p,.app-shell .long-term-desk .lt-entry-plan p,.app-shell .long-term-desk .lt-entry-plan-caveat { color: #7e8794; }
+.app-shell .long-term-desk .lt-current-price strong { color: #172c48; }
+.app-shell .long-term-desk .lt-factor-grid { gap: 12px; }
+.app-shell .long-term-desk .lt-factor { padding: 16px; }
+.app-shell .long-term-desk .lt-entry-zone-main>div { background: #f5f7fb; border-color: #dbe5f5; border-radius: 10px; }
+.app-shell .long-term-desk .lt-entry-zone-main strong { color: #17345e; }
+.app-shell .long-term-desk .lt-entry-timing-grid>div { border-color: #e3dece; }
+.app-shell .long-term-desk .lt-entry-timing-grid span { color: #7e8794; }
+.app-shell .long-term-desk .lt-entry-timing-grid strong { color: #293449; }
+.app-shell .long-term-desk .lt-table-wrap,.app-shell .long-term-desk .lt-deal-table-wrap { border-color: #e3dece; background: #fffdf8; border-radius: 12px; }
+.app-shell .long-term-desk .lt-table-wrap th,.app-shell .long-term-desk .lt-deal-table-wrap th { background: #f6f2e8; color: #687681; border-color: #e3dece; }
+.app-shell .long-term-desk .lt-table-wrap td,.app-shell .long-term-desk .lt-deal-table-wrap td { color: #536175; border-color: #eee9dd; }
+.app-shell .long-term-desk .lt-activity-controls,.app-shell .long-term-desk .lt-deal-filter-bar { background: #f8f5ed; border-color: #e3dece; border-radius: 12px; }
+.app-shell .long-term-desk .lt-accumulation-caveat,.app-shell .long-term-desk .lt-data-note p { color: #657184; }
+.app-shell .long-term-desk .lt-empty { color: #7e8794; }
+.app-shell .long-term-desk .lt-decision { border-radius: 12px; }
+.app-shell .long-term-desk .lt-entry-status { border-radius: 100px; }
+.app-shell .long-term-desk .lt-decision-buy,.app-shell .long-term-desk .lt-entry-plan-in-zone { background: #e7f5ed; border-color: #b9e0c9; color: #216947; }
+.app-shell .long-term-desk .lt-decision-hold,.app-shell .long-term-desk .lt-entry-plan-wait,.app-shell .long-term-desk .lt-entry-plan-watch { background: #fff1ca; border-color: #ead9a8; color: #8a6b20; }
+.app-shell .long-term-desk .lt-decision-sell { background: #fff0ed; border-color: #efcfca; color: #9f3e35; }
+.app-shell .long-term-desk .lt-accumulation-panel .lt-data-note { background: #fffaf0; border-color: #ead9a8; color: #8a6b20; }
+.app-shell .long-term-desk .lt-accumulation-panel .lt-data-note strong { color: #6c5119; }
+.app-shell .long-term-desk .lt-accumulation-panel .lt-data-note p,.app-shell .long-term-desk .lt-accumulation-panel .lt-data-note a { color: #5b4c35; }
+.app-shell .long-term-desk .lt-accumulation-controls { gap: 12px; }
+.app-shell .long-term-desk .lt-activity-controls,.app-shell .long-term-desk .lt-deal-filter-bar { color: #536175; }
+.app-shell .long-term-desk .lt-heading-stamp strong { color: #285fbd; }
+.app-shell .long-term-desk .lt-heading-stamp small { color: #7e8794; }
+.app-shell .long-term-desk .lt-error { background: #fff4f2; color: #9f3e35; border-color: #efcfca; }
+.app-shell .long-term-desk .lt-loading { background: #e5edfc; color: #285fbd; border-color: #cdddf7; }
+.app-shell .long-term-desk .lt-deal-filter-bar input,.app-shell .long-term-desk .lt-deal-filter-bar select,
+.app-shell .long-term-desk .lt-activity-controls input,.app-shell .long-term-desk .lt-activity-controls select,
+.app-shell .long-term-desk .lt-accumulation-controls input,.app-shell .long-term-desk .lt-accumulation-controls select {
+  color: #293449; background: #fffdf8; border-color: #d9deE6;
+}
+@media (max-width: 1000px) {
+  .app-shell .topbar,.app-shell .terminal-nav { width: 220px; }
+  .app-shell > .long-term-desk,.app-shell > .quant-lab-content,.app-shell > .footer { margin-left: 220px; }
+  .app-shell .market-strip { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 700px) {
+  .app-shell { padding: 0; }
+  .app-shell .topbar {
+    position: relative; inset: auto; width: 100%; height: auto; min-height: 66px;
+    padding: 12px 16px; flex-direction: row; align-items: center; gap: 10px;
+    background: #f8f5ed; border-right: 0; border-bottom: 1px solid #e3dece;
+  }
+  .app-shell .brand { width: auto; min-height: 40px; padding: 0; }
+  .app-shell .brand-mark { width: 34px; height: 34px; flex-basis: 34px; }
+  .app-shell .brand strong { font-size: 11px; }
+  .app-shell .brand small { font-size: 7px; letter-spacing: .07em; }
+  .app-shell .topbar-right { width: auto; display: flex; flex-wrap: wrap; justify-content: flex-end; margin: 0; padding: 0; border: 0; background: transparent; font-size: 7px; }
+  .app-shell .topbar-right .topbar-muted { display: none; }
+  .app-shell .terminal-nav {
+    position: sticky; inset: auto; top: 0; width: 100%; height: auto; flex-direction: row; gap: 6px;
+    overflow-x: auto; overflow-y: hidden; padding: 9px 12px; background: rgba(248,245,237,.96);
+    border-right: 0; border-bottom: 1px solid #e3dece; backdrop-filter: blur(12px);
+  }
+  .app-shell .terminal-nav:before { display: none; }
+  .app-shell .terminal-nav button { width: auto; min-height: 39px; padding: 8px 12px; white-space: nowrap; font-size: 10px; }
+  .app-shell .terminal-nav button.active:before { display: none; }
+  .app-shell > .long-term-desk,.app-shell > .quant-lab-content,.app-shell > .footer { margin-left: 0; }
+  .app-shell > .long-term-desk { padding: 18px 14px 0; }
+  .app-shell > .quant-lab-content { padding: 0 14px; }
+  .app-shell > .footer { padding: 20px 14px; }
+  .app-shell .hero { padding: 23px 20px; min-height: 0; margin-top: 10px; }
+  .app-shell .hero-stamp { display: none; }
+  .app-shell .market-strip { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+  .app-shell .market-card,.app-shell .market-card+.market-card { min-height: 100px; padding: 13px; }
+  .app-shell .market-card .metric-value { font-size: 21px; }
+  .app-shell .long-term-desk .lt-heading { padding-top: 16px; }
+  .app-shell .long-term-desk .lt-heading-stamp { display: none; }
+  .app-shell .long-term-desk .lt-tabs { display: grid; grid-template-columns: 1fr; }
+  .app-shell .long-term-desk .lt-tabs button { min-height: 64px; }
+}
