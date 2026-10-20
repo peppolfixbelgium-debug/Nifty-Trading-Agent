@@ -84,6 +84,7 @@ function ActionPill({ action }: { action: ScanAction }) {
 
 function App() {
   const [activePage, setActivePage] = useState<Page>(readPageFromLocation);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (typeof window === "undefined") return "light";
     try {
@@ -287,6 +288,7 @@ function App() {
   }, []);
 
   function navigate(page: Page) {
+    setMobileMenuOpen(false);
     const url = new URL(window.location.href);
     url.searchParams.set("view", page);
     window.history.pushState({}, "", url);
@@ -340,6 +342,17 @@ function App() {
             <span aria-hidden="true">{theme === "light" ? "☾" : "☀"}</span>
             <span>{theme === "light" ? "Dark mode" : "Light mode"}</span>
           </button>
+          <button
+            className="mobile-menu-toggle"
+            type="button"
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Open navigation menu"
+            aria-expanded={mobileMenuOpen}
+            aria-controls="nifty-mobile-navigation"
+            title="Open menu"
+          >
+            <span aria-hidden="true">☰</span>
+          </button>
         </div>
       </header>
       <nav className="terminal-nav" aria-label="Main navigation">
@@ -348,6 +361,58 @@ function App() {
           aria-current={activePage === page.id ? "page" : undefined}
           onClick={() => navigate(page.id)}>{page.label}</button>)}
       </nav>
+
+      {mobileMenuOpen && <div className="mobile-nav-overlay" onClick={() => setMobileMenuOpen(false)}>
+        <aside
+          id="nifty-mobile-navigation"
+          className="mobile-nav-drawer"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Nifty navigation"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className="drawer-head">
+            <div className="drawer-brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+            <div className="drawer-brand-copy"><strong>NIFTY</strong><small>INVESTOR INTELLIGENCE</small></div>
+            <button className="drawer-close" type="button" onClick={() => setMobileMenuOpen(false)} aria-label="Close navigation">×</button>
+          </div>
+          <div className="drawer-market-pill"><span></span> INDIA EQUITY RESEARCH <b>DAILY</b></div>
+
+          <div className="drawer-section-label">WORKSPACE</div>
+          {PAGE_OPTIONS.filter((page) => page.id === "overview").map((page) => <button
+            key={page.id}
+            type="button"
+            className={"drawer-nav-item " + (activePage === page.id ? "active" : "")}
+            aria-current={activePage === page.id ? "page" : undefined}
+            onClick={() => { navigate(page.id); setMobileMenuOpen(false); }}
+          ><span className="drawer-nav-icon" aria-hidden="true">▦</span><span>{page.label}</span><span className="drawer-nav-chevron">›</span></button>)}
+
+          <div className="drawer-section-label">RESEARCH</div>
+          {PAGE_OPTIONS.filter((page) => page.id === "research" || page.id === "institutional").map((page) => <button
+            key={page.id}
+            type="button"
+            className={"drawer-nav-item " + (activePage === page.id ? "active" : "")}
+            aria-current={activePage === page.id ? "page" : undefined}
+            onClick={() => { navigate(page.id); setMobileMenuOpen(false); }}
+          ><span className="drawer-nav-icon" aria-hidden="true">{page.id === "research" ? "⌕" : "▤"}</span><span>{page.label}</span>{activePage === page.id && <span className="drawer-nav-chevron">›</span>}</button>)}
+
+          <div className="drawer-section-label">TOOLS</div>
+          {PAGE_OPTIONS.filter((page) => ["charts", "options", "scanner", "strategy", "backtest"].includes(page.id)).map((page) => <button
+            key={page.id}
+            type="button"
+            className={"drawer-nav-item " + (activePage === page.id ? "active" : "")}
+            aria-current={activePage === page.id ? "page" : undefined}
+            onClick={() => { navigate(page.id); setMobileMenuOpen(false); }}
+          ><span className="drawer-nav-icon" aria-hidden="true">{page.id === "charts" ? "↗" : page.id === "options" ? "◇" : page.id === "scanner" ? "⌁" : page.id === "strategy" ? "⚙" : "▥"}</span><span>{page.label}</span>{activePage === page.id && <span className="drawer-nav-chevron">›</span>}</button>)}
+
+          <div className="drawer-evidence-card">
+            <span className="drawer-shield" aria-hidden="true">✓</span>
+            <div><strong>Evidence first</strong><small>Source-backed research · no orders placed</small></div>
+            <span className="drawer-evidence-dot"></span>
+          </div>
+          <p className="drawer-footnote">Verify prices, filings and final terms against official sources before acting.</p>
+        </aside>
+      </div>}
 
       {(activePage === "research" || activePage === "institutional") && <LongTermInvestorDesk
         key={activePage + ":" + researchSymbol}
