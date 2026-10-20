@@ -3087,3 +3087,344 @@ body {
   .app-shell.theme-light .long-term-desk .lt-panel { padding: 12px; }
   .app-shell.theme-dark .long-term-desk .lt-panel { padding: 12px; }
 }
+
+
+/* -------------------------------------------------------------------------
+   Mobile layout correction: IPO-style drawer navigation and consistent cards.
+   This layer replaces the earlier partially overlapping mobile nav treatments.
+   ------------------------------------------------------------------------- */
+.app-shell .mobile-menu-toggle { display: none; }
+.app-shell .mobile-nav-overlay { display: none; }
+.app-shell.theme-light .long-term-desk .lt-heading {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  margin: 12px 0 16px;
+  padding: 24px;
+  overflow: hidden;
+  border: 1px solid #e3dece;
+  border-radius: 18px;
+  background: linear-gradient(125deg,#fffdf8 0%,#f8f5ed 72%,#edf2fc 145%);
+  box-shadow: 0 8px 26px rgba(44,48,61,.035);
+}
+.app-shell.theme-dark .long-term-desk .lt-heading {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  margin: 12px 0 16px;
+  padding: 24px;
+  overflow: hidden;
+  border: 1px solid #2b394b;
+  border-radius: 18px;
+  background: linear-gradient(125deg,#151f2c 0%,#172235 100%);
+}
+.app-shell .long-term-desk .lt-heading:after { opacity: .28; pointer-events: none; }
+.app-shell.theme-light .long-term-desk .lt-heading h2 {
+  max-width: 100%;
+  color: #172c48;
+  font-size: clamp(27px,3.4vw,38px);
+  line-height: 1.12;
+  letter-spacing: -.045em;
+  overflow-wrap: break-word;
+  word-break: normal;
+  text-wrap: balance;
+}
+.app-shell.theme-dark .long-term-desk .lt-heading h2 {
+  max-width: 100%;
+  color: #f0f4fc;
+  font-size: clamp(27px,3.4vw,38px);
+  line-height: 1.12;
+  letter-spacing: -.045em;
+  overflow-wrap: break-word;
+  word-break: normal;
+  text-wrap: balance;
+}
+.app-shell.theme-light .long-term-desk .lt-heading p { color: #536175; font-size: 13px; line-height: 1.7; }
+.app-shell.theme-dark .long-term-desk .lt-heading p { color: #b9c5d7; font-size: 13px; line-height: 1.7; }
+.app-shell.theme-light .long-term-desk .lt-heading .section-kicker { color: #285fbd; }
+.app-shell.theme-dark .long-term-desk .lt-heading .section-kicker { color: #9dbbff; }
+
+.app-shell .long-term-desk .lt-panel {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 18px;
+  border-radius: 16px;
+}
+.app-shell .long-term-desk .lt-search-form,
+.app-shell .long-term-desk .lt-activity-controls,
+.app-shell .long-term-desk .lt-activity-search,
+.app-shell .long-term-desk .lt-deal-filter-bar,
+.app-shell .long-term-desk .lt-accumulation-controls {
+  min-width: 0;
+  max-width: 100%;
+  border-radius: 12px;
+}
+.app-shell .long-term-desk .lt-search-field { min-width: 0; }
+.app-shell .long-term-desk .lt-search-field input { min-width: 0; max-width: 100%; }
+.app-shell .long-term-desk .lt-primary-btn,
+.app-shell .long-term-desk .lt-ghost-btn { min-width: 0; }
+.app-shell .long-term-desk .lt-stock-hero,
+.app-shell .long-term-desk .lt-assessment-summary,
+.app-shell .long-term-desk .lt-entry-plan,
+.app-shell .long-term-desk .lt-factor,
+.app-shell .long-term-desk .lt-metric-card,
+.app-shell .long-term-desk .lt-analyst-key,
+.app-shell .long-term-desk .lt-rating-count,
+.app-shell .long-term-desk .lt-target-range,
+.app-shell .long-term-desk .lt-flow-card,
+.app-shell .long-term-desk .lt-data-note,
+.app-shell .long-term-desk .lt-accumulation-panel {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+.app-shell.theme-light .long-term-desk .lt-stock-identity h3,
+.app-shell.theme-dark .long-term-desk .lt-stock-identity h3 {
+  font-size: clamp(19px,2.1vw,25px);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.app-shell .long-term-desk .lt-decision { min-width: 0; max-width: 100%; }
+.app-shell .long-term-desk .lt-decision strong { line-height: 1.35; overflow-wrap: anywhere; }
+.app-shell .long-term-desk .lt-entry-zone-main { min-width: 0; }
+.app-shell .long-term-desk .lt-entry-zone-main > div { min-width: 0; }
+.app-shell .long-term-desk .lt-entry-zone-main strong { line-height: 1.2; }
+.app-shell .long-term-desk .lt-entry-status { max-width: 100%; white-space: normal; text-align: center; line-height: 1.35; }
+.app-shell .long-term-desk .lt-factor p { min-height: 0; overflow-wrap: break-word; }
+.app-shell .long-term-desk .lt-metric-card p { overflow-wrap: break-word; }
+.app-shell .long-term-desk .lt-metric-status { max-width: 100%; white-space: normal; line-height: 1.25; text-align: center; }
+.app-shell .long-term-desk .lt-table-wrap,
+.app-shell .long-term-desk .lt-deal-table-wrap { max-width: 100%; overflow-x: auto; }
+.app-shell .long-term-desk .lt-source-row { overflow-wrap: anywhere; }
+.app-shell .long-term-desk .lt-subheading { min-width: 0; }
+.app-shell .long-term-desk .lt-subheading > small { max-width: 100%; }
+
+/* Repair the overview guide's card stack: compact, content-sized and visible. */
+.app-shell .page-overview .quick-start {
+  height: auto;
+  min-height: 0;
+  max-width: 100%;
+}
+.app-shell .page-overview .quick-start-steps {
+  display: grid !important;
+  height: auto;
+  min-height: 0;
+  grid-auto-rows: auto;
+  align-content: start;
+  visibility: visible;
+  opacity: 1;
+}
+.app-shell .page-overview .quick-start-step {
+  display: flex !important;
+  min-width: 0;
+  min-height: 0;
+  height: auto;
+  visibility: visible;
+  opacity: 1;
+}
+.app-shell.theme-light .page-overview .quick-start-step { color: #293449; background: #fffdf8; }
+.app-shell.theme-light .page-overview .quick-start-step strong { color: #293449; }
+.app-shell.theme-light .page-overview .quick-start-step p { color: #536175; }
+.app-shell.theme-light .page-overview .quick-start-note { color: #536175; background: #f1f4fb; }
+.app-shell.theme-dark .page-overview .quick-start { background: #151f2c; border-color: #2b394b; }
+.app-shell.theme-dark .page-overview .quick-start-heading h2 { color: #f0f4fc; }
+.app-shell.theme-dark .page-overview .quick-start-heading p { color: #b2bfd2; }
+.app-shell.theme-dark .page-overview .quick-start-steps { background: #121b27; border-color: #2b394b; }
+.app-shell.theme-dark .page-overview .quick-start-step { color: #edf1f8; background: #151f2c; }
+.app-shell.theme-dark .page-overview .quick-start-step strong { color: #edf1f8; }
+.app-shell.theme-dark .page-overview .quick-start-step p { color: #b2bfd2; }
+.app-shell.theme-dark .page-overview .quick-start-note { color: #b2bfd2; background: #1b2737; border-color: #5575dd; }
+.app-shell.theme-dark .page-overview .quick-start-note span { color: #c6d6ff; }
+
+@media (min-width: 701px) {
+  .app-shell .mobile-menu-toggle,
+  .app-shell .mobile-nav-overlay { display: none !important; }
+}
+@media (max-width: 700px) {
+  .app-shell { width: 100%; max-width: 100%; padding: 0 14px 28px; overflow-x: clip; }
+  .app-shell .topbar {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    min-height: 68px;
+    height: auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 11px 0;
+  }
+  .app-shell .brand { flex: 1 1 auto; min-width: 0; gap: 8px; }
+  .app-shell .brand-mark { flex: 0 0 34px; width: 34px; height: 34px; }
+  .app-shell .brand > span:last-child { min-width: 0; }
+  .app-shell .brand strong { font-size: 12px; letter-spacing: .1em; }
+  .app-shell .brand small { font-size: 7px; letter-spacing: .07em; white-space: nowrap; }
+  .app-shell .topbar-right {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 0;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  .app-shell .topbar-right > span:nth-child(2),
+  .app-shell .topbar-right .topbar-divider,
+  .app-shell .topbar-right .topbar-muted { display: none !important; }
+  .app-shell .theme-toggle,
+  .app-shell .mobile-menu-toggle {
+    display: inline-flex;
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    min-height: 40px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid #cfd8e8;
+    border-radius: 12px;
+    background: #fffdf8;
+    color: #285fbd;
+  }
+  .app-shell .theme-toggle span:first-child { font-size: 20px; }
+  .app-shell .theme-toggle span:last-child { display: none; }
+  .app-shell.theme-dark .theme-toggle,
+  .app-shell.theme-dark .mobile-menu-toggle { background: #1b2737; border-color: #3a4b64; color: #9dbbff; }
+  .app-shell .mobile-menu-toggle { font-size: 20px; font-weight: 600; line-height: 1; }
+  .app-shell .terminal-nav { display: none !important; }
+  .app-shell .mobile-nav-overlay {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 0;
+    background: rgba(14,20,28,.48);
+    backdrop-filter: blur(3px);
+  }
+  .app-shell .mobile-nav-drawer {
+    display: flex;
+    flex: 0 0 min(86vw,360px);
+    flex-direction: column;
+    width: min(86vw,360px);
+    min-width: 0;
+    max-width: 360px;
+    height: 100vh;
+    height: 100dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 24px 20px 20px;
+    background: #f8f5ed;
+    color: #293449;
+    border-right: 1px solid #e3dece;
+    box-shadow: 14px 0 40px rgba(16,25,40,.16);
+    animation: nifty-drawer-in .18s ease-out;
+  }
+  .app-shell.theme-dark .mobile-nav-drawer { background: #111a27; color: #edf1f8; border-color: #2b394b; }
+  @keyframes nifty-drawer-in { from { transform: translateX(-14px); opacity: .8; } to { transform: translateX(0); opacity: 1; } }
+  .app-shell .drawer-head { display: flex; align-items: center; gap: 10px; padding: 1px 0 22px; border-bottom: 1px solid #e3dece; }
+  .app-shell.theme-dark .drawer-head { border-color: #2b394b; }
+  .app-shell .drawer-brand-mark { display: flex; flex: 0 0 42px; align-items: flex-end; justify-content: center; gap: 3px; width: 42px; height: 42px; padding: 8px; border: 1px solid #9cb8ed; border-radius: 12px; background: #e5edfc; }
+  .app-shell .drawer-brand-mark span { display: block; width: 4px; border-radius: 3px; background: #285fbd; }
+  .app-shell .drawer-brand-mark span:nth-child(1) { height: 10px; }
+  .app-shell .drawer-brand-mark span:nth-child(2) { height: 18px; }
+  .app-shell .drawer-brand-mark span:nth-child(3) { height: 24px; }
+  .app-shell .drawer-brand-copy { display: flex; flex: 1 1 auto; min-width: 0; flex-direction: column; gap: 4px; }
+  .app-shell .drawer-brand-copy strong { color: #172c48; font: 800 15px var(--display); letter-spacing: .12em; }
+  .app-shell .drawer-brand-copy small { color: #7e8794; font: 9px var(--mono); letter-spacing: .11em; }
+  .app-shell.theme-dark .drawer-brand-copy strong { color: #edf1f8; }
+  .app-shell.theme-dark .drawer-brand-copy small { color: #a3afc2; }
+  .app-shell .drawer-close { display: grid; flex: 0 0 36px; place-items: center; width: 36px; height: 36px; border: 1px solid #d9deE6; border-radius: 10px; background: #fffdf8; color: #536175; font-size: 25px; line-height: 1; }
+  .app-shell.theme-dark .drawer-close { border-color: #3a4b64; background: #1b2737; color: #d2daea; }
+  .app-shell .drawer-market-pill { display: flex; align-items: center; gap: 8px; margin: 20px 0 22px; padding: 11px 12px; border: 1px solid #e3dece; border-radius: 12px; color: #536175; font: 9px var(--mono); letter-spacing: .03em; }
+  .app-shell .drawer-market-pill > span { flex: 0 0 7px; width: 7px; height: 7px; border-radius: 50%; background: #2b9b78; }
+  .app-shell .drawer-market-pill b { margin-left: auto; color: #285fbd; font-weight: 500; }
+  .app-shell.theme-dark .drawer-market-pill { color: #b2bfd2; border-color: #2b394b; }
+  .app-shell.theme-dark .drawer-market-pill b { color: #9dbbff; }
+  .app-shell .drawer-section-label { margin: 0 0 9px 9px; color: #8a96a8; font: 10px var(--mono); letter-spacing: .16em; }
+  .app-shell .drawer-nav-item { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 46px; margin: 0 0 5px; padding: 10px 12px; border: 1px solid transparent; border-radius: 12px; background: transparent; color: #536175; text-align: left; font-size: 14px; line-height: 1.35; }
+  .app-shell .drawer-nav-icon { display: grid; flex: 0 0 25px; place-items: center; width: 25px; height: 25px; color: #78869a; font-size: 20px; }
+  .app-shell .drawer-nav-item.active { border-color: #cdddf7; background: #e5edfc; color: #285fbd; font-weight: 700; box-shadow: 0 8px 20px rgba(40,95,189,.09); }
+  .app-shell .drawer-nav-item.active .drawer-nav-icon { color: #285fbd; }
+  .app-shell .drawer-nav-chevron { margin-left: auto; color: #285fbd; font-size: 22px; line-height: 1; }
+  .app-shell .drawer-section-label:not(:first-of-type) { margin-top: 19px; }
+  .app-shell.theme-dark .drawer-nav-item { color: #b2bfd2; }
+  .app-shell.theme-dark .drawer-nav-icon { color: #a3afc2; }
+  .app-shell.theme-dark .drawer-nav-item.active { background: #1e2c49; border-color: #3c5687; color: #d9e4ff; }
+  .app-shell.theme-dark .drawer-nav-item.active .drawer-nav-icon,
+  .app-shell.theme-dark .drawer-nav-chevron { color: #9dbbff; }
+  .app-shell .drawer-evidence-card { display: flex; align-items: center; gap: 10px; margin-top: auto; padding: 13px 12px; border: 1px solid #e3dece; border-radius: 14px; background: #fffdf8; }
+  .app-shell .drawer-shield { display: grid; flex: 0 0 36px; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: #e5edfc; color: #285fbd; font-weight: 800; }
+  .app-shell .drawer-evidence-card div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .app-shell .drawer-evidence-card strong { color: #293449; font-size: 12px; }
+  .app-shell .drawer-evidence-card small { color: #657184; font-size: 10px; line-height: 1.4; }
+  .app-shell .drawer-evidence-dot { flex: 0 0 7px; width: 7px; height: 7px; border-radius: 50%; background: #285fbd; }
+  .app-shell.theme-dark .drawer-evidence-card { border-color: #2b394b; background: #151f2c; }
+  .app-shell.theme-dark .drawer-evidence-card strong { color: #edf1f8; }
+  .app-shell.theme-dark .drawer-evidence-card small { color: #b2bfd2; }
+  .app-shell .drawer-footnote { margin: 14px 3px 0; color: #8a96a8; font-size: 10px; line-height: 1.6; }
+  .app-shell.theme-dark .drawer-footnote { color: #8797ae; }
+  .app-shell .long-term-desk { padding: 14px 0 24px; }
+  .app-shell .long-term-desk .lt-heading { margin: 8px 0 14px; padding: 19px 17px; border-radius: 17px; }
+  .app-shell .long-term-desk .lt-heading h2 { font-size: clamp(24px,6.5vw,29px); line-height: 1.12; }
+  .app-shell .long-term-desk .lt-heading p { font-size: 12px; line-height: 1.65; }
+  .app-shell .long-term-desk .lt-heading .section-kicker { font-size: 9px; letter-spacing: .12em; line-height: 1.55; }
+  .app-shell .long-term-desk .lt-heading .lt-heading-stamp { display: none; }
+  .app-shell .long-term-desk .lt-panel { padding: 12px; border-radius: 15px; }
+  .app-shell .long-term-desk .lt-stock-hero { grid-template-columns: minmax(0,1fr); padding: 14px; gap: 14px; }
+  .app-shell .long-term-desk .lt-stock-identity { flex-wrap: wrap; align-items: flex-start; }
+  .app-shell .long-term-desk .lt-ticker { flex: 0 0 auto; min-width: 52px; min-height: 52px; }
+  .app-shell .long-term-desk .lt-stock-identity > div:last-child { flex: 1 1 180px; min-width: 0; }
+  .app-shell .long-term-desk .lt-current-price { min-width: 0; padding-top: 13px; }
+  .app-shell .long-term-desk .lt-decision { grid-column: auto; padding: 13px; }
+  .app-shell .long-term-desk .lt-decision strong { font-size: 14px; }
+  .app-shell .long-term-desk .lt-assessment-summary { padding: 13px; }
+  .app-shell .long-term-desk .lt-entry-plan { padding: 13px; border-radius: 14px; }
+  .app-shell .long-term-desk .lt-entry-plan-header { gap: 9px; }
+  .app-shell .long-term-desk .lt-entry-plan-header h3 { font-size: 19px; line-height: 1.25; }
+  .app-shell .long-term-desk .lt-entry-zone-main { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; padding: 10px; }
+  .app-shell .long-term-desk .lt-entry-zone-main > div { flex: 1 1 135px; padding: 10px; }
+  .app-shell .long-term-desk .lt-entry-zone-main small { font-size: 8px; line-height: 1.35; }
+  .app-shell .long-term-desk .lt-entry-zone-main strong { font-size: clamp(18px,5vw,23px); }
+  .app-shell .long-term-desk .lt-entry-zone-separator { display: none; }
+  .app-shell .long-term-desk .lt-entry-timing-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }
+  .app-shell .long-term-desk .lt-entry-timing-grid > div { min-width: 0; }
+  .app-shell .long-term-desk .lt-entry-timing-grid strong { font-size: 12px; }
+  .app-shell .long-term-desk .lt-factor-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+  .app-shell .long-term-desk .lt-factor { padding: 11px; }
+  .app-shell .long-term-desk .lt-factor > div { min-height: 0; }
+  .app-shell .long-term-desk .lt-factor p { min-height: 0; font-size: 11px; }
+  .app-shell .long-term-desk .lt-metric-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+  .app-shell .long-term-desk .lt-metric-card { min-height: 0; padding: 11px; }
+  .app-shell .long-term-desk .lt-metric-label { font-size: 8px; }
+  .app-shell .long-term-desk .lt-metric-value { font-size: 17px; line-height: 1.25; }
+  .app-shell .long-term-desk .lt-analyst-summary { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+  .app-shell .long-term-desk .lt-analyst-key,
+  .app-shell .long-term-desk .lt-target-range { grid-column: 1 / -1; }
+  .app-shell .long-term-desk .lt-rating-count { min-height: 0; }
+  .app-shell .long-term-desk .lt-flow-grid { grid-template-columns: 1fr; }
+  .app-shell .long-term-desk .lt-deal-filter-bar { grid-template-columns: minmax(0,1fr); }
+  .app-shell .long-term-desk .lt-primary-btn { flex: 1 1 auto; }
+  .app-shell .long-term-desk .lt-subheading { margin: 22px 0 12px; }
+  .app-shell .page-overview .hero { margin-top: 12px; padding: 24px 18px; }
+  .app-shell .page-overview .hero h1 { font-size: clamp(34px,8.5vw,43px); line-height: 1.08; }
+  .app-shell .page-overview .hero-copy > p { font-size: 12px; line-height: 1.7; }
+  .app-shell .page-overview .hero-note { font-size: 11px; }
+  .app-shell .page-overview .quick-start { padding: 15px; margin: 12px 0 16px; }
+  .app-shell .page-overview .quick-start-heading { gap: 9px; margin-bottom: 13px; }
+  .app-shell .page-overview .quick-start-heading h2 { font-size: 22px; }
+  .app-shell .page-overview .quick-start-steps { grid-template-columns: minmax(0,1fr); }
+  .app-shell .page-overview .quick-start-step { padding: 14px 12px; gap: 10px; }
+  .app-shell .page-overview .quick-start-step p { font-size: 12px; }
+  .app-shell .market-strip { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+  .app-shell .market-card,
+  .app-shell .market-card + .market-card { min-height: 0; padding: 12px; }
+  .app-shell .market-card .metric-value { font-size: 20px; }
+  .app-shell .footer { grid-template-columns: 1fr; gap: 12px; }
+  .app-shell .footer-version { grid-column: auto; }
+}
