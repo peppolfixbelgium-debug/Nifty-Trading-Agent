@@ -84,6 +84,14 @@ function ActionPill({ action }: { action: ScanAction }) {
 
 function App() {
   const [activePage, setActivePage] = useState<Page>(readPageFromLocation);
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") return "light";
+    try {
+      return window.localStorage.getItem("nifty-agent-theme") === "dark" ? "dark" : "light";
+    } catch {
+      return "light";
+    }
+  });
   const [researchSymbol, setResearchSymbol] = useState("RELIANCE");
   const [data, setData] = useState<ScanResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -106,6 +114,14 @@ function App() {
   const [directionSelection, setDirectionSelection] = useState("both");
   const [scannerTimeframe, setScannerTimeframe] = useState("daily");
   const [minimumTradesForRanking, setMinimumTradesForRanking] = useState("30");
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("nifty-agent-theme", theme);
+    } catch {
+      // Keep the theme toggle usable when browser storage is unavailable.
+    }
+  }, [theme]);
+
   const activeQualifiedSignalCount = useMemo(
     () => (opportunityData?.candidates ?? []).filter((candidate) => candidate.currentSignal).length,
     [opportunityData]
@@ -302,7 +318,7 @@ function App() {
   const riskCapHit = data !== null && data.params.effectiveRiskInr < data.params.requestedRiskInr;
 
   return (
-    <main className="app-shell" data-page={activePage}>
+    <main className={`app-shell theme-${theme}`} data-page={activePage}>
       <header className="topbar">
         <button className="brand brand-button" type="button" onClick={() => navigate("overview")} aria-label="Nifty Trading Agent home">
           <span className="brand-mark"><span></span><span></span><span></span></span>
@@ -313,6 +329,17 @@ function App() {
           <span>LONG-TERM RESEARCH</span>
           <span className="topbar-divider"></span>
           <span className="topbar-muted">NSE · Investor-first</span>
+          <button
+            className="theme-toggle"
+            type="button"
+            onClick={() => setTheme((current) => current === "light" ? "dark" : "light")}
+            aria-label={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+            aria-pressed={theme === "dark"}
+            title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+          >
+            <span aria-hidden="true">{theme === "light" ? "☾" : "☀"}</span>
+            <span>{theme === "light" ? "Dark mode" : "Light mode"}</span>
+          </button>
         </div>
       </header>
       <nav className="terminal-nav" aria-label="Main navigation">
