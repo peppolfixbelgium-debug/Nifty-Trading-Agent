@@ -2292,3 +2292,136 @@ body {
   .app-shell .long-term-desk .lt-tabs { display: grid; grid-template-columns: 1fr; }
   .app-shell .long-term-desk .lt-tabs button { min-height: 64px; }
 }
+
+
+/* Readability and right-side workspace navigation pass. */
+@media (min-width: 701px) {
+  .app-shell .topbar {
+    inset: 0 0 0 auto;
+    border-right: 0;
+    border-left: 1px solid #e3dece;
+  }
+  .app-shell .terminal-nav {
+    inset: 111px 0 92px auto;
+    border-right: 0;
+    border-left: 1px solid #e3dece;
+  }
+  .app-shell > .long-term-desk,
+  .app-shell > .quant-lab-content,
+  .app-shell > .footer {
+    margin-left: 0;
+    margin-right: 252px;
+  }
+}
+@media (min-width: 701px) and (max-width: 1000px) {
+  .app-shell .topbar,
+  .app-shell .terminal-nav { width: 220px; }
+  .app-shell > .long-term-desk,
+  .app-shell > .quant-lab-content,
+  .app-shell > .footer { margin-right: 220px; }
+}
+
+/* Avoid tiny, low-contrast copy: body text, controls, helper text and tables
+   use comfortable sizes and stronger ink on the IPO-inspired light surfaces. */
+.app-shell .hero-copy > p,
+.app-shell .hero-note,
+.app-shell .quick-start-heading p,
+.app-shell .quick-start-step p,
+.app-shell .quick-start-note,
+.app-shell .control-intro p,
+.app-shell .field,
+.app-shell .field-hint,
+.app-shell .terminal-section-top p,
+.app-shell .chart-source-note,
+.app-shell .options-note,
+.app-shell .footer,
+.app-shell .long-term-desk p,
+.app-shell .long-term-desk li,
+.app-shell .long-term-desk .lt-empty,
+.app-shell .long-term-desk .lt-data-note p,
+.app-shell .long-term-desk .lt-data-note li,
+.app-shell .long-term-desk .lt-error span,
+.app-shell .long-term-desk .lt-loading {
+  font-size: 12px;
+  line-height: 1.65;
+}
+.app-shell .metric-label,
+.app-shell .metric-foot,
+.app-shell .metric-change span,
+.app-shell .section-kicker,
+.app-shell .eyebrow,
+.app-shell .long-term-desk .lt-metric-label,
+.app-shell .long-term-desk .lt-search-field > span,
+.app-shell .long-term-desk .lt-analyst-key span,
+.app-shell .long-term-desk .lt-target-range span,
+.app-shell .long-term-desk .lt-company-name,
+.app-shell .long-term-desk .lt-deal-type,
+.app-shell .long-term-desk .lt-entry-plan-caveat {
+  font-size: 10px;
+  line-height: 1.55;
+}
+.app-shell .long-term-desk .lt-heading p,
+.app-shell .long-term-desk .lt-stock-identity p,
+.app-shell .long-term-desk .lt-current-price small,
+.app-shell .long-term-desk .lt-current-price span,
+.app-shell .long-term-desk .lt-assessment-summary p,
+.app-shell .long-term-desk .lt-factor p,
+.app-shell .long-term-desk .lt-flow-card p,
+.app-shell .long-term-desk .lt-accumulation-caveat {
+  color: #5d687a;
+  font-size: 12px;
+  line-height: 1.65;
+}
+.app-shell .long-term-desk .lt-search-field input,
+.app-shell .long-term-desk .lt-search-field select,
+.app-shell .long-term-desk input,
+.app-shell .long-term-desk select,
+.app-shell .input-wrap input,
+.app-shell .search-wrap input,
+.app-shell .chart-instrument-picker select {
+  min-height: 42px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.app-shell .long-term-desk .lt-table th,
+.app-shell .long-term-desk .lt-table-wrap th,
+.app-shell .long-term-desk .lt-deal-table-wrap th,
+.app-shell th {
+  font-size: 10px;
+  line-height: 1.45;
+}
+.app-shell .long-term-desk .lt-table td,
+.app-shell .long-term-desk .lt-table-wrap td,
+.app-shell .long-term-desk .lt-deal-table-wrap td,
+.app-shell td {
+  font-size: 12px;
+  line-height: 1.55;
+}
+.app-shell .long-term-desk .lt-tabs strong { font-size: 13px; }
+.app-shell .long-term-desk .lt-tabs small { color: #657184; font-size: 11px; line-height: 1.5; }
+.app-shell .long-term-desk .lt-metric-card p { color: #5d687a; font-size: 11px; line-height: 1.6; }
+.app-shell .long-term-desk .lt-factor strong,
+.app-shell .long-term-desk .lt-subheading h3 { font-size: 15px; }
+.app-shell .long-term-desk .lt-entry-plan-caveat { color: #5d687a; }
+.app-shell .long-term-desk .lt-ticker-link { font-size: 12px; }
+.app-shell .long-term-desk .lt-search-field input::placeholder { color: #687487; opacity: 1; }
+.app-shell .terminal-nav button { font-size: 12px; min-height: 44px; }
+.app-shell .terminal-nav:before { font-size: 10px; }
+.app-shell .brand small { font-size: 9px; }
+.app-shell .topbar-right { font-size: 10px; }
+.app-shell .topbar-right .topbar-muted { font-size: 9px; }
+
+@media (max-width: 700px) {
+  .app-shell .topbar { inset: auto; }
+  .app-shell .terminal-nav { inset: auto; }
+  .app-shell > .long-term-desk,
+  .app-shell > .quant-lab-content,
+  .app-shell > .footer { margin-right: 0; }
+  .app-shell .terminal-nav button { font-size: 11px; }
+  .app-shell .brand small { font-size: 8px; }
+  .app-shell .topbar-right { font-size: 8px; }
+  .app-shell .long-term-desk p,
+  .app-shell .long-term-desk li,
+  .app-shell .quick-start-step p,
+  .app-shell .quick-start-note { font-size: 12px; }
+}
