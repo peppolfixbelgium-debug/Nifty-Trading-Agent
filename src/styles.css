@@ -3428,3 +3428,194 @@ body {
   .app-shell .footer { grid-template-columns: 1fr; gap: 12px; }
   .app-shell .footer-version { grid-column: auto; }
 }
+
+
+/* Production hotfix: keep the brand mark inside its frame and restore contrast
+   on the long-term entry card in the IPO-inspired light theme. */
+.app-shell .brand-mark {
+  position: relative;
+  display: flex;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.app-shell .brand-mark > span {
+  display: block;
+  flex: 0 0 4px;
+  width: 4px;
+  min-width: 4px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: #285fbd;
+}
+.app-shell .brand-mark > span:nth-child(1) { height: 10px; }
+.app-shell .brand-mark > span:nth-child(2) { height: 18px; }
+.app-shell .brand-mark > span:nth-child(3) { height: 25px; }
+
+.app-shell.theme-light .long-term-desk .lt-entry-plan {
+  color: #293449;
+  border-color: #e5c9c5;
+  background: #fff7f5;
+  box-shadow: 0 8px 24px rgba(54,45,50,.035);
+}
+.app-shell.theme-light .long-term-desk .lt-entry-plan .section-kicker,
+.app-shell.theme-light .long-term-desk .lt-entry-plan .lt-entry-plan-header .section-kicker,
+.app-shell.theme-light .long-term-desk .lt-entry-plan .lt-entry-timing-grid span,
+.app-shell.theme-light .long-term-desk .lt-entry-plan .lt-entry-zone-main small {
+  color: #657184;
+}
+.app-shell.theme-light .long-term-desk .lt-entry-plan .lt-entry-plan-header h3 {
+  color: #293449;
+}
+.app-shell.theme-light .long-term-desk .lt-entry-plan .lt-entry-plan-header p,
+.app-shell.theme-light .long-term-desk .lt-entry-plan .lt-entry-plan-message,
+.app-shell.theme-light .long-term-desk .lt-entry-plan .lt-entry-plan-footnote {
+  color: #536175;
+}
+.app-shell.theme-light .long-term-desk .lt-entry-plan .lt-entry-timing-grid {
+  border-bottom-color: #e3d9d2;
+}
+.app-shell.theme-light .long-term-desk .lt-entry-plan .lt-entry-timing-grid strong {
+  color: #293449;
+}
+.app-shell.theme-light .long-term-desk .lt-entry-plan .lt-entry-zone-main {
+  background: #f0f3fa;
+  border-left-color: #3658c8;
+  border-radius: 12px;
+}
+.app-shell.theme-light .long-term-desk .lt-entry-plan .lt-entry-zone-main strong {
+  color: #172c48;
+}
+.app-shell.theme-light .long-term-desk .lt-entry-plan .lt-entry-zone-separator {
+  color: #657184;
+}
+.app-shell.theme-light .long-term-desk .lt-entry-plan .lt-entry-status {
+  max-width: 100%;
+  white-space: normal;
+  line-height: 1.4;
+  color: #a53b38;
+  background: #fff0ed;
+  border-color: #efc7c0;
+}
+.app-shell.theme-light .long-term-desk .lt-entry-plan .lt-entry-plan-message,
+.app-shell.theme-light .long-term-desk .lt-entry-plan .lt-entry-plan-footnote {
+  overflow-wrap: anywhere;
+}
+.app-shell.theme-dark .long-term-desk .lt-entry-plan .lt-entry-plan-header h3 { color: #f0f4fc; }
+
+@media (max-width: 700px) {
+  .app-shell .topbar {
+    position: relative;
+    inset: auto;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: 68px;
+    gap: 8px;
+    padding: 11px 0;
+    border-right: 0;
+    border-bottom: 1px solid #e3dece;
+  }
+  .app-shell .brand.brand-button {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    max-width: calc(100% - 96px);
+    gap: 9px;
+    padding: 0;
+  }
+  .app-shell .brand-mark {
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    overflow: hidden;
+  }
+  .app-shell .brand > span:last-child { min-width: 0; }
+  .app-shell .brand strong { line-height: 1.25; }
+  .app-shell .brand small { line-height: 1.4; white-space: normal; }
+  .app-shell .topbar-right {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 0;
+    margin-left: auto;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .app-shell .topbar-right .live-dot { margin: 0 2px 0 0; }
+  .app-shell .theme-toggle,
+  .app-shell .mobile-menu-toggle {
+    flex: 0 0 40px;
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+    border-radius: 12px;
+  }
+  .app-shell .long-term-desk .lt-entry-plan { padding: 15px; }
+  .app-shell .long-term-desk .lt-entry-plan-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .app-shell .long-term-desk .lt-entry-plan-header h3 {
+    font-size: 21px;
+    line-height: 1.22;
+    overflow-wrap: anywhere;
+  }
+  .app-shell .long-term-desk .lt-entry-plan-header p { font-size: 12px; }
+  .app-shell .long-term-desk .lt-entry-zone-main {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    align-items: stretch;
+    gap: 9px;
+    padding: 10px;
+  }
+  .app-shell .long-term-desk .lt-entry-zone-main > div {
+    min-width: 0;
+    padding: 11px;
+    border: 1px solid #d7dfed;
+    border-radius: 12px;
+    background: #fffdf8;
+  }
+  .app-shell .long-term-desk .lt-entry-zone-main small {
+    font-size: 9px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+  .app-shell .long-term-desk .lt-entry-zone-main strong {
+    font-size: clamp(16px,4.8vw,22px);
+    line-height: 1.25;
+  }
+  .app-shell .long-term-desk .lt-entry-zone-separator { display: none; }
+  .app-shell .long-term-desk .lt-entry-timing-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 14px 12px;
+  }
+  .app-shell .long-term-desk .lt-entry-timing-grid span {
+    font-size: 9px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+  .app-shell .long-term-desk .lt-entry-timing-grid strong {
+    font-size: 14px;
+    line-height: 1.35;
+  }
+}
